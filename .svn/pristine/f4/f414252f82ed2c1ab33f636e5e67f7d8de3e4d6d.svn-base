@@ -1,0 +1,513 @@
+<template>
+  <div class="workflowManage">
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          查询条件
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form ref="form" :model="form" v-model="labelPosition" label-width="35%">
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="业务类型">
+                    <el-select v-model="form.businesstype" placeholder="请选择" disabled>
+                    <el-option
+                      v-for="item in businesstypeList"
+                      :key="item.code"
+                      :label="item.name"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                  <!-- <el-input v-model="form.businesstype" maxlength="100" disabled></el-input> -->
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="起点活动">
+                  <el-select v-model="form.transitionstart" clearable placeholder="请选择" filterable>
+                    <el-option
+                      v-for="item in transitionstartList"
+                      :key="item.transitionstart"
+                      :label="item.transitionstart+'-'+item.startName"
+                      :value="item.transitionstart"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="终止活动">
+                  <el-select v-model="form.transitionend" clearable placeholder="请选择" filterable>
+                    <el-option
+                      v-for="item in transitionendList"
+                      :key="item.transitionend"
+                      :label="item.transitionend+'-'+item.endName"
+                      :value="item.transitionend"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+
+          <el-row style="text-align:right;padding-right:15px;">
+            <el-button type="primary" @click="initTable" round>查 询</el-button>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+
+    <div class="work_queue">
+      <span>查询列表</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        :data="tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)"
+        style="width: 100%"
+        highlight-current-row
+        @row-click="toDetails"
+      >
+        <el-table-column label="序号" type="index" :index="indexMethod" align="center"></el-table-column>
+        <el-table-column prop="businesstype" label="业务类型" align="center"></el-table-column>
+        <el-table-column prop="transitionstart" label="起点活动" align="center"></el-table-column>
+        <el-table-column prop="startName" label="起点活动名称" align="center"></el-table-column>
+        <el-table-column prop="transitionend" label="终点活动" align="center"></el-table-column>
+        <el-table-column prop="endName" label="终点活动名称" align="center"></el-table-column>
+        <el-table-column prop="transitioncondt" label="转移条件类型" align="center"></el-table-column>
+        <el-table-column prop="transitionmodel" label="转移条件描述" align="center"></el-table-column>
+      </el-table>
+      <div class="block">
+        <el-pagination
+          @size-change="currentPage1"
+          @current-change="currentChange"
+          :current-page.sync="currentPage1"
+          :page-size="10"
+          background
+          layout="prev, pager, next, jumper"
+          :total="tableData.length"
+        ></el-pagination>
+      </div>
+    </div>
+
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          信息录入
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form ref="listForm" :model="listForm" v-model="labelPosition" label-width="140px" :rules="rules">
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="业务类型" prop="businesstype">
+                  <!-- <el-input v-model="listForm.businessType" disabled></el-input> -->
+                   <el-select v-model="form.businesstype" placeholder="请选择" disabled>
+                    <el-option
+                      v-for="item in businesstypeList"
+                      :key="item.code"
+                      :label="item.name"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="起点活动" prop="transitionstart">
+                  <el-select v-model="listForm.transitionstart" clearable placeholder="请选择" filterable>
+                    <el-option
+                      v-for="item in transitionstartList"
+                      :key="item.transitionstart"
+                      :label="item.transitionstart+'-'+item.startName"
+                      :value="item.transitionstart"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="终止活动" prop="transitionend">
+                  <el-select v-model="listForm.transitionend" clearable placeholder="请选择" filterable>
+                    <el-option
+                      v-for="item in transitionendList"
+                      :key="item.transitionend"
+                      :label="item.transitionend+'-'+item.endName"
+                      :value="item.transitionend"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="转移条件类型" prop="transitioncondt">
+                  <el-select v-model="listForm.transitioncondt" clearable placeholder="请选择" filterable>
+                    <el-option
+                      v-for="item in transitioncondtList"
+                      :key="item.code"
+                      :label="item.codename"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="24">
+              <div class="grid-content">
+                <el-form-item label="转移条件">
+                  <el-input
+                    type="textarea"
+                    placeholder="请输入内容"
+                    v-model="listForm.transitioncond"
+                    maxlength="700"
+                    :autosize="{ minRows: 6 }"
+                    show-word-limit
+                  ></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+
+          <el-row>
+            <el-col :span="24">
+              <div class="grid-content">
+                <el-form-item label="转移条件描述" prop="transitionmodel">
+                  <el-input
+                    type="textarea"
+                    placeholder="请输入内容"
+                    v-model="listForm.transitionmodel"
+                    maxlength="700"
+                    :autosize="{ minRows: 6 }"
+                    show-word-limit
+                  ></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+
+          <el-row style="text-align:right;padding-right:30px;">
+            <el-button type="primary" round @click="addTable('listForm')">增 加</el-button>
+            <el-button type="primary" round @click="updateTable('listForm')" :disabled="updata">修 改</el-button>
+            <el-button type="primary" round @click="deleteTable" :disabled="updata">删 除</el-button>
+            <el-button type="primary" round @click="goback">返 回</el-button>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+import { getCodeType } from "../../utils/service";
+export default {
+  name: "ListQuery",
+  data() {
+    return {
+      form: {
+        transitionstart:"",
+        businesstype: "01",
+        transitionend:""
+      },
+      listForm: {
+        transitionid: this.transitionId,
+        transitionstart:"",
+        transitionend:"",
+        transitioncond:"",
+        transitioncondt:"0",
+        transitionmodel:"",
+        businesstype:"01"
+      },
+      businesstypeList:[{
+        code:"01",
+        name:"个险理赔"
+      }],
+      updata: true,
+      rules: {
+        transitionstart: [
+            { required: true, message: '起点活动不能为空！', trigger: 'change' }
+          ],
+        businesstype:[
+          { required: true, message: '业务类型不能为空！', trigger: 'change' }
+        ],
+        transitionend:[
+          { required: true, message: '终止活动不能为空！', trigger: 'change' }
+        ],
+        transitioncondt:[
+          { required: true, message: '转移条件类型不能为空！', trigger: 'change' }
+        ],
+        transitionmodel:[
+          { required: true, message: '转移条件描述不能为空！', trigger: ['blur','change'] }
+        ]
+      },
+      transitionId:"",
+      transitionstartList: [],
+      transitionendList:[],
+      transitioncondtList:[],
+      activeName: ["1", "2"],
+      labelPosition: "right",
+      currentPage: 1,
+      currentPage1: 1,
+      tableData: [],
+      pagesize: 10,
+      currpage: 1,
+      currentRow: "",
+      menugrpcode: ""
+    };
+  },
+  inject: ["reload"],
+  created() {
+    this.getSelect();
+    this.transitioncondtList = getCodeType("transitiontype");
+  },
+  mounted() {
+    // this.initTable();
+  },
+  methods: {
+    getSelect() {
+      post(service.queryStartAndEnd, {
+        bodys: {}
+      }).then(res => {
+        if (res.data.headers.code === "200"&&res.data.headers.success) {
+          this.transitionendList= res.data.bodys;
+          this.transitionstartList=res.data.bodys;
+        }else{
+          this.$message.error(res.data.headers.message)
+        }
+      });
+    },
+    goback() {
+      this.$router.go(-1);
+    },
+    // 查询
+    initTable: function() {
+      post(service.queryProcessTrans, {
+        bodys: this.form
+      }).then(res => {
+        if (res.data.headers.code === "200"&&res.data.headers.success) {
+          this.tableData = res.data.bodys;
+        }else{
+          this.$message.error(res.data.headers.message)
+        }
+      });
+    },
+    // 新增
+    addTable(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            post(service.createProcessTrans,{
+              bodys:this.listForm
+            }).then(res=>{
+              if(res.data.headers.code==='200'&&res.data.headers.message){
+                 this.$message.success(res.data.headers.message);
+                 this.reload()
+              }
+            })
+          } else {
+            // this.$message.error('信息填写不完整！');
+            return false;
+          }
+        });
+      },
+    toDetails(row) {
+      this.updata = false;
+      this.listForm=row;
+      this.transitionId = row.transitionid;
+    },
+      // 修改
+    updateTable(formName) {
+       this.$refs[formName].validate((valid) => {
+          if (valid) {
+         post(service.updateProcessTrans, {
+        bodys: this.listForm
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.$message.success(res.data.headers.message);
+          this.reload()
+        } else {
+          this.$message.error(res.data.headers.message);
+        }
+      });
+          } else {
+            // this.$message.error('信息填写不完整！');
+            return false;
+          }
+        });
+    },
+    // 删除
+    deleteTable() {
+      post(service.deleteProcessTrans, {
+        bodys: {
+          transitionid: this.transitionId
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.$message.success(res.data.headers.message);
+          this.reload();
+        } else {
+          this.$message.error(res.data.headers.message);
+        }
+      });
+    },
+    currentChange: function(page) {
+      this.currentPage = page;
+      // this.tableList();
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currentPage - 1) * 10;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.workflowManage {
+  margin: 10px;
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 20px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+      padding-right: 16px;
+    background-color: #fff;
+  }
+  .work_queue {
+    position: relative;
+    margin-top: 21px;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .work_table {
+    margin-bottom: 21px;
+    background-color: #fff;
+    padding: 20px 8px;
+    .el-form-item__content {
+      margin-left: 0 !important;
+    }
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 20px;
+    box-sizing: border-box;
+  }
+  .img_style {
+    width: 27px;
+    height: 22px;
+  }
+}
+</style>
+<style lang="less">
+.workflowManage {
+  .el-row {
+    // padding-top: 20px;
+    &:first-child {
+      padding-top: 20px;
+    }
+    &:last-child {
+      padding-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+}
+.workflowManage {
+  //   .el-input {
+  //     width: 80% !important;
+  //   }
+  .date_style {
+    .el-input {
+      width: 46% !important;
+    }
+  }
+
+  .el-select {
+    width: 100% !important;
+    .el-input {
+      width: 100% !important;
+    }
+  }
+  .el-collapse-item__arrow {
+    display: none;
+  }
+  .el-collapse-item__header {
+    background-color: #0673ff;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 10px 10px 0 0;
+    padding: 0 15px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+  }
+  .el-collapse-item__content {
+    padding-bottom: 17px;
+  }
+  .el-table--striped .el-table__body tr.el-table__row--striped.current-row td,
+  .el-table__body tr.current-row > td,
+  .el-table__body tr.hover-row.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped > td,
+  .el-table__body tr.hover-row > td {
+    background-color: #409eff;
+  }
+ .el-button.is-round {
+  padding: 7px 13px;
+}
+}
+</style>

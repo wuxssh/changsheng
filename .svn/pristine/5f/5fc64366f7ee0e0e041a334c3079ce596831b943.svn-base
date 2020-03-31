@@ -1,0 +1,496 @@
+<template>
+  <div class="contractProcess">
+    <el-tabs v-model="activeName1" @tab-click="handleClick1" style="margin-bottom:20px;">
+      <div :style="style2" :class="isbox1 ? 'box' : ''"></div>
+      <el-tab-pane name="first">
+        <span slot="label">赔案涉及合同</span>
+        <el-table :data="policyClaimQueryData" style="width: 100%">
+          <el-table-column type="expand">
+            <template slot-scope="props">
+              <el-table
+                class="sonTable"
+                :data="props.row.lmRiskInfoList"
+                border
+                style="width: 100%"
+                :header-cell-style="{background:'#F7FAFF'}"
+              >
+                <el-table-column type="index" align="center" width="50" label="序号"></el-table-column>
+                <el-table-column prop="riskname" label="险种名称" align="center"></el-table-column>
+                <el-table-column prop="riskcode" label="险种代码" align="center"></el-table-column>
+                <el-table-column prop="amnt" label="保险金额" align="center"></el-table-column>
+                <el-table-column prop="uwstate" label="险种状态" align="center"></el-table-column>
+                <el-table-column prop="cvalidate" label="生效日期" align="center"></el-table-column>
+                <el-table-column prop="prem" label="应交保费" align="center"></el-table-column>
+                <el-table-column prop="payenddate" label="实际缴费期满日" align="center"></el-table-column>
+                <el-table-column prop="enddate" label="实际期满日" align="center"></el-table-column>
+                <el-table-column prop="afterState" label="赔付后状态" align="center"></el-table-column>
+                <el-table-column prop="contdeal" label="合同处理" align="center"></el-table-column>
+              </el-table>
+            </template>
+          </el-table-column>
+          <el-table-column type="index" width="50" align="center" label="序号"></el-table-column>
+          <el-table-column prop="contno" label="保单号" align="center"></el-table-column>
+          <el-table-column prop="appntname" label="投保人" align="center"></el-table-column>
+          <el-table-column prop="insuredname" label="被保险人" align="center"></el-table-column>
+          <el-table-column prop="riskname" label="主险名称" align="center"></el-table-column>
+          <el-table-column prop="polstate" label="保单状态" align="center"></el-table-column>
+          <el-table-column prop="cvalidate" label="生效日期" align="center"></el-table-column>
+          <el-table-column prop="payenddate" label="实际缴费期满日" align="center"></el-table-column>
+          <el-table-column prop="enddate" label="实际期满日" align="center"></el-table-column>
+          <el-table-column prop="claimflag" label="挂起标志" align="center"></el-table-column>
+          <el-table-column prop="suspension" label="挂起原因" align="center"></el-table-column>
+          <el-table-column prop="afterState" label="赔付后状态" align="center"></el-table-column>
+          <el-table-column prop="contdeal" label="合同处理" align="center"></el-table-column>
+        </el-table>
+      </el-tab-pane>
+      <el-tab-pane name="second">
+        <span slot="label">赔案未涉及合同</span>
+        <el-table :data="policyNoClaimQueryData" style="width: 100%">
+          <el-table-column type="expand">
+            <template slot-scope="props">
+              <el-table
+                class="sonTable"
+                :data="props.row.lmRiskInfoList"
+                border
+                style="width: 100%"
+                :header-cell-style="{background:'#F7FAFF'}"
+              >
+                <el-table-column type="index" align="center" width="50" label="序号"></el-table-column>
+                <el-table-column prop="riskname" label="险种名称" align="center"></el-table-column>
+                <el-table-column prop="riskcode" label="险种代码" align="center"></el-table-column>
+                <el-table-column prop="amnt" label="保险金额" align="center"></el-table-column>
+                <el-table-column prop="uwstate" label="险种状态" align="center"></el-table-column>
+                <el-table-column prop="cvalidate" label="生效日期" align="center"></el-table-column>
+                <el-table-column prop="prem" label="应交保费" align="center"></el-table-column>
+                <el-table-column prop="payenddate" label="实际缴费期满日" align="center"></el-table-column>
+                <el-table-column prop="enddate" label="实际期满日" align="center"></el-table-column>
+                <!-- <el-table-column prop="afterState" label="理赔后状态" align="center"></el-table-column> -->
+                <el-table-column prop="afterState" label="赔付后状态" align="center"></el-table-column>
+                <el-table-column prop="contdeal" label="合同处理" align="center"></el-table-column>
+              </el-table>
+            </template>
+          </el-table-column>
+          <el-table-column type="index" width="50" align="center" label="序号"></el-table-column>
+          <el-table-column prop="contno" label="保单号" align="center"></el-table-column>
+          <el-table-column prop="appntname" label="投保人" align="center"></el-table-column>
+          <el-table-column prop="insuredname" label="被保险人" align="center"></el-table-column>
+          <el-table-column prop="riskname" label="主险名称" align="center"></el-table-column>
+          <el-table-column prop="polstate" label="保单状态" align="center"></el-table-column>
+          <el-table-column prop="cvalidate" label="生效日期" align="center"></el-table-column>
+          <el-table-column prop="payenddate" label="实际缴费期满日" align="center"></el-table-column>
+          <el-table-column prop="enddate" label="实际期满日" align="center"></el-table-column>
+          <el-table-column prop="claimflag" label="挂起标志" align="center"></el-table-column>
+          <el-table-column prop="suspension" label="挂起原因" align="center"></el-table-column>
+          <el-table-column prop="afterState" label="赔付后状态" align="center"></el-table-column>
+          <!-- <el-table-column prop="policyflag" label="赔付后状态" align="center"></el-table-column> -->
+          <el-table-column prop="contdeal" label="合同处理" align="center"></el-table-column>
+        </el-table>
+      </el-tab-pane>
+    </el-tabs>
+    <!-- 保单清算结果 -->
+    <div class="work_queue">
+      <span>保单清算结果</span>
+      <div class="box"></div>
+    </div>
+    <div style="background-color:#fff;margin-bottom:20px;">
+      <el-table
+        :data="checkflagData  "
+        style="width: 100%"
+        ref="multipleTable"
+        tooltip-effect="dark"
+      >
+        <!-- <el-table-column type="selection" :selectable="isDisabled" width="55"></el-table-column> -->
+        <el-table-column type="index" width="50" label="序号"></el-table-column>
+        <el-table-column prop="busstypename" label="业务类型" align="center"></el-table-column>
+        <el-table-column prop="sonbusstypename" label="子业务类型" align="center"></el-table-column>
+        <el-table-column prop="contno" label="保单号" align="center"></el-table-column>
+        <el-table-column prop="riskcode" label="险种编码" align="center"></el-table-column>
+        <el-table-column prop="riskname" label="险种名称" align="center"></el-table-column>
+        <el-table-column prop="clmmoney" label="计算金额" align="center"></el-table-column>
+      </el-table>
+      <!-- <div style="padding:10px 0;">
+        <el-pagination
+          background
+          small
+          @size-change="handleSizeChange1"
+          @current-change="handleCurrentChange1"
+          :page-size="pagesize1"
+          layout="prev, pager, next,jumper"
+          :total="policyTerminateClaimQueryData.length"
+        ></el-pagination>
+      </div>-->
+    </div>
+    <div class="work_queue">
+      <span>历史调整原因</span>
+      <div class="box"></div>
+    </div>
+    <el-table
+      :data="policyCalculateClaimQueryData.slice((currpage4 - 1) * pagesize4, currpage4 * pagesize4)"
+      style="width: 100%"
+    >
+      <el-table-column type="expand">
+        <template slot-scope="props">
+          <el-form class="itemForm">
+            <el-row>
+              <el-col :span="24">
+                <el-form-item
+                  style="padding:0!important;"
+                  label="历史调整原因"
+                  v-show="props.row.modifyreason"
+                >
+                  <el-input
+                    disabled
+                    type="textarea"
+                    resize="none"
+                    v-model="props.row.modifyreason"
+                    :rows="6"
+                  ></el-input>
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
+        </template>
+      </el-table-column>
+      <el-table-column type="index" width="50" label="序号" :index="indexMethod4"></el-table-column>
+      <el-table-column prop="modifyreason" label="历史调整原因" class-name="uwideaContent" align="center"></el-table-column>
+      <el-table-column prop="contno" label="保单号" align="center"></el-table-column>
+      <el-table-column prop="modifydate" label="操作日期" align="center"></el-table-column>
+      <el-table-column prop="operator" label="操作人员" align="center"></el-table-column>
+    </el-table>
+    <div style="padding:7px 0;background:#fff">
+      <el-pagination
+        background
+        small
+        @size-change="handleSizeChange4"
+        @current-change="handleCurrentChange4"
+        :page-size="pagesize4"
+        layout="prev, pager, next,jumper"
+        :total="policyCalculateClaimQueryData.length"
+      ></el-pagination>
+    </div>
+    <div style="text-align:right;background:#fff;padding:20px 20px 17px 20px;">
+      <el-button type="primary" size="small" round @click="goback">返回</el-button>
+    </div>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request";
+import { getCodeType } from "../../utils/service";
+export default {
+  data() {
+    return {
+      activeName: "first",
+      activeName1: "first",
+      style1: {
+        margin: "0 0 0 15px"
+      },
+      style2: {
+        margin: "0 0 0 15px"
+      },
+      isbox: true,
+      isbox1: true,
+      isClick: false,
+      pagesize: 10,
+      currpage: 1,
+      pagesize1: 10,
+      currpage1: 1,
+      pagesize4: 10,
+      currpage4: 1,
+      policycontdeal: [], // 外层
+      riskcontdeal: [], // 里层
+      policyNoClaimQueryData: [], // 未涉及查询
+      policyClaimQueryData: [], // 涉及查询
+      policyTerminateClaimQueryData: [], // 保单清算结果
+      policyCalculateClaimQueryData: [], // 历史调整原因
+      // =======================
+      templateRadio: "",
+      contractArr: [],
+      axiosList: [],
+      labelPosition: "left",
+      form: {
+        beforePay: "",
+        afterPay: "",
+        payResaon: "",
+        hosPayResaon: ""
+      },
+      value: "",
+      checked: [],
+      row: {},
+      isFirst: "", // 是否首次进入自动处理
+      checkflagData: [], // 默认勾选的数组
+      riskcontdeal: [],
+      policycontdeal: []
+    };
+  },
+  created() {
+    this.policyTerminateClaimQuery(); // 保单清算结果
+    this.policyNoClaimQuery(); // 未涉及
+    this.policyClaimQuery(); // 涉及
+    this.policyCalculateClaimQuery(); // 历史调整原因
+  },
+  mounted() {
+    this.policycontdeal = getCodeType("policycontdeal"); // 合同处理枚举值
+    this.riskcontdeal = getCodeType("riskcontdeal"); // 合同处理枚举值
+    console.log("aa", this.policycontdeal);
+    console.log("bb", this.riskcontdeal);
+  },
+  methods: {
+    // 调整原因标签切换
+    handleClick(tab, event) {
+      this.isbox = true;
+      if (tab.index === "0") {
+        this.style1 = "margin: 0 0 0 15px";
+      }
+      if (tab.index === "1") {
+        this.style1 = "margin: 0 0 0 141px";
+      }
+    },
+    handleClick1(tab, event) {
+      this.isbox1 = true;
+      if (tab.index === "0") {
+        this.style2 = "margin: 0 0 0 15px";
+      }
+      if (tab.index === "1") {
+        this.style2 = "margin: 0 0 0 141px";
+      }
+    },
+    // 返回上一页
+    goback() {
+      this.$router.go(-1);
+    },
+    // 赔案未涉及合同信息查询
+    policyNoClaimQuery() {
+      post(service.policyNoClaimQuery, {
+        bodys: {
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+          customerno: JSON.parse(this.$route.params.dataOfTable).customerno
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.policyNoClaimQueryData = res.data.bodys;
+          this.policyNoClaimQueryData.forEach(item => {
+            this.policycontdeal.forEach(key => {
+              if (item.contdeal == key.code) {
+                item.contdeal = key.codename;
+              }
+            });
+          });
+          this.policyNoClaimQueryData.forEach(items => {
+            items.lmRiskInfoList.forEach(keys => {
+              this.riskcontdeal.forEach(key => {
+                if (keys.contdeal == key.code) {
+                  keys.contdeal = key.codename;
+                }
+              });
+            });
+          });
+        }
+      });
+    },
+    // 赔案涉及合同信息查询
+    policyClaimQuery() {
+      post(service.policyClaimQuery, {
+        bodys: {
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+          customerno: JSON.parse(this.$route.params.dataOfTable).customerno
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.policyClaimQueryData = res.data.bodys;
+          this.policyClaimQueryData.forEach(item => {
+            this.policycontdeal.forEach(key => {
+              if (item.contdeal == key.code) {
+                item.contdeal = key.codename;
+              }
+            });
+          });
+          this.policyClaimQueryData.forEach(items => {
+            items.lmRiskInfoList.forEach(keys => {
+              this.riskcontdeal.forEach(key => {
+                if (keys.contdeal == key.code) {
+                  keys.contdeal = key.codename;
+                }
+              });
+            });
+          });
+        }
+      });
+    },
+    // 保单清算结果
+    policyTerminateClaimQuery() {
+      post(service.policyTerminateClaimQuery, {
+        bodys: {
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+          customerno: JSON.parse(this.$route.params.dataOfTable).customerno
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.policyTerminateClaimQueryData = res.data.bodys;
+            this.policyTerminateClaimQueryData.forEach(item => {
+              if (item.checkflag == "0") {
+                this.checkflagData.push(item);
+              }
+            });
+          console.log("DDD", this.checkflagData);
+        }
+      });
+    },
+    // 历史调整原因
+    policyCalculateClaimQuery() {
+      post(service.policyCalculateClaimQuery, {
+        bodys: {
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+          customerno: JSON.parse(this.$route.params.dataOfTable).customerno
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.policyCalculateClaimQueryData = res.data.bodys;
+        }
+      });
+    },
+    // ==========================================
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currpage - 1) * 10;
+    },
+    handleSizeChange1(val) {
+      this.pagesize1 = val;
+    },
+    handleCurrentChange1(val) {
+      this.currpage1 = val;
+    },
+    indexMethod1(index) {
+      return index + 1 + (this.currpage1 - 1) * 10;
+    },
+    handleSizeChange4(val) {
+      this.pagesize4 = val;
+    },
+    handleCurrentChange4(val) {
+      this.currpage4 = val;
+    },
+    indexMethod4(index) {
+      return index + 1 + (this.currpage4 - 1) * 10;
+    }
+  }
+};
+</script>
+<style scoped lang="less">
+/deep/.uwideaContent .cell {
+  white-space: nowrap;
+}
+/deep/ .el-table__expanded-cell {
+  padding: 0 !important;
+  .itemForm {
+    padding: 0 15px !important;
+  }
+}
+// 隐藏全选框
+/deep/.el-table__header-wrapper .el-checkbox {
+  display: none;
+}
+.sonTable {
+  /deep/colgroup col:last-child {
+    width: auto !important;
+  }
+  /deep/tr th:last-child {
+    width: auto !important;
+  }
+}
+/deep/.el-table__expanded-cell {
+  padding: 10px;
+}
+.reasons {
+  padding: 20px 0px;
+}
+.reasonItem {
+  width: 50%;
+}
+.reasonBtn {
+  margin-left: 40px;
+}
+.contractProcess {
+  .el-form {
+    background: #fff;
+    padding: 10px 20px 0;
+    .colItem {
+      height: 100%;
+    }
+  }
+}
+.contractProcess {
+  margin: 20px;
+  .work_queue {
+    position: relative;
+    //   img{
+    //      position: relative;
+    //   }
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      font-size: 16px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .block {
+    height: 80px;
+    padding-top: 27px;
+    box-sizing: border-box;
+  }
+}
+// ------tab选项卡--------
+/deep/.el-tabs__active-bar {
+  border: none;
+  background: transparent;
+}
+/deep/ .el-tabs__item {
+  background: #fff;
+  font-size: 16px;
+  padding: 0;
+  text-align: center;
+  width: 120px;
+  border-right: 1px solid #f1f1f1;
+}
+/deep/ .el-tabs__item:hover {
+  color: #000;
+}
+/deep/ .el-tabs__item.is-active {
+  background-color: #0673ff;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  color: #fff;
+}
+.box {
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #0673ff;
+  position: absolute;
+  z-index: 999;
+}
+/deep/ .el-tabs__header {
+  margin: 0;
+}
+// ------tab选项卡End--------
+</style>

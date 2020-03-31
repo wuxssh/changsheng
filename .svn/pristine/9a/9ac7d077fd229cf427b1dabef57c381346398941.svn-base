@@ -1,0 +1,262 @@
+<template>
+  <div class="productPayForm">
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          统计信息
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form
+          ref="listForm"
+          :model="listForm"
+          v-model="labelPosition"
+          label-width="34%"
+          class="demo-ruleForm"
+          :rules="rules"
+        >
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="险种" prop="filingAgency">
+                  <el-select
+                    multiple
+                    collapse-tags
+                    v-model="listForm.filingAgency"
+                    clearable
+                    placeholder="请选择"
+                  >
+                    <el-option
+                      v-for="(item,index) in lists"
+                      :key="index"
+                      :label="item.riskName"
+                      :value="item.kindCode"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="统计起期" prop="validstartdate">
+                  <el-date-picker
+                    v-model="listForm.validstartdate"
+                    type="date"
+                    placeholder="选择日期"
+                    value-format="yyyy-MM-dd"
+                  ></el-date-picker>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="统计止期" prop="validenddate">
+                  <el-date-picker
+                    v-model="listForm.validenddate"
+                    type="date"
+                    placeholder="选择日期"
+                    value-format="yyyy-MM-dd"
+                  ></el-date-picker>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+
+          <el-row style="text-align:right;padding-right:30px;">
+            <el-button type="primary" round @click="generateRiskPayReportForm('listForm')">打印个险产品赔付率</el-button>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+import { getTime } from "../../utils/common.js";
+// import { getCodeArr } from "../../utils/service";
+export default {
+  name: "productPayForm",
+  data() {
+    return {
+      agency: true,
+      listForm: {
+        filingAgency: [],
+        validenddate: "",
+        validstartdate: ""
+      },
+      activeName: ["1"],
+      labelPosition: "right",
+      agencyList: [],
+      lists: [],
+      rules: {
+        validstartdate: [
+          {
+            required: true,
+            message: "请选择统计起期",
+            trigger: "blur"
+          }
+        ],
+        validenddate: [
+          {
+            required: true,
+            message: "请选择统计止期",
+            trigger: "blur"
+          }
+        ]
+      }
+    };
+  },
+  inject: ["reload"],
+  created() {
+    // this.getCodeList();
+    this.queryRiskCode();
+  },
+  mounted() {},
+  methods: {
+    // getCodeList: function() {
+    //   post(service.mngComQuery, {
+    //     bodys: {
+    //       comCode: localStorage.getItem("comCode")
+    //     }
+    //   }).then(res => {
+    //     if (res.data.header.code === "200") {
+    //       this.agencyList = res.data.bodys;
+    //       // this.comGrade=this.agencyList[i].comGrade
+    //       if(this.agencyList.length>0){
+    //         this.agency=false
+    //       }else{
+    //         this.agency=true
+    //       }
+    //     }
+    //   });
+    // },
+    queryRiskCode() {
+      post(service.queryRiskCode, {}).then(res => {
+        this.lists = res.data.bodys;
+      });
+    },
+    generateRiskPayReportForm(formName) {
+      this.$refs[formName].validate(valid => {
+        if (!valid) {
+          return false;
+        } else {
+          if (
+            (new Date(this.listForm.validenddate).getTime() -
+              new Date(this.listForm.validstartdate).getTime()) /
+              1000 <
+            0
+          ) {
+            this.$message.error("统计起期不能大于统计止期！");
+            return;
+          }
+          post(service.generateRiskPayReportForm, {
+            bodys: {
+              riskCode: this.listForm.filingAgency.toString(),
+              startDate: this.listForm.validstartdate,
+              endDate: this.listForm.validenddate
+            }
+          }).then(res => {
+            if(res.data.bodys){
+              window.open(res.data.bodys)
+            }else{
+              this.$message.error(res.data.headers.message)
+            }
+          });
+        }
+      });
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.productPayForm {
+  margin: 20px;
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 20px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+  }
+}
+</style>
+<style lang="less">
+.productPayForm {
+  .el-row {
+    // padding-top: 20px;
+    &:first-child {
+      padding-top: 20px;
+    }
+    &:last-child {
+      padding-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+}
+.productPayForm {
+  .el-input {
+    width: 85% !important;
+  }
+  .date_style {
+    .el-input {
+      width: 46% !important;
+    }
+  }
+
+  .el-select {
+    width: 85% !important;
+    .el-input {
+      width: 100% !important;
+    }
+  }
+  .el-collapse-item__arrow {
+    display: none;
+  }
+  .el-collapse-item__header {
+    background-color: #0673ff;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 10px 10px 0 0;
+    padding: 0 15px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+  }
+  .el-collapse-item__content {
+    padding-bottom: 17px;
+  }
+  .el-table--striped .el-table__body tr.el-table__row--striped.current-row td,
+  .el-table__body tr.current-row > td,
+  .el-table__body tr.hover-row.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped > td,
+  .el-table__body tr.hover-row > td {
+    background-color: #409eff;
+  }
+}
+</style>

@@ -1,0 +1,962 @@
+<template>
+  <div class="userManage">
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          理赔用户查询
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form
+          ref="listForm"
+          :model="listForm"
+          v-model="labelPosition"
+          label-width="34%"
+          class="demo-ruleForm"
+        >
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="用户编码" prop="usercode">
+                  <el-input
+                    v-model="listForm.usercode"
+                    maxlength="100"
+                    @keyup.enter.native="initList"
+                  ></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="用户姓名" prop="username">
+                  <el-input
+                    v-model="listForm.username"
+                    maxlength="100"
+                    @keyup.enter.native="initList"
+                  ></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="管理机构" prop="comcode">
+                  <!-- <el-date-picker v-model="listForm.birthday" type="date" placeholder="选择日期" value-format="yyyy-MM-dd"></el-date-picker> -->
+
+                  <el-select
+                    v-model="listForm.comcode"
+                    clearable
+                    placeholder="请选择"
+                    filterable
+                    v-el-select-loadmore="loadmoreCom"
+                    :filter-method="filterCom"
+                    @change="comCode()"
+                    @focus="comCode()"
+                  >
+                    <el-option
+                      v-for="item in manageAgency"
+                      :key="item.comcode"
+                      :label="item.name"
+                      :value="item.comcode"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="角色权限" prop="rolecode">
+                  <el-select v-model="listForm.rolecode" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in roleList"
+                      :key="item.rolecode"
+                      :label="item.rolelevel"
+                      :value="item.rolecode"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="用户状态" prop="userstate">
+                  <el-select v-model="listForm.userstate" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in UserStateList"
+                      :key="item.value"
+                      :label="item.name"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+
+          <el-row style="text-align:right;padding-right:30px;">
+            <el-button type="primary" round @click="initList">查 询</el-button>
+            <el-button type="primary" round @click="resetForm('listForm')">重 填</el-button>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+
+    <!-- <img src="../../assets/images/report/inquire@1x.png" alt style="margin:30px 0;" /> -->
+
+    <div class="work_queue">
+      <!-- <img src="../../assets/images/report/tab_btn@1x.png" alt=""> -->
+      <span>理赔用户列表</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        :data="tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)"
+        style="width: 100%"
+        highlight-current-row
+        @row-click="toDetails"
+      >
+        <el-table-column label="序号" type="index" :index="indexMethod" align="center" width="55"></el-table-column>
+        <el-table-column prop="usercode" label="用户编码" align="center" width="130"></el-table-column>
+        <el-table-column prop="username" label="用户姓名" align="center" width="130"></el-table-column>
+        <el-table-column prop="comcodeandname" label="管理机构" align="center" width="150"></el-table-column>
+        <el-table-column prop="rolelevel" label="角色权限" align="center" width="130"></el-table-column>
+        <el-table-column prop="upusername" label="上级用户" align="center" width="150"></el-table-column>
+        <!-- <el-table-column prop="reportflag" label="报案权限" align="center">
+          <template slot-scope="scope">
+            <span>{{codeToname(scope.row.reportflag)}}</span>
+          </template>
+        </el-table-column>-->
+        <el-table-column prop="registerflag" label="立案权限" align="center">
+          <template slot-scope="scope">
+            <span>{{codeToname(scope.row.registerflag)}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="noteuwflag" label="照会审批权限" align="center">
+          <template slot-scope="scope">
+            <span>{{codeToname(scope.row.noteuwflag)}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="inquwflag" label="调查审批权限" align="center">
+          <template slot-scope="scope">
+            <span>{{codeToname(scope.row.inquwflag)}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="taskassignflag" label="任务分配权限" align="center">
+          <template slot-scope="scope">
+            <span>{{codeToname(scope.row.taskassignflag)}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="checkflag" label="案件审核权限" align="center">
+          <template slot-scope="scope">
+            <span>{{codeToname(scope.row.checkflag)}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="uwflag" label="案件审批权限" align="center">
+          <template slot-scope="scope">
+            <span>{{codeToname(scope.row.uwflag)}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="exemptflag" label="豁免权限" align="center">
+          <template slot-scope="scope">
+            <span>{{codeToname(scope.row.exemptflag)}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="userstate" label="用户状态" align="center">
+          <template slot-scope="scope">
+            <span>{{codeToname2(scope.row.userstate)}}</span>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="block">
+        <el-pagination
+          @size-change="currentPage1"
+          @current-change="currentChange"
+          :current-page.sync="currentPage1"
+          :page-size="10"
+          background
+          layout="prev, pager, next, jumper"
+          :total="total"
+        ></el-pagination>
+      </div>
+    </div>
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="2">
+        <template slot="title">
+          理赔用户信息管理
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form
+          ref="listForm2"
+          :model="listForm2"
+          v-model="labelPosition"
+          label-width="34%"
+          :rules="rules"
+        >
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="用户编码" prop="usercode">
+                  <el-input v-model="listForm2.usercode" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="用户姓名" prop="username">
+                  <el-input v-model="listForm2.username" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="域账号" prop="regioncode">
+                  <el-input v-model="listForm2.regioncode" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="管理机构" prop="comcode">
+                  <el-select
+                    v-model="listForm2.comcode"
+                    clearable
+                    placeholder="请选择"
+                    filterable
+                    v-el-select-loadmore="loadmoreCom2"
+                    :filter-method="filterCom2"
+                    @focus="comCode2()"
+                    @change="comCode2()"
+                  >
+                    <el-option
+                      v-for="item in manageAgency2"
+                      :key="item.comcode"
+                      :label="item.name"
+                      :value="item.comcode"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="上级用户" prop="upusercode">
+                  <!-- <el-input v-model="listForm2.upusercode" maxlength="100"></el-input> -->
+                  <el-select
+                    v-model="listForm2.upusercode"
+                    clearable
+                    placeholder="请选择"
+                    filterable
+                    v-el-select-loadmore="loadmoreUp"
+                    :filter-method="filterUp"
+                    @focus="getUpCom()"
+                    @change="getUpCom()"
+                  >
+                    <el-option
+                      v-for="item in upusercodeList"
+                      :key="item.usercode"
+                      :label="item.contact"
+                      :value="item.usercode"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="用户状态" prop="userstate">
+                  <el-select v-model="listForm2.userstate" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in UserStateList"
+                      :key="item.value"
+                      :label="item.name"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="角色权限" prop="rolecode">
+                  <el-select v-model="listForm2.rolecode" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in roleList"
+                      :key="item.rolecode"
+                      :label="item.rolelevel"
+                      :value="item.rolecode"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="有效开始日期" prop="validstartdate">
+                  <el-date-picker
+                    v-model="listForm2.validstartdate"
+                    type="date"
+                    placeholder="选择日期"
+                    value-format="yyyy-MM-dd"
+                  ></el-date-picker>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="有效结束日期" prop="validenddate">
+                  <el-date-picker
+                    v-model="listForm2.validenddate"
+                    type="date"
+                    placeholder="选择日期"
+                    value-format="yyyy-MM-dd"
+                  ></el-date-picker>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="电话" prop="phone" :rules="!listForm2.phone?[{}]:rules.phone">
+                  <el-input v-model="listForm2.phone" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="工作邮箱" prop="email">
+                  <el-input v-model="listForm2.email" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row style="text-align:right;padding-right:30px;">
+            <el-button type="primary" round @click="add('listForm2')">增 加</el-button>
+            <el-button type="primary" round @click="update('listForm2')" :disabled="updata">修 改</el-button>
+            <el-button type="primary" round @click="resetMod" :disabled="updata">重置密码</el-button>
+            <el-button type="primary" round @click="empty('listForm2')">重 置</el-button>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+// import { getCodeArr } from "../../utils/service";
+export default {
+  name: "ListQuery",
+  directives: {
+    "el-select-loadmore": {
+      bind(el, binding) {
+        const elss = el.querySelector(
+          ".el-select-dropdown .el-select-dropdown__wrap"
+        );
+        elss.addEventListener("scroll", function() {
+          const condition =
+            this.scrollHeight - this.scrollTop <= this.clientHeight;
+          if (condition) {
+            binding.value();
+          }
+        });
+      }
+    }
+  },
+  data() {
+    var isMobileNumber = (rule, value, callback) => {
+      if (!value) {
+        return new Error("请输入电话");
+      } else {
+        var reg = /^\d+$|^\d+[.]?\d+$/;
+        if (!reg.test(value)) {
+          callback(new Error("电话号码不合法!"));
+        } else {
+          if (value.substr(0, 1) == 1) {
+            debugger;
+            if (value.length != 11) {
+              callback(new Error("电话号码不合法!"));
+            } else {
+              callback();
+            }
+          } else {
+            callback();
+          }
+        }
+      }
+    };
+    // var isMobileNumber = (rule, value, callback) => {
+    //   if (value) {
+    //       var reg = /^\d+$|^\d+[.]?\d+$/;
+    //     if (!reg.test(value)) {
+    //       callback(new Error("电话号码不合法!"));
+    //     } else {
+    //       if (value.substr(0, 1) == 1) {
+    //         debugger;
+    //         if (value.length != 11) {
+    //           callback(new Error("电话号码不合法!"));
+    //         } else {
+    //           callback();
+    //         }
+    //       } else {
+    //         callback();
+    //       }
+    //     }
+    //   }
+    // };
+    return {
+      updata: true,
+      listForm: {
+        usercode: "",
+        username: "",
+        comcode: "",
+        rolecode: "",
+        userstate: ""
+      },
+      upusercodeList: [],
+      listForm2: {
+        usercode: "",
+        username: "",
+        regioncode: "",
+        comcode: "",
+        upusercode: "",
+        userstate: "",
+        rolecode: "",
+        validstartdate: "",
+        validenddate: "",
+        phone: "",
+        email: ""
+      },
+      stateList: [
+        {
+          value: "0",
+          name: "无"
+        },
+        {
+          value: "1",
+          name: "有"
+        }
+      ],
+      UserStateList: [
+        {
+          value: "0",
+          name: "有效"
+        },
+        {
+          value: "1",
+          name: "无效"
+        }
+      ],
+      manageAgency: [],
+      manageAgency2: [],
+      roleList: [],
+      agencyList: [],
+      activeName: ["1", "2"],
+      labelPosition: "right",
+      currentPage: 1,
+      currentPage1: 1,
+      tableData: [],
+      pagesize: 10,
+      currpage: 1,
+      total: 0,
+      currentRow: "",
+      resetModStr: "",
+      comCodeData: {
+        pagestart: 0,
+        rows: 10,
+        comcode: ""
+      },
+      comCodeData2: {
+        pagestart: 0,
+        rows: 10,
+        comcode: ""
+      },
+      upData: {
+        pagestart: 0,
+        rows: 10,
+        upusercode: ""
+      },
+      rules: {
+        usercode: [
+          {
+            required: true,
+            message: "请输入用户编码",
+            trigger: ["blur", "change"]
+          }
+        ],
+        comcode: [
+          { required: true, message: "请选择管理机构", trigger: "change" }
+        ],
+        phone: [
+          {
+            message: "请输入电话号码",
+            trigger: ["blur", "change"]
+          },
+          { validator: isMobileNumber, trigger: "blur" }
+        ],
+        username: [
+          {
+            required: true,
+            message: "请输入用户姓名",
+            trigger: ["blur", "change"]
+          }
+        ],
+        upusercode: [
+          {
+            required: true,
+            message: "请输入上级用户",
+            trigger: ["blur", "change"]
+          }
+        ],
+        userstate: [
+          { required: true, message: "请选择用户状态", trigger: "change" }
+        ],
+        rolecode: [
+          { required: true, message: "请选择角色权限", trigger: "change" }
+        ],
+        email: [
+          {
+            required: true,
+            message: "请输入工作邮箱",
+            trigger: ["blur", "change"]
+          }
+        ]
+      },
+      listFormUp: {}
+    };
+  },
+  inject: ["reload"],
+  created() {
+    this.getRole();
+    this.comCode();
+    this.comCode2();
+    this.getUpCom();
+  },
+  mounted() {},
+  methods: {
+    getRole() {
+      post(service.roleQuery, {
+        bodys: {}
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.roleList = res.data.bodys;
+        }
+      });
+    },
+    comCode() {
+      this.comCodeData.pagestart = 0;
+      this.comCodeData.rows = 10;
+      this.comCodeData.comcode = "";
+      // this.comCodeData.comcode = this.listForm.comcode;
+      post(service.comGradeQuery, {
+        bodys: this.comCodeData
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.manageAgency = res.data.bodys;
+        }
+      });
+    },
+    comCode2() {
+      this.comCodeData2.pagestart = 0;
+      this.comCodeData2.rows = 10;
+      this.comCodeData2.comcode = "";
+      post(service.comGradeQuery, {
+        bodys: this.comCodeData2
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.manageAgency2 = res.data.bodys;
+        }
+      });
+    },
+    filterCom(val) {
+      if (val) {
+      this.comCodeData.pagestart=0;
+        this.comCodeData.comcode = val;
+        post(service.comGradeQuery, {
+          bodys: this.comCodeData
+        }).then(res => {
+          if (res.data.header.code === "200") {
+            this.manageAgency = res.data.bodys;
+          }
+        });
+      }
+    },
+    filterCom2(val) {
+      if (val) {
+      this.comCodeData2.pagestart=0;
+        this.comCodeData2.comcode = val;
+        post(service.comGradeQuery, {
+          bodys: this.comCodeData2
+        }).then(res => {
+          if (res.data.header.code === "200") {
+            this.manageAgency2 = res.data.bodys;
+          }
+        });
+      }
+    },
+    filterUp(val) {
+      if (val) {
+        this.upData.pagestart = 0;
+        this.upData.rows = 10;
+        this.upData.upusercode = val;
+        post(service.upUserList, {
+          bodys: this.upData
+        }).then(res => {
+          if (res.data.headers.code === "200") {
+            this.upusercodeList = res.data.bodys.rows;
+          }
+        });
+      }
+    },
+    getUpCom() {
+      this.upData.pagestart = 0;
+      this.upData.rows = 10;
+      this.upData.upusercode = "";
+      post(service.upUserList, {
+        bodys: this.upData
+      }).then(res => {
+        if (res.data.headers.code === "200" && res.data.headers.success) {
+          this.upusercodeList = res.data.bodys.rows;
+        }
+      });
+    },
+    loadmoreCom() {
+      this.comCodeData.pagestart += 10;
+      post(service.comGradeQuery, {
+        bodys: this.comCodeData
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.manageAgency = [...this.manageAgency, ...res.data.bodys];
+        }
+      });
+    },
+    loadmoreCom2() {
+      this.comCodeData2.pagestart += 10;
+      post(service.comGradeQuery, {
+        bodys: this.comCodeData2
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.manageAgency2 = [...this.manageAgency2, ...res.data.bodys];
+        }
+      });
+    },
+    loadmoreUp() {
+      this.upData.pagestart += 10;
+      post(service.upUserList, {
+        bodys: this.upData
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.upusercodeList = [
+            ...this.upusercodeList,
+            ...res.data.bodys.rows
+          ];
+        }
+      });
+    },
+    // gobanck() {
+    //   this.$router.go(-1);
+    // },
+    codeToname: function(obj) {
+      var a = null;
+      this.stateList.forEach(element => {
+        if (element.value == obj) {
+          a = element.name;
+        }
+      });
+      return a;
+    },
+    codeToname2: function(obj) {
+      var a = null;
+      this.UserStateList.forEach(element => {
+        if (element.value == obj) {
+          a = element.name;
+        }
+      });
+      return a;
+    },
+    // 理赔用户列表
+    initList() {
+      this.currentPage = 1;
+      this.currentPage1 = 1;
+      this.$forceUpdate();
+      post(service.userList, {
+        bodys: this.listForm
+      })
+        .then(result => {
+          if (result.data.headers.code === "200") {
+            this.tableData = result.data.bodys.rows;
+            this.total = result.data.bodys.total;
+          }
+        })
+        .catch(error => {
+          console.log("请求失败");
+        });
+    },
+
+    resetForm(formName) {
+      this.$refs[formName].resetFields();
+    },
+
+    toDetails(row) {
+      this.updata = false;
+      this.resetModStr = row.usercode;
+      sessionStorage.setItem("row", JSON.stringify(row));
+      // this.listForm2 = JSON.parse("row");
+      post(service.userQuery, {
+        bodys: {
+          usercode: this.resetModStr
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.listForm2 = res.data.bodys[0];
+          this.comCodeData2.pagestart = 0;
+          this.comCodeData2.comcode = this.listForm2.comcode;
+          post(service.comGradeQuery, {
+            bodys: this.comCodeData2
+          }).then(res => {
+            if (res.data.header.code === "200") {
+              this.manageAgency2 = res.data.bodys;
+            }
+          });
+          this.upData.upusercode = this.listForm2.upusercode;
+          this.upData.pagestart=0;
+          post(service.upUserList, {
+            bodys: this.upData
+          }).then(res => {
+            if (res.data.headers.code === "200") {
+              this.upusercodeList = res.data.bodys.rows;
+            }
+          });
+        }
+      });
+    },
+
+    add(formName) {
+      if (this.listForm2.validenddate && this.listForm2.validstartdate) {
+        if (this.listForm2.validenddate < this.listForm2.validstartdate) {
+          this.$message.error("开始日期不得大于结束日期！");
+          return;
+        }
+      }
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          post(service.insertUser, {
+            bodys: this.listForm2
+          }).then(res => {
+            if (res.data.header.code === "200" && res.data.header.success) {
+              this.$message.success(res.data.header.message);
+              this.reload();
+            } else {
+              this.$message.error(res.data.header.message);
+            }
+          });
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    update(formName) {
+      if (this.listForm2.validenddate && this.listForm2.validstartdate) {
+        if (this.listForm2.validenddate < this.listForm2.validstartdate) {
+          this.$message.error("开始日期不得大于结束日期！");
+          return;
+        }
+      }
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          post(service.updateUser, {
+            bodys: {
+              usercode: this.listForm2.usercode,
+              username: this.listForm2.username,
+              regioncode: this.listForm2.regioncode,
+              comcode: this.listForm2.comcode,
+              upusercode: this.listForm2.upusercode,
+              userstate: this.listForm2.userstate,
+              rolecode: this.listForm2.rolecode,
+              validstartdate: this.listForm2.validstartdate,
+              validenddate: this.listForm2.validenddate,
+              phone: this.listForm2.phone,
+              email: this.listForm2.email,
+              oldusercode: this.resetModStr
+            }
+          }).then(res => {
+            if (res.data.header.code === "200" && res.data.header.success) {
+              this.$message.success(res.data.header.message);
+              this.reload();
+            } else {
+              this.$message.error(res.data.header.message);
+            }
+          });
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    empty(formName) {
+      if (!this.updata) {
+        this.listForm2 = JSON.parse(sessionStorage.getItem("row"));
+      } else {
+        this.$refs[formName].resetFields();
+      }
+    },
+    resetMod() {
+      post(service.repw, {
+        bodys: {
+          usercode: this.resetModStr
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200" && res.data.headers.success) {
+          this.$message.success(res.data.headers.message);
+        } else {
+          this.$message.error(res.data.headers.message);
+        }
+      });
+    },
+    currentChange: function(page) {
+      this.currentPage = page;
+      // this.tableList();
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currentPage - 1) * 10;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.userManage {
+  margin: 10px;
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 20px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+  }
+  .work_queue {
+    position: relative;
+    margin-top: 21px;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .work_table {
+    margin-bottom: 21px;
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 20px;
+    box-sizing: border-box;
+  }
+  .img_style {
+    width: 27px;
+    height: 22px;
+  }
+}
+</style>
+<style lang="less">
+.userManage {
+  .el-row {
+    // padding-top: 20px;
+    &:first-child {
+      padding-top: 20px;
+    }
+    &:last-child {
+      padding-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+}
+.userManage {
+  .el-input {
+    width: 85% !important;
+  }
+  .date_style {
+    .el-input {
+      width: 46% !important;
+    }
+  }
+
+  .el-select {
+    width: 85% !important;
+    .el-input {
+      width: 100% !important;
+    }
+  }
+  .el-collapse-item__arrow {
+    display: none;
+  }
+  .el-collapse-item__header {
+    background-color: #0673ff;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 10px 10px 0 0;
+    padding: 0 15px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+  }
+  .el-collapse-item__content {
+    padding-bottom: 17px;
+  }
+  .el-table--striped .el-table__body tr.el-table__row--striped.current-row td,
+  .el-table__body tr.current-row > td,
+  .el-table__body tr.hover-row.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped > td,
+  .el-table__body tr.hover-row > td {
+    background-color: #409eff;
+  }
+}
+</style>

@@ -1,0 +1,377 @@
+<template>
+  <div class="diplomatic">
+    <el-tabs v-model="activeName" @tab-click="handleClick" style="margin-bottom:20px;">
+      <div :style="style1" :class="isbox ? 'box' : ''"></div>
+      <el-tab-pane name="first" v-if="getPhotoState1()">
+        <span slot="label">待审批({{audit.length}})</span>
+        <el-table
+          style="width: 100%"
+          :data="audit.slice((currpage - 1) * pagesize, currpage * pagesize)"
+          @row-dblclick="handle"
+        >
+          <el-table-column label="序号" align="center" type="index" width="50" :index="indexMethod"></el-table-column>
+          <el-table-column prop="contno" align="center" label="保单号"></el-table-column>
+          <el-table-column prop="caseno" align="center" label="理赔号"></el-table-column>
+          <el-table-column prop="insurename" align="center" label="被保险人姓名"></el-table-column>
+          <el-table-column prop="receivename" align="center" label="接收对象"></el-table-column>
+          <el-table-column prop="noticekindname" align="center" label="照会种类"></el-table-column>
+          <!-- <el-table-column prop="idtype" label="照会类型"></el-table-column> -->
+          <el-table-column prop="noticetypename" align="center" label="照会类型"></el-table-column>
+          <el-table-column prop="signdate" align="center" label="下发日期"></el-table-column>
+        </el-table>
+        <div style="margin-top:10px;">
+          <el-pagination
+            background
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :page-size="pagesize"
+            layout="prev, pager, next,jumper"
+            :total="audit.length"
+          ></el-pagination>
+        </div>
+      </el-tab-pane>
+      <el-tab-pane name="second" v-if="getPhotoState()">
+        <span slot="label">待回复({{reply.length}})</span>
+        <el-table
+          style="width: 100%"
+          :data="reply.slice((currpage1 - 1) * pagesize1, currpage1 * pagesize1)"
+          @row-dblclick="handle1"
+        >
+          <el-table-column label="序号" align="center" type="index" width="50" :index="indexMethod1"></el-table-column>
+          <el-table-column prop="contno" align="center" label="保单号"></el-table-column>
+          <el-table-column prop="caseno" align="center" label="理赔号"></el-table-column>
+          <el-table-column prop="insurename" align="center" label="被保险人姓名"></el-table-column>
+          <el-table-column prop="receivename" align="center" label="接收对象"></el-table-column>
+          <el-table-column prop="noticekindname" align="center" label="照会种类"></el-table-column>
+          <el-table-column prop="noticetypename" align="center" label="照会类型"></el-table-column>
+          <el-table-column prop="signdate" align="center" label="下发日期"></el-table-column>
+        </el-table>
+        <div style="margin-top:10px;">
+          <el-pagination
+            background
+            @size-change="handleSizeChange1"
+            @current-change="handleCurrentChange1"
+            :page-size="pagesize1"
+            layout="prev, pager, next,jumper"
+            :total="reply.length"
+          ></el-pagination>
+        </div>
+      </el-tab-pane>
+      <el-tab-pane name="third" v-if="getPhotoState1()">
+        <span slot="label">待回销({{sellback.length}})</span>
+        <el-table
+          style="width: 100%"
+          :data="sellback.slice((currpage2 - 1) * pagesize2, currpage2 * pagesize2)"
+          @row-dblclick="handle2"
+        >
+          <el-table-column label="序号" align="center" type="index" width="50" :index="indexMethod2"></el-table-column>
+          <el-table-column prop="contno" align="center" label="保单号"></el-table-column>
+          <el-table-column prop="caseno" align="center" label="理赔号"></el-table-column>
+          <el-table-column prop="receivename" align="center" label="被保险人姓名"></el-table-column>
+          <el-table-column prop="insurename" align="center" label="接收对象"></el-table-column>
+          <el-table-column prop="noticekindname" align="center" label="照会种类"></el-table-column>
+          <el-table-column prop="noticetypename" align="center" label="照会类型"></el-table-column>
+          <el-table-column prop="signdate" align="center" label="下发日期"></el-table-column>
+        </el-table>
+        <div style="margin-top:10px;">
+          <el-pagination
+            background
+            @size-change="handleSizeChange2"
+            @current-change="handleCurrentChange2"
+            :page-size="pagesize2"
+            layout="prev, pager, next,jumper"
+            :total="sellback.length"
+          ></el-pagination>
+        </div>
+      </el-tab-pane>
+    </el-tabs>
+
+    <!-- 提示框 -->
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+import { generateUUID, getDate, getTime } from "../../utils/common.js";
+export default {
+  data() {
+    return {
+      activeName: "first",
+      style1: {
+        margin: "0 0 0 15px"
+      },
+      isbox: true,
+      choseIndex: "02",
+      pagesize: 10,
+      currpage: 1,
+      pagesize1: 10,
+      currpage1: 1,
+      pagesize2: 10,
+      currpage2: 1,
+      audit: [],
+      reply: [], // 待回复
+      sellback: [] // 待回销
+    };
+  },
+  created() {
+    this.clmno = this.$route.query.clmno;
+    this.initData();
+    if (!this.getPhotoState1()) {
+      this.activeName = "second";
+    }
+  },
+  mounted() {
+  },
+
+  methods: {
+    handleClick(tab, event) {
+      this.isbox = true;
+      if (tab.index === "0") {
+        this.style1 = "margin: 0 0 0 15px";
+      }
+      if (tab.index === "1") {
+        this.style1 = "margin: 0 0 0 141px";
+      }
+      if (tab.index === "2") {
+        this.style1 = "margin: 0 0 0 270px";
+      }
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currpage - 1) * 10;
+    },
+    indexMethod1(index) {
+      return index + 1 + (this.currpage1 - 1) * 10;
+    },
+    indexMethod2(index) {
+      return index + 1 + (this.currpage2 - 1) * 10;
+    },
+    // 照会工作池查询
+    initData() {
+      post(service.noticeInfoWorkQuery, {
+        bodys: {
+          rgtno: this.clmno,
+          querytype: "02",
+          agentcode:localStorage.getItem("userCode"),
+          agentcom:localStorage.getItem("comCode")
+        }
+      })
+        .then(result => {
+          if (result.data.header.code == "200") {
+            this.audit = result.data.bodys.audit;
+            this.reply = result.data.bodys.reply;
+            this.sellback = result.data.bodys.sellback;
+          }
+        })
+        .catch();
+    },
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    },
+    handleSizeChange1(val) {
+      this.pagesize1 = val;
+    },
+    handleCurrentChange1(val) {
+      this.currpage1 = val;
+    },
+    handleSizeChange2(val) {
+      this.pagesize2 = val;
+    },
+    handleCurrentChange2(val) {
+      this.currpage2 = val;
+    },
+    // 选择某一条数据
+    handle(row, event, column) {
+      this.$router.push({
+        name: "diplomaticnoteDetail",
+        params: { dataOfTable: JSON.stringify(row) }
+      });
+    },
+    handle1(row, event, column) {
+      this.$router.push({
+        name: "diplomaticnoteDetail",
+        params: { dataOfTable: JSON.stringify(row) }
+      });
+    },
+    handle2(row, event, column) {
+      this.$router.push({
+        name: "diplomaticnoteDetail",
+        params: { dataOfTable: JSON.stringify(row) }
+      });
+    },
+    selectItem(key) {
+      this.choseIndex = key;
+      // this.initData();
+      if (key === "01") {
+      } else if (key === "02") {
+      } else if (key === "03") {
+      }
+    },
+    codeToname: function(obj, arr) {
+      var a = null;
+      arr.forEach(element => {
+        if (element.code === obj) {
+          a = element.name;
+        }
+      });
+      return a;
+    },
+    applyTask() {},
+    getPhotoState() {
+      if (localStorage.getItem("notesignflag") == "1") {
+        return true;
+      }
+    },
+    getPhotoState1() {
+      if (localStorage.getItem("noteuwflag") == "1") {
+        return true;
+      }
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.colorSet {
+  border-bottom: 1.5px solid #0673ff;
+  color: #0673ff;
+}
+.diplomatic {
+  .diplomatic-cla {
+    display: flex;
+
+    .diplomatic-cla-1 {
+      display: flex;
+      margin-left: 20px;
+      div {
+        height: 50px;
+        width: 100px;
+        align-items: center;
+        display: flex;
+        justify-content: center;
+        box-shadow: 0 0 2px #999999;
+      }
+    }
+  }
+
+  padding: 20px;
+
+  .el-row {
+    margin-top: 20px;
+    margin-bottom: 20px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .el-col {
+    border-radius: 4px;
+  }
+
+  .grid-content {
+    padding: 0 20px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    height: 100px;
+    background-color: #fff;
+    line-height: 100px;
+  }
+
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+
+  .text {
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+    font-weight: 400;
+    margin-left: 10px;
+    color: rgba(102, 102, 102, 1);
+    opacity: 1;
+  }
+
+  .year_text {
+    font-size: 60px;
+    font-family: DIN Alternate;
+    font-weight: bold;
+    color: rgba(246, 78, 111, 1);
+    text-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16);
+    opacity: 1;
+    float: right;
+  }
+
+  .work_queue {
+    position: relative;
+
+    //   img{
+    //      position: relative;
+    //   }
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 27px;
+    box-sizing: border-box;
+  }
+  // ------tab选项卡--------
+  /deep/.el-tabs__active-bar {
+    border: none;
+    background: transparent;
+  }
+  /deep/ .el-tabs__item {
+    background: #fff;
+    font-size: 16px;
+    padding: 0;
+    text-align: center;
+    width: 120px;
+    border-right: 1px solid #f1f1f1;
+  }
+  /deep/ .el-tabs__item:hover {
+    color: #000;
+  }
+  /deep/ .el-tabs__item.is-active {
+    background-color: #0673ff;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    color: #fff;
+  }
+  .box {
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #0673ff;
+    position: absolute;
+    z-index: 999;
+  }
+  /deep/ .el-tabs__header {
+    margin: 0;
+  }
+  // ------tab选项卡End--------
+}
+</style>

@@ -1,0 +1,223 @@
+<template>
+  <div class="workBench">
+    <el-form :data="queryList">
+      <el-row :gutter="20">
+        <el-col :span="6">
+          <div class="grid-content">
+            <img src="../../assets/images/home/year@1x.png" />
+            <span class="text">年度处理（件）</span>
+            <span class="year_text">{{queryList.yearnum}}</span>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="grid-content">
+            <img src="../../assets/images/home/month@1x.png" />
+            <span class="text">月度处理（件）</span>
+            <span class="year_text">{{queryList.monthnum}}</span>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="grid-content">
+            <img src="../../assets/images/home/hour@1x.png" />
+            <span class="text">年度时效（h）</span>
+            <span class="year_text">{{queryList.yeartime}}</span>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="grid-content">
+            <img src="../../assets/images/home/hours@1x.png" />
+            <span class="text">月度时效（h）</span>
+            <span class="year_text">{{queryList.monthtime}}</span>
+          </div>
+        </el-col>
+        <!-- <el-col :span="6">
+        <div class="grid-content">
+          <img
+            src="../../assets/images/home/hours@1x.png"
+            alt
+            style="display:inline-block;vertical-align: middle;"
+          />
+          <span class="text">本月平均时效（h）</span>
+          <span class="year_text">0</span>
+        </div>
+        </el-col>-->
+        <!-- <el-col :span="6">
+          <div class="grid-content">
+            <img src="../../assets/images/home/hours@1x.png" />
+            <span class="text">当月案件回退率</span>
+            <span class="year_text">{{queryList.backrant}}</span>
+          </div>
+        </el-col>-->
+      </el-row>
+    </el-form>
+
+    <!-- <el-row style="background:#fff;padding:16px 16px 0;margin-bottom:32px;">
+      <line-chart :chart-data="lineChartData" />
+    </el-row>-->
+    <el-row style="margin-bottom:32px;">
+      <sum-up :queryList="queryList" />
+    </el-row>
+    <public-task />
+  </div>
+</template>
+<script>
+import LineChart from "./../../components/charts/LineChart";
+import SumUp from "./../../components/summary/SumUp";
+import PublicTask from "./../../components/publicTask/PublicTask";
+import { post, service } from "../../utils/request.js";
+const lineChartData = {
+  newVisitis: {
+    expectedData: [100, 120, 161, 134, 105, 160, 165],
+    actualData: [120, 82, 91, 154, 162, 140, 145]
+  },
+  messages: {
+    expectedData: [200, 192, 120, 144, 160, 130, 140],
+    actualData: [180, 160, 151, 106, 145, 150, 130]
+  },
+  purchases: {
+    expectedData: [80, 100, 121, 104, 105, 90, 100],
+    actualData: [120, 90, 100, 138, 142, 130, 130]
+  },
+  shoppings: {
+    expectedData: [130, 140, 141, 142, 145, 150, 160],
+    actualData: [120, 82, 91, 154, 162, 140, 130]
+  }
+};
+export default {
+  data() {
+    return {
+      value: "",
+      value1: "",
+      lineChartData: lineChartData.newVisitis,
+      queryList: {},
+      primary: {}
+    };
+  },
+  created() {
+    this.workbenchQuery();
+    // this.getPrimery();
+  },
+  methods: {
+    // 工作台统计数据
+    workbenchQuery() {
+      post(service.workbenchQuery, {
+        bodys: {
+          operator: localStorage.getItem("userCode"),
+          mngcom: localStorage.getItem("comCode")
+        }
+      }).then(res => {
+        this.queryList = res.data.bodys;
+      });
+    },
+    // 工作台统计队列
+    workbenchList() {
+      post(service.workbenchList, {
+        bodys: {
+          operator: localStorage.getItem("userCode"),
+          mngcom: localStorage.getItem("comCode"),
+          startDate: "",
+          endDate: "",
+          activityid: "0000005015" //0000005035  0000005055
+        }
+      }).then(res => {});
+    },
+    // 工作台绿色通道
+    workbenchGreen() {
+      post(service.workbenchGreen, {
+        bodys: {}
+      }).then(res => {});
+    },
+    // 工作台公告信息
+    // announcedList() {
+    //   post(service.announcedList, {
+    //     bodys: {
+    //       operator: localStorage.getItem("userCode"),
+    //       mngcom: localStorage.getItem("comCode")
+    //     }
+    //   }).then(res => {
+    //     console.log("11",res)
+    //   });
+    // },
+    // 用户权限信息
+    getPrimery() {
+      post(service.getPrimery, {
+        bodys: {
+          operator: localStorage.getItem("userCode"),
+          mngcom: localStorage.getItem("comCode")
+        }
+      }).then(result => {
+        this.primary = result.data.bodys;
+        localStorage.setItem("registerflag", this.primary.registerflag); // 立案权限
+        localStorage.setItem("notesignflag", this.primary.notesignflag); // 下发照会权限
+        localStorage.setItem("noteuwflag", this.primary.noteuwflag); // 照会审批权限
+        localStorage.setItem("startinqflag", this.primary.startinqflag); // 提起调查权限
+        localStorage.setItem("inquwflag", this.primary.inquwflag); // 调查审批权限
+        localStorage.setItem("taskassignflag", this.primary.taskassignflag); // 任务分配权限
+        localStorage.setItem("startsecondflag", this.primary.startsecondflag); // 提起二核权限
+        localStorage.setItem("seconduwflag", this.primary.seconduwflag); // 二核审批权限
+        localStorage.setItem("secondreplayflag", this.primary.secondreplayflag); // 二核回复权限
+        localStorage.setItem("checkflag", this.primary.checkflag); // 案件审核权限
+        localStorage.setItem("uwflag", this.primary.uwflag); // 案件审批权限
+        localStorage.setItem("exemptflag", this.primary.exemptflag); // 豁免权限
+        localStorage.setItem("homepageflag", this.primary.homepageflag); // 首页权限
+      });
+    }
+  },
+  components: {
+    LineChart,
+    SumUp,
+    PublicTask
+  }
+};
+</script>
+<style lang="less" scoped>
+.workBench {
+  user-select: none;
+  padding: 20px;
+  .el-row {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  .el-col {
+    border-radius: 4px;
+    padding: 0 5px !important;
+  }
+  .grid-content {
+    padding: 0 12px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    height: 100px;
+    background-color: #fff;
+    line-height: 100px;
+    clear: both;
+    img {
+      display: inline-block;
+      vertical-align: middle;
+    }
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+  .text {
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+    font-weight: 400;
+    // margin-left: 10px;
+    color: rgba(102, 102, 102, 1);
+    opacity: 1;
+  }
+  .year_text {
+    font-size: 20px;
+    font-family: DIN Alternate;
+    font-weight: bold;
+    color: rgba(246, 78, 111, 1);
+    text-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16);
+    opacity: 1;
+    float: right;
+  }
+}
+</style>

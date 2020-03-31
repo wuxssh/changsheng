@@ -1,0 +1,321 @@
+<template>
+  <div class="diplomatic">
+    <div class="diplomatic-cla">
+      <div class="work_queue">
+        <span>保单信息查询</span>
+        <div class="box"></div>
+      </div>
+      <div class="work_table">
+        <el-table
+          style="width: 100%;"
+          :data="tableData.slice((currpage1 - 1) * pagesize1, currpage1 * pagesize1)"
+          @row-click="selectimageinfo"
+        >
+          <el-table-column label="序号" align="center" width="60" type="index" :index="indexMethod1"></el-table-column>
+          <el-table-column prop="contno" align="center" label="保单号/客户号"></el-table-column>
+          <el-table-column prop="appntname" align="center" label="投保人姓名"></el-table-column>
+          <el-table-column prop="insuredname" align="center" label="被保人姓名"></el-table-column>
+          <el-table-column prop="cvalidate" align="center" label="生效日期"></el-table-column>
+          <el-table-column prop="enddate" align="center" label="保单到期日" width="200"></el-table-column>
+        </el-table>
+      </div>
+      <div class="pagination2">
+        <el-pagination
+          background
+          @size-change="handleSizeChange1"
+          @current-change="handleCurrentChange1"
+          :page-size="pagesize1"
+          layout="prev, pager, next,jumper"
+          :total="tableData.length"
+        ></el-pagination>
+      </div>
+    </div>
+    <div class="diplomatic-cla margintop">
+      <div class="work_queue">
+        <span>影像资料信息</span>
+        <div class="box"></div>
+      </div>
+      <div class="work_table tableImg">
+        <div class="imgShow" v-if="chooseOne == true">
+          <div id="images">
+            <template v-if="imgList.length>0">
+              <img :src="imgList[0].imageurl" draggable="false" width="100%" alt />
+              <div v-show="false">
+                <img
+                  v-for="(item,index) in imgList.slice(1,)"
+                  :key="index"
+                  draggable="false"
+                  :src="item.imageurl"
+                />
+              </div>
+            </template>
+          </div>
+        </div>
+        <el-table
+          style="width: 100%"
+          :data="imgData.slice((currpage - 1) * pagesize, currpage * pagesize)"
+          @row-click="toShowImg"
+        >
+          <el-table-column label="序号" align="center" width="60" type="index" :index="indexMethod"></el-table-column>
+          <el-table-column prop="imageno" align="center" label="影像编号"></el-table-column>
+          <el-table-column prop="contno" align="center" label="保单号/客户号"></el-table-column>
+          <el-table-column prop="rgtno" align="center" label="理赔号"></el-table-column>
+          <el-table-column prop="typemax" align="center" label="影像大类"></el-table-column>
+          <el-table-column prop="typemin" align="center" label="影像小类"></el-table-column>
+          <el-table-column prop="uploadtime" align="center" label="上传日期" width="200"></el-table-column>
+          <el-table-column prop="comefrom" align="center" label="来源"></el-table-column>
+        </el-table>
+      </div>
+      <div style="margin:10px 0;">
+        <el-pagination
+          background
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :page-size="pagesize"
+          layout="prev, pager, next,jumper"
+          :total="imgData.length"
+        ></el-pagination>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import Viewer from "viewerjs";
+import "viewerjs/dist/viewer.css";
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+export default {
+  data() {
+    return {
+      viewer: "",
+      pagesize: 10,
+      currpage: 1,
+      pagesize1: 10,
+      currpage1: 1,
+      tableData: [],
+      imgData: [],
+      typemaxList: [
+        { id: "UNPLPZL", label: "个险理赔系统资料" },
+        { id: "PLPZL", label: "个险理赔客户资料" }
+      ],
+      typeminList: [
+        { id: "LPTJBG", label: "体检报告" },
+        { id: "LPSF", label: "身份证明" },
+        { id: "LPCS", label: "出生证明、关系证明" },
+        { id: "LPBC", label: "补充病史" },
+        { id: "LPSW", label: "死亡证明" },
+        { id: "LPYW", label: "意外情况说明" },
+        { id: "LPSZ", label: "首诊病史" },
+        { id: "LPQT", label: "其他材料" },
+        { id: "LPWJ", label: "健康问卷" },
+        { id: "LPKXQ", label: "宽限期出险、照会续费" },
+        { id: "LPSM", label: "声明材料" },
+        { id: "LPQB", label: "契变书" },
+        { id: "LPTZ", label: "理赔通知单" },
+        { id: "LPDCSQ", label: "调查申请书" },
+        { id: "LPDCBG", label: "调查报告" },
+        { id: "LPQTDC", label: "其他调查资料" },
+        { id: "LPBYLA", label: "不予立案资料" },
+        { id: "LPTZS", label: "赔付决定通知书" },
+        { id: "LPHTTZS", label: "理赔回退收费通知书" }
+      ],
+      chooseOne: false,
+      imgs: [
+        {
+          url: "http://172.18.100.187:8080/imagequery/332013_4.jpg"
+        },
+        {
+          url: "http://172.18.100.187:8080/imagequery/332013_1.jpg"
+        },
+        {
+          url: "http://172.18.100.187:8080/imagequery/332013_0.jpg"
+        }
+      ],
+      imgList: []
+    };
+  },
+  created() {
+    this.getPolicy();
+  },
+  methods: {
+    initImageTools() {
+      if (this.viewer) {
+        this.viewer.destroy();
+      }
+      let that = this;
+      this.viewer = new Viewer(document.getElementById("images"), {
+        // inline:true,
+        navbar: true,
+        tooltip: false,
+        movable: false,
+        movable: true,
+        scalable: false,
+        title: false,
+        show() {},
+        hide() {
+          that.chooseOne = false;
+        }
+      });
+      console.log("AAA", this.viewer);
+    },
+    toShowImg(row) {
+      post(service.queryimageJpg, {
+        serialno: row.imageno,
+        // serialno: "318210",
+        operator: localStorage.getItem("userCode")
+      }).then(res => {
+        if (res.data.resultcode === "200") {
+          this.imgList = res.data.imageurllist;
+          // this.imgList[0].imageurl
+          // window.open(this.imgList[0].imageurl, "_blank");
+          // if (
+          //   res.data.imageurllist[0].imageurl.substring(
+          //     res.data.imageurllist[0].imageurl.length - 3,
+          //     res.data.imageurllist[0].imageurl.length
+          //   ) === ("PDF" || "pdf")
+          // ) {
+          //   window.open(res.data.imageurllist[0].imageurl, "_blank");
+          //   setTimeout(() => {
+          //     this.chooseOne = false;
+          //   }, 500);
+          // } else {
+          //   this.chooseOne = true;
+          // }
+          if (
+            row.imageexpandname == "pdf" ||
+            row.imageexpandname == "PDF" ||
+            row.imageexpandname == "zip" ||
+            row.imageexpandname == "msg" ||
+            row.imageexpandname == "rar"
+          ) {
+            window.open(res.data.imageurllist[0].imageurl, "_blank");
+            setTimeout(() => {
+              this.chooseOne = false;
+            }, 500);
+          } else {
+            this.chooseOne = true;
+            this.$nextTick(() => {
+              this.initImageTools();
+              this.viewer.show();
+            });
+          }
+        } else {
+          this.$message.error(res.data.resultdesc);
+        }
+      });
+    },
+    // 保单信息查询
+    getPolicy() {
+      post(service.queryImageCount, {
+        bodys: {
+          rgtno: this.$route.query.rgtno
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.tableData = res.data.bodys;
+          this.total1 = res.data.bodys.length;
+        }
+      });
+    },
+    // 第二个列表查询
+    selectimageinfo(row) {
+      post(service.selectimageinfo, {
+        contno: row.contno,
+        operator: localStorage.getItem("userCode")
+      }).then(res => {
+        this.imgData = res.data.data;
+      });
+    },
+    // 选择
+    toChangeContno() {},
+    // 全选
+    toGetAllContno() {},
+    indexMethod(index) {
+      return index + 1 + (this.currpage - 1) * 10;
+    },
+
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    },
+    indexMethod1(index) {
+      return index + 1 + (this.currpage1 - 1) * 10;
+    },
+
+    handleSizeChange1(val) {
+      this.pagesize1 = val;
+    },
+    handleCurrentChange1(val) {
+      this.currpage1 = val;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.pagination2 {
+  margin: 10px 0;
+}
+// 图片
+.tableImg {
+  position: relative;
+}
+.imgShow {
+  opacity: 0;
+  z-index: 999;
+  width: 100%;
+  height: 200px;
+  position: absolute;
+  img {
+    height: 520px;
+  }
+}
+/deep/.el-form-item__label {
+  text-align: left;
+  width: auto !important;
+}
+/deep/.el-form-item__content {
+  margin-left: 22% !important;
+}
+/deep/.el-form-item {
+  margin-bottom: 0;
+}
+.submits {
+  // background: #fff;
+  padding: 0 30px;
+  margin: 15px 0;
+}
+.diplomatic {
+  margin-top: 20px;
+}
+.work_queue {
+  position: relative;
+  span {
+    display: inline-block;
+    background-color: #0673ff;
+    color: #fff;
+    padding: 0 15px;
+    height: 33px;
+    line-height: 33px;
+    border-radius: 10px 10px 0 0;
+  }
+  .box {
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #0673ff;
+    position: absolute;
+    top: 33px;
+    left: 15px;
+    z-index: 999;
+  }
+}
+.grid-content {
+  padding: 20px 20px;
+  box-sizing: border-box;
+  border-radius: 4px;
+  background-color: #fff;
+}
+</style>

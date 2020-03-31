@@ -1,0 +1,138 @@
+export function drawpieCharts(obj, key) {
+    let data1 = []
+    let data2 = []
+    if (key == "channel1") {
+        if (obj) {
+            obj.numlist.map((item, index) => {
+                data1.push({ value: item })
+                data2.push({ value: item, name: obj.channellist[index] })
+            })
+        }
+    }
+    console.log('饼状图数据-----', data1, data2)
+    var option = {
+        tooltip: {
+            trigger: 'item',
+            // formatter: "{a} <br/>{b}: {c} ({d}%)"
+            formatter: "{b} <br/>{c} ({d}%)"
+
+        },
+        title: {
+            text: '按渠道赔付件数及占比',
+            textStyle: {
+                fontWeight: "normal",
+                color: "#000",
+                fontSize: 16
+            }
+        },
+        legend: {
+            orient: 'vertical',
+            x: 'left',
+            data: []
+        },
+        series: [
+            {
+                // name:'访问来源',
+                type: 'pie',
+                selectedMode: 'single',
+                radius: [0, '40%'],
+                center: ['50%', '60%'],// 设置内部饼状图的位置
+                label: {
+                    normal: {
+                        position: 'inner'
+                    }
+                },
+                labelLine: {
+                    normal: {
+                        show: false
+                    }
+                },
+                itemStyle: {
+                    emphasis: {
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    },
+                    normal: {
+                        color: function (params) {
+                            //自定义颜色
+                            var colorList = [
+                                '#005BED', '#1D046F', '#63E0FF', '#02A9FF', '#0D6DB2',
+                            ];
+                            // 30%  10% 10% 
+                            return colorList[params.dataIndex]
+                        }
+                    }
+                },
+                data: data1,
+                itemStyle: {
+                    normal: {
+                        label: {
+                            show: true,
+                            formatter: '{d}%',
+                            fontSize: 8
+                        },
+                        labelLine: { show: true }
+                    }
+                }
+            },
+            {
+                // name:'访问来源',
+                type: 'pie',
+                radius: ['60%', '50%'],
+                center: ['50%', '60%'],// 设置外部圆环图的位置
+                label: {
+                    normal: {
+                        formatter: '{b|{b}：}{c}',
+                        fontSize: 8,
+                        // backgroundColor: '#eee',
+                        // borderColor: '#aaa',
+                        // borderWidth: 1,
+                        // borderRadius: 4,
+                        // shadowBlur:3,
+                        // shadowOffsetX: 2,
+                        // shadowOffsetY: 2,
+                        // shadowColor: '#999',
+                        // padding: [0, 7],
+                        rich: {
+                            a: {
+                                color: '#999',
+                                lineHeight: 22,
+                                align: 'center'
+                            },
+                            c: {
+                                fontSize: 8,
+                            },
+                            // abg: {
+                            //     backgroundColor: '#333',
+                            //     width: '100%',
+                            //     align: 'right',
+                            //     height: 22,
+                            //     borderRadius: [4, 4, 0, 0]
+                            // },
+                            hr: {
+                                borderColor: '#aaa',
+                                width: '100%',
+                                borderWidth: 0.5,
+                                height: 0
+                            },
+                            b: {
+                                fontSize: 8,
+                                lineHeight: 33
+                            },
+                            per: {
+                                color: '#eee',
+                                backgroundColor: '#334455',
+                                padding: [2, 4],
+                                borderRadius: 2
+                            }
+                        }
+                    }
+                },
+                data: data2
+            }
+        ]
+    }
+    return option
+
+}

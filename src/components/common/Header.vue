@@ -1,0 +1,183 @@
+<template>
+  <div class="header">
+    <div style="height:60px;line-height:60px;display:inline-block;text-align:center;">
+      <!-- <div class="title" v-show="$route.name!=='Home'">
+        <span>{{getFirstTitle}}</span>
+        <span v-if="getFirstTitle">&nbsp;>>></span>
+        <span class="title-second">{{getSecondTitle}}</span>       
+      </div>-->
+      <div class="title">
+        <span>{{$route.meta.firstTitle}}</span>
+        <span v-if="$route.meta.firstTitle">&nbsp;>>></span>
+        <span class="title-second">{{$route.meta.secondTitle}}</span>
+      </div>
+      <div v-if="$route.name==='Home' || $route.name==='WorkBench'">
+        <home-tabs></home-tabs>
+      </div>
+      <!-- <div v-show="$route.name==='medicalDocuments'" style="display: flex">
+        <div @click="changeType('1')" :class="{'colorSet': getDocumentType === '1', '': ''}">普通账单</div>
+      </div>-->
+      <div
+        v-show="$route.name==='bjDocuments' || $route.name==='medicalDocuments'"
+        style="display: flex"
+        class="medic"
+      >
+        <div
+          @click="changeType1('1')"
+          :class="{'colorSet': $route.name==='medicalDocuments', '': ''}"
+        >普通医疗账单</div>
+        <div
+          @click="changeType1('2')"
+          :class="{'colorSet': $route.name==='bjDocuments', '': ''}"
+          style="margin-left: 15px;"
+        >北京医疗账单</div>
+      </div>
+
+      <div class="right_content">
+        <!-- <el-badge :value="12" class="item">
+          <i class="el-icon-bell"></i>
+        </el-badge>-->
+        <el-dropdown>
+          <i class="el-icon-setting" style="margin-right: 15px"></i>
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item @click.native="logout">注销</el-dropdown-item>
+            <el-dropdown-item @click.native="updatePwd">修改密码</el-dropdown-item>
+            <!-- <el-dropdown-item>新增</el-dropdown-item>
+            <el-dropdown-item>删除</el-dropdown-item>-->
+          </el-dropdown-menu>
+        </el-dropdown>
+        <span>您好,{{getRole}}！</span>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import HomeTabs from "../../components/homeTabs/HomeTabs";
+export default {
+  name: "Header",
+  data() {
+    return {
+      userCode: localStorage.getItem("userName")
+    };
+  },
+  computed: {
+    getFirstTitle() {
+      return this.$store.getters.getFirstTitle;
+    },
+    getSecondTitle() {
+      return this.$store.getters.getSecondTitle;
+    },
+    getDocumentType() {
+      return this.$store.getters.getDocumentType;
+    },
+    getRole() {
+      return localStorage.getItem("userName");
+    },
+    generalMedicalType() {
+      return this.$store.getters.generalMedicalType;
+    }
+  },
+  created() {},
+  mounted() {},
+  methods: {
+    changeType(key) {
+      this.$store.commit("setDocumentsType", key);
+    },
+    changeType1(key) {
+      localStorage.getItem("objData");
+      if (key == "1") {
+        let row = { rgtno: localStorage.getItem("RGT"), customerno: localStorage.getItem("CUS") };
+        console.log("zzzzzzza", row);
+        this.$router.push({
+          name: "medicalDocuments",
+          params: {
+            dataOfTable: JSON.stringify(row)
+          }
+        });
+      }
+      if (key == "2") {      
+        let row = { rgtno: localStorage.getItem("RGT"), customerno: localStorage.getItem("CUS") };
+        console.log("zzzzzzza", row);
+        // console.log(row);
+        this.$router.push({
+          name: "bjDocuments",
+          params: {
+            dataOfTable: JSON.stringify(row)
+          }
+        });
+      }
+    },
+    logout() {
+      this.$confirm("确定要退出登录吗?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          this.$router.push({ name: "Login" });
+          localStorage.clear();
+          sessionStorage.clear();
+        })
+        .catch(() => {});
+    },
+    updatePwd() {
+      this.$router.push({
+        name: "ModifyPsd"
+        // query:{usercode: sessionStorage.getItem("userCode"),}
+        // query: { usercode: this.$route.query.usercode }
+      });
+      // console.log("111", sessionStorage.getItem("userCode"));
+    }
+  },
+  components: {
+    HomeTabs
+  }
+};
+</script>
+<style lang="less" scoped>
+.colorSet {
+  border-bottom: 1.5px solid #0673ff;
+  color: #0673ff;
+}
+.medic {
+  div {
+    cursor: pointer;
+  }
+}
+.header {
+  .title {
+    position: absolute;
+    left: 30px;
+    user-select: none;
+    span {
+      color: #666666;
+      font-size: 19px;
+      font-family: Source Han Sans CN;
+    }
+    .title-second {
+      font-size: 19px;
+      color: #0673ff;
+      font-family: Source Han Sans CN;
+    }
+  }
+
+  .el-dropdown {
+    margin-left: 20px;
+  }
+
+  .right_content {
+    height: 60px;
+    position: absolute;
+    top: 0;
+    right: 20px;
+  }
+}
+</style>
+<style lang="less">
+.header {
+  .el-badge__content.is-fixed {
+    margin-top: -10px;
+    top: 50%;
+  }
+}
+</style>

@@ -1,0 +1,932 @@
+<template>
+  <div class="generalMedical">
+    <!-- 门诊 -->
+    <div class="work_queue">
+      <span>普通门诊单证录入信息</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        ref="ruleForm"
+        style="width: 100%"
+        :data="commonOutpatient.slice((currentPage1-1)*pagesize1,currentPage1*pagesize1)"
+        :header-cell-style="{color:'#555',textAlign:'center'}"
+        :cell-style="{textAlign:'center'}"
+      >
+        <el-table-column label="序号" type="index" :index="indexMethod1"></el-table-column>
+        <el-table-column prop="mainfeeno" label="收据编号" width="180">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>收据编号</span>
+          </template>
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.mainfeeno" maxlength="100"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="hospitalcode" label="医院名称" width="320">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>医院名称</span>
+          </template>
+          <template slot-scope="scope">
+            <el-select v-model="scope.row.hospitalcode" disabled>
+              <el-option
+                v-for="item in newhospitalLists[scope.$index]"
+                :key="item.hospitalcode"
+                :label="item.hospitalname"
+                :value="item.hospitcode"
+              ></el-option>
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column prop="feedate" label="就诊时间" width="160">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>就诊时间</span>
+          </template>
+          <template slot-scope="scope">
+            <el-date-picker
+              disabled
+              v-model="scope.row.feedate"
+              type="date"
+              placeholder="选择日期"
+              value-format="yyyy-MM-dd"
+            ></el-date-picker>
+          </template>
+        </el-table-column>
+        <el-table-column prop="billmoney" label="费用总金额" width="160">
+          <template slot-scope="scope">
+            <div
+              v-if="scope.row.billmoney"
+              class="riskcodePDF"
+              @click="getDetail2(scope.row)"
+            >{{ scope.row.billmoney }}</div>
+            <el-button v-else size="mini" @click="getDetail1(scope.row,scope.$index)">录入明细</el-button>
+          </template>
+        </el-table-column>
+        <el-table-column prop="selfamnt" label="自费金额" width="120">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>自费金额</span>
+          </template>
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.selfamnt" type="text"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="selfamnt" label="特殊自费" width="140">
+          <template slot="header">
+            <span>特殊自费</span>
+            <el-popover
+              placement="top-start"
+              title
+              width="200"
+              trigger="hover"
+              content="彩虹桥系列、长生福特殊自费金额"
+            >
+              <span slot="reference">
+                <img src="../../assets/images/filing/warn.png" alt style="width:16px;height:16px" />
+              </span>
+            </el-popover>
+          </template>
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.specselfamnt" type="text"></el-input>
+          </template>
+        </el-table-column>          
+        <el-table-column prop="socifee" label="统筹/附加金额" width="120">
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.socifee" type="text"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="sociflag" label="社保标志" width="120">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>社保标志</span>
+          </template>
+          <template slot-scope="scope">
+            <el-select v-model="scope.row.sociflag" disabled>
+              <el-option label="有" value="1"></el-option>
+              <el-option label="无" value="0"></el-option>
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column prop="otherfee" label="其他补偿" width="120">
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.otherfee" type="text"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="refusemoney" label="扣费明细" width="120">
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.refusemoney" maxlength="100"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="indemnity" label="收据赔付金额" width="140">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>收据赔付金额</span>
+          </template>
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.indemnity" maxlength="100"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="operation" label="是否手术" width="120">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>是否手术</span>
+          </template>
+          <template slot-scope="scope">
+            <el-select v-model="scope.row.operation" disabled>
+              <el-option label="是" value="1"></el-option>
+              <el-option label="否" value="0"></el-option>
+            </el-select>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div style="margin-top:10px;">
+        <el-pagination
+          background
+          @size-change="handleSizeChange1"
+          @current-change="handleCurrentChange1"
+          :page-size="pagesize1"
+          layout="prev, pager, next, jumper"
+          :total="commonOutpatient.length"
+        ></el-pagination>
+      </div>
+    </div>
+    <!-- 住院 -->
+    <div class="work_queue" style="margin-top:20px;">
+      <span>普通住院单证录入信息</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        :data="commonHospital.slice((currentPage2-1)*pagesize2,currentPage2*pagesize2)"
+        style="width: 100%"
+        :header-cell-style="{color:'#555',textAlign:'center'}"
+        :cell-style="{textAlign:'center'}"
+      >
+        <el-table-column label="序号" type="index" :index="indexMethod2"></el-table-column>
+        <el-table-column prop="mainfeeno" label="收据编号" width="180">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>收据编号</span>
+          </template>
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.mainfeeno" maxlength="100"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="hospitalcode" label="医院名称" width="320">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>医院名称</span>
+          </template>
+          <template slot-scope="scope">
+            <el-select v-model="scope.row.hospitalcode" disabled>
+              <el-option
+                v-for="item in newhospitalLists1[scope.$index]"
+                :key="item.hospitalcode"
+                :label="item.hospitalname"
+                :value="item.hospitcode"
+              ></el-option>
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column prop="hospstartdate" label="入院日期" width="160">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>入院日期</span>
+          </template>
+          <template slot-scope="scope">
+            <el-date-picker
+              disabled
+              v-model="scope.row.hospstartdate"
+              type="date"
+              placeholder="选择日期"
+              value-format="yyyy-MM-dd"
+            ></el-date-picker>
+          </template>
+        </el-table-column>
+        <el-table-column prop="hospenddate" label="出院日期" width="160">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>出院日期</span>
+          </template>
+          <template slot-scope="scope">
+            <el-date-picker
+              disabled
+              v-model="scope.row.hospenddate"
+              type="date"
+              placeholder="选择日期"
+              value-format="yyyy-MM-dd"
+            ></el-date-picker>
+          </template>
+        </el-table-column>
+        <el-table-column prop="realhospdate" label="普通病房天数" width="120">
+          <template slot-scope="scope">
+            <el-input disabled v-model.number="scope.row.realhospdate" min="1"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="imhospdate" label="重症病房天数" width="120">
+          <template slot-scope="scope">
+            <el-input disabled v-model.number="scope.row.imhospdate" min="1"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="billmoney" label="费用总金额" width="160">
+          <template slot-scope="scope">
+            <div
+              v-if="scope.row.billmoney"
+              class="riskcodePDF"
+              @click="getDetail2(scope.row)"
+            >{{ scope.row.billmoney }}</div>
+            <el-button v-else size="mini" @click="getDetail2(scope.row,scope.$index)">录入明细</el-button>
+          </template>
+        </el-table-column>
+        <el-table-column prop="selfamnt" label="自费金额" width="120">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>自费金额</span>
+          </template>
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.selfamnt" type="text"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="selfamnt" label="特殊自费" width="140">
+          <template slot="header">
+            <span>特殊自费</span>
+            <el-popover
+              placement="top-start"
+              title
+              width="200"
+              trigger="hover"
+              content="彩虹桥系列、长生福特殊自费金额"
+            >
+              <span slot="reference">
+                <img src="../../assets/images/filing/warn.png" alt style="width:16px;height:16px" />
+              </span>
+            </el-popover>
+          </template>
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.specselfamnt" type="text"></el-input>
+          </template>
+        </el-table-column>      
+        <el-table-column prop="socifee" label="统筹/附加金额" width="120">
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.socifee" type="text"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="sociflag" label="社保标志" width="120">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>社保标志</span>
+          </template>
+          <template slot-scope="scope">
+            <el-select v-model="scope.row.sociflag" disabled>
+              <el-option label="有" value="1"></el-option>
+              <el-option label="无" value="0"></el-option>
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column prop="otherfee" label="其他补偿" width="120">
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.otherfee" type="text" maxlength="13" min="0"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="refusemoney" label="扣费明细" width="120">
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.refusemoney" maxlength="100"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="indemnity" label="收据计算金额" width="140">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>收据计算金额</span>
+          </template>
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.indemnity" maxlength="100"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="operation" label="是否手术" width="120">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>是否手术</span>
+          </template>
+          <template slot-scope="scope">
+            <el-select v-model="scope.row.operation" disabled>
+              <el-option label="是" value="1"></el-option>
+              <el-option label="否" value="0"></el-option>
+            </el-select>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div style="margin-top:10px;">
+        <el-pagination
+          background
+          @size-change="handleSizeChange2"
+          @current-change="handleCurrentChange2"
+          :page-size="pagesize2"
+          layout="prev, pager, next, jumper"
+          :total="commonHospital.length"
+        ></el-pagination>
+      </div>
+    </div>
+    <div style="text-align:right;margin-top:20px;">
+      <el-button type="primary" round @click="toAddFiling">返 回</el-button>
+    </div>
+    <!-- 提示框 -->
+    <el-dialog title :visible.sync="dialogVisible" width="85%">
+      <template>
+        <p class="twoTitle">费用明细</p>
+      </template>
+      <el-table
+        :data="fyDetail.slice((currentPage3-1)*pagesize3,currentPage3*pagesize3)"
+        center="true"
+      >
+        <el-table-column label="序号" type="index" :index="indexMethod3"></el-table-column>
+        <el-table-column prop="feeitemname" label="费用项名称" width="200" align="center">
+          <template slot="header">
+            <!-- <span class="redStars">&nbsp*&nbsp</span> -->
+            <span>费用项名称</span>
+          </template>
+          <template slot-scope="scope">
+            <el-select disabled v-model="scope.row.feeitemname">
+              <el-option
+                v-for="(item,index) in fyxLists"
+                :label="item.codename"
+                :value="item.code"
+                :key="index"
+              ></el-option>
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column prop="feeitemdetil" label="费用名称明细" width="200" align="center">
+          <template slot="header">
+            <!-- <span class="redStars">&nbsp*&nbsp</span> -->
+            <span>费用名称明细</span>
+          </template>
+          <template slot-scope="scope">
+            <el-select disabled v-model="scope.row.feeitemdetil">
+              <el-option
+                v-for="(item,index) in fyDetailList1"
+                :key="index"
+                :label="item.itemname"
+                :value="item.id+'|@|'+item.itemname"
+              ></el-option>
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column prop="fee" label="单价" width="140" align="center">
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.fee" type="text" maxlength="13" min="0"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="number" label="数量" width="140" align="center">
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.number" type="text" maxlength="13" min="0"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="price" label="费用金额" width="160" align="center">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>费用金额</span>
+          </template>
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.price" type="text" maxlength="13" min="0"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="specifications" label="规格与单位" width="180" align="center">
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.specifications"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="healthcaretype" label="医保类别" width="180" align="center">
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.healthcaretype"></el-input>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div style="margin-top:10px;">
+        <el-pagination
+          background
+          @size-change="handleSizeChange3"
+          @current-change="handleCurrentChange3"
+          :page-size="pagesize3"
+          layout="prev, pager, next, jumper"
+          :total="fyDetail.length"
+        ></el-pagination>
+      </div>
+      <template>
+        <p class="twoTitle">扣费明细</p>
+      </template>
+      <el-table
+        :data="kfDetail.slice((currentPage4-1)*pagesize4,currentPage4*pagesize4)"
+        center="true"
+      >
+        <el-table-column label="序号" type="index" :index="indexMethod4"></el-table-column>
+        <el-table-column prop="deducttypes" label="扣费类型" align="center" width="200">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>扣费类型</span>
+          </template>
+          <template slot-scope="scope">
+            <el-select disabled v-model="scope.row.deducttypes">
+              <el-option
+                v-for="(item,index) in koufeiTypes"
+                :label="item.codename"
+                :value="item.code"
+                :key="index"
+                filterable
+                clearable
+              ></el-option>
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column prop="deductnames" label="扣费名称" align="center" width="200" clearable>
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>扣费名称</span>
+          </template>
+          <template slot-scope="scope">
+            <el-select disabled v-model="scope.row.deductnames">
+              <el-option
+                v-for="item in koufeiLists"
+                :key="item.id"
+                :label="item.itemname"
+                :value="item.id+'|@|'+item.itemname"
+              ></el-option>
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column prop="deductfee " label="扣费金额" align="center" width="200">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>扣费金额</span>
+          </template>
+          <template slot-scope="scope">
+            <el-input
+              disabled
+              v-model="scope.row.deductfee"
+              type="text"
+              maxlength="13"
+              clearable
+              min="0"
+            ></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="deductreasontypes" label="扣费原因类型" width="200">
+          <template slot="header">
+            <span class="redStars">&nbsp;*&nbsp;</span>
+            <span>扣费原因类型</span>
+          </template>
+          <template slot-scope="scope">
+            <el-select v-model="scope.row.deductreasontypes" disabled>
+              <el-option
+                v-for="(item,index) in koufeiReason"
+                :key="index"
+                :label="item.codename"
+                :value="item.code"
+                filterable
+                clearable
+              ></el-option>
+            </el-select>
+          </template>
+        </el-table-column>
+        <el-table-column prop="deductreasons" label="扣费原因" align="center" width="200">
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.deductreasons" clearable maxlength="100"></el-input>
+          </template>
+        </el-table-column>
+        <el-table-column prop="deductemark" label="备注" align="center" width="200">
+          <template slot-scope="scope">
+            <el-input disabled v-model="scope.row.deductemark" maxlength="100" clearable></el-input>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div style="margin-top:10px;">
+        <el-pagination
+          background
+          @size-change="handleSizeChange4"
+          @current-change="handleCurrentChange4"
+          :page-size="pagesize4"
+          layout="prev, pager, next, jumper"
+          :total="kfDetail.length"
+        ></el-pagination>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="dialogVisible = false">返回</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import { post, service } from "../../utils/request.js";
+import { generateUUID, getDate, getTime } from "../../utils/common.js";
+import { sumDays, getCodeType } from "../../utils/service.js";
+export default {
+  name: "GeneralMedical",
+  data() {
+    return {
+      pagesize1: 10,
+      currentPage1: 1,
+      pagesize2: 10,
+      currentPage2: 1,
+      pagesize3: 10,
+      currentPage3: 1,
+      pagesize4: 10,
+      currentPage4: 1,
+      mainData1: null,
+      mainData2: null,
+      dialogVisible: false,
+      medicalList: [],
+      getNumList: [],
+      fyxLists: [],
+      fyDetailList1: [],
+      fyListCode: "",
+      kyListCode: "",
+      lastTask: "",
+
+      koufeiTypes: [], // 扣费类型
+      // 显示代码+名称
+      koufeiReason: [], // 扣费原因类型
+      commonOutpatient: [], //普通门诊
+      kfDetail: [], // 扣费明细
+      commonHospital: [], // 普通住院
+      fyDetail: [], // 费用明细
+      inhospital: null, // 入院日期
+      hospitalName: null, // 医院名称
+      outhospital: null, //出院日期
+      death: null, //身故日期
+      accent: null, //出险日期
+      ordTime: null, //普通病房天数
+      koufeiLists: [],
+      hospitalLists: [],
+      newhospitalLists: [],
+      hospitalLists1: [],
+      newhospitalLists1: [],
+      pageData1: {
+        startPage: 0,
+        endPage: 100
+      },
+      pageData2: {
+        startPage: 0,
+        endPage: 100
+      },
+      pages: ""
+    };
+  },
+  beforeRouteEnter(to, from, next) {
+    next(vm => {
+      if (from.name === "EAListDetails1") {
+        vm.pages = "001";
+        sessionStorage.setItem("ispage", "001");
+      } else if (from.name === "IntegratDetails") {
+        vm.pages = "002";
+        sessionStorage.setItem("ispage", "002");
+      }
+    });
+  },
+  mounted() {
+    this.koufeiReason = getCodeType("deductionReason");
+    localStorage.setItem(
+      "RGT",
+      JSON.parse(this.$route.params.dataOfTable).rgtno
+    );
+    localStorage.setItem(
+      "CUS",
+      JSON.parse(this.$route.params.dataOfTable).customerno
+    );
+  },
+  created() {
+    if (
+      JSON.parse(this.$route.params.dataOfTable).rgtno &&
+      JSON.parse(this.$route.params.dataOfTable).customerno
+    ) {
+      this.getCfee();
+    }
+    if (this.$route.params.dataOfTable) {
+      this.getCfee();
+    }
+    this.rgtno =
+      this.$route.query.rgtno ||
+      JSON.parse(this.$route.params.dataOfTable).rgtno;
+    this.customerno =
+      this.$route.query.rgtno ||
+      JSON.parse(this.$route.params.dataOfTable).customerno;
+    this.getFeeItem();
+    this.getHospitals();
+    this.getHospitals1();
+  },
+  methods: {
+    getHospitals() {
+      setTimeout(() => {
+        for (let key in this.commonOutpatient) {
+          post(service.getHospital, {
+            pagestart: this.pageData1.startPage,
+            pageend: this.pageData1.endPage,
+            likename: this.commonOutpatient[key].hospitalcode || ""
+          }).then(res => {
+            this.hospitalLists = res.data.bodys;
+            this.newhospitalLists.push(this.hospitalLists);
+            this.newhospitalLists[key] = res.data.bodys;
+          });
+        }
+      }, 800);
+    },
+    getHospitals1() {
+      setTimeout(() => {
+        for (let key in this.commonHospital) {
+          post(service.getHospital, {
+            pagestart: this.pageData2.startPage,
+            pageend: this.pageData2.endPage,
+            likename: this.commonHospital[key].hospitalcode || ""
+          }).then(res => {
+            this.hospitalLists1 = res.data.bodys;
+            this.newhospitalLists1.push(this.hospitalLists1);
+            this.newhospitalLists1[key] = res.data.bodys;
+          });
+        }
+      }, 800);
+    },
+    searchNum() {
+      post(service.getDeffNum, {
+        bodys: {
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+          customerno: JSON.parse(this.$route.params.dataOfTable).customerno
+        }
+      }).then(result => {
+        if (result.data.headers.code == "200") {
+          this.getNumList = result.data.bodys.rows;
+        }
+      });
+    },
+    getFeeItem() {
+      post(service.getCodeList, {
+        codetype: ["llfeeitem", "deductiontype"]
+      }).then(res => {
+        console.log("333", res);
+        this.fyxLists = res.data.bodys.llfeeitem;
+        this.koufeiTypes = res.data.bodys.deductiontype;
+      });
+    },
+    // 获取医疗账单信息
+    getCfee() {
+      post(service.getcfee, {
+        bodys: {
+          rgtno: JSON.parse(this.$route.params.dataOfTable).rgtno
+            ? JSON.parse(this.$route.params.dataOfTable).rgtno
+            : this.$route.params.dataOfTable
+        }
+      }).then(result => {
+        if (result.data.headers.code == "200") {
+          this.searchNum();
+          this.commonOutpatient = result.data.bodys.rows[0].MenZhen;
+          this.commonHospital = result.data.bodys.rows[0].ZhuYuan;
+          this.hospitalName = result.data.bodys.rows[0].hospitalcode; // 医院名称
+          this.outhospital = result.data.bodys.rows[0].outhospitaldate; // 出院日期
+          this.inhospital = result.data.bodys.rows[0].inhospitaldate; // 入院日期
+          this.death = result.data.bodys.rows[0].deathdate; // 入院日期
+          this.accent = result.data.bodys.rows[0].accdate; // 出险日期
+          this.ordTime =
+            sumDays(
+              result.data.bodys.rows[0].inhospitaldate,
+              result.data.bodys.rows[0].outhospitaldate
+            ) + 1; //普通病房天数
+        } else {
+          this.searchNum();
+        }
+      });
+    },
+    // 获取门诊详细
+    getDetail1(data) {
+      if (!data.mainfeeno) {
+        this.$message({
+          message: "请先录入收据编号",
+          type: "error"
+        });
+      } else {
+        this.dialogVisible = true;
+        this.fyDetail = data.medicinerequestreceiptlist;
+        // 扣费明细获取
+        this.kfDetail = data.medicinerequestdeductlist;
+        // this.mainData1 = data;
+        // post(service.getcfeeDetail, {
+        //   bodys: {
+        //     // rgtno:JSON.parse(this.$route.params.dataOfTable).rgtno,
+        //     rgtno: JSON.parse(this.$route.params.dataOfTable).rgtno
+        //       ? JSON.parse(this.$route.params.dataOfTable).rgtno
+        //       : this.$route.params.dataOfTable,
+        //     mainfeeno: data.mainfeeno
+        //   }
+        // }).then(result => {
+        //   if (result.data.headers.code === "200") {
+        //     //  this.commonOutDetail =  res.data.headers
+        //     this.kfDetail = result.data.bodys.rows[0].deduct;
+        //     this.fyDetail = result.data.bodys.rows[0].receipt;
+        //     console.log(this.kfDetail, this.fyDetail);
+        //   } else if (result.data.headers.code === "500") {
+        //     this.kfDetail = [];
+        //     this.fyDetail = [];
+        //   }
+        // });
+      }
+    },
+    // 获取住院详细
+    getDetail2(data) {
+      if (!data.mainfeeno) {
+        this.$message({
+          message: "请先录入收据编号",
+          type: "error"
+        });
+      } else {
+        this.dialogVisible = true;
+        this.fyDetail = data.medicinerequestreceiptlist;
+        // 扣费明细获取
+        this.kfDetail = data.medicinerequestdeductlist;
+        // this.mainData1 = data; // 住院
+        // post(service.getcfeeDetail, {
+        //   bodys: {
+        //     // rgtno:JSON.parse(this.$route.params.dataOfTable).rgtno,
+        //     rgtno: JSON.parse(this.$route.params.dataOfTable).rgtno
+        //       ? JSON.parse(this.$route.params.dataOfTable).rgtno
+        //       : this.$route.params.dataOfTable,
+        //     mainfeeno: data.mainfeeno
+        //   }
+        // }).then(result => {
+        //   if (result.data.headers.code === "200") {
+        //     //  this.commonOutDetail =  res.data.headers
+        //     this.kfDetail = result.data.bodys.rows[0].deduct;
+        //     this.fyDetail = result.data.bodys.rows[0].receipt;
+        //     console.log("ggggg", this.kfDetail);
+        //   } else if (result.data.headers.code === "500") {
+        //     this.kfDetail = [];
+        //     this.fyDetail = [];
+        //   }
+        // });
+      }
+    },
+    toAddFiling() {
+      if (this.pages) {
+        if (this.pages == "001") {
+          let row = { rgtno: this.rgtno, customerno: this.customerno };
+          this.$router.push({
+            name: "EAListDetails1",
+            params: {
+              dataOfTable: JSON.stringify(row)
+            }
+          });
+        } else if (this.pages == "002") {
+          this.$router.push({
+            name: "IntegratDetails",
+            query: { rgtno: this.rgtno, customerno: this.customerno }
+          });
+        }
+      } else {
+        if (sessionStorage.getItem("ispage") == "001") {
+          let row = { rgtno: this.rgtno, customerno: this.customerno };
+          this.$router.push({
+            name: "EAListDetails1",
+            params: {
+              dataOfTable: JSON.stringify(row)
+            }
+          });
+        } else if (sessionStorage.getItem("ispage") == "002") {
+          this.$router.push({
+            name: "IntegratDetails",
+            query: { rgtno: this.rgtno, customerno: this.customerno }
+          });
+        }
+      }
+    },
+    indexMethod1(index) {
+      return index + 1 + (this.currentPage1 - 1) * 10;
+    },
+    indexMethod2(index) {
+      return index + 1 + (this.currentPage2 - 1) * 10;
+    },
+    indexMethod3(index) {
+      return index + 1 + (this.currentPage3 - 1) * 10;
+    },
+    indexMethod4(index) {
+      return index + 1 + (this.currentPage4 - 1) * 10;
+    },
+    handleSizeChange1(val) {
+      this.pagesize1 = val;
+    },
+    handleCurrentChange1(val) {
+      this.currentPage1 = val;
+    },
+    handleSizeChange2(val) {
+      this.pagesize2 = val;
+    },
+    handleCurrentChange2(val) {
+      this.currentPage2 = val;
+    },
+    handleSizeChange3(val) {
+      this.pagesize3 = val;
+    },
+    handleCurrentChange3(val) {
+      this.currentPage3 = val;
+    },
+    handleSizeChange4(val) {
+      this.pagesize4 = val;
+    },
+    handleCurrentChange4(val) {
+      this.currentPage4 = val;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+/deep/.el-table td div {
+  width: 100%;
+}
+.generalMedical {
+  padding: 10px;
+  .el-row {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  .el-col {
+    border-radius: 4px;
+  }
+  .grid-content {
+    padding: 0 20px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    height: 100px;
+    background-color: #fff;
+    line-height: 100px;
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+  .text {
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+    font-weight: 400;
+    margin-left: 10px;
+    color: rgba(102, 102, 102, 1);
+    opacity: 1;
+  }
+  .year_text {
+    font-size: 60px;
+    font-family: DIN Alternate;
+    font-weight: bold;
+    color: rgba(246, 78, 111, 1);
+    text-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16);
+    opacity: 1;
+    float: right;
+  }
+  .work_queue {
+    position: relative;
+    //   img{
+    //      position: relative;
+    //   }
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 27px;
+    box-sizing: border-box;
+  }
+}
+</style>
+<style lang="less">
+.el-dialog__footer {
+  text-align: left;
+}
+.el-dialog__body {
+  padding: 0px 20px 10px;
+}
+.twoTitle {
+  border-left: 2px solid #409eff;
+  padding-left: 10px;
+  font-size: 16px;
+}
+.titleBtn {
+  float: right;
+  padding: 5px 15px;
+}
+</style>

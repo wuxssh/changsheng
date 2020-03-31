@@ -1,0 +1,296 @@
+<template>
+  <div class="marketerSelection">
+    <el-collapse v-model="activeName" ref="one">
+      <el-collapse-item name="1" id="0">
+        <template slot="title">
+          营销员信息查询
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 0 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form :model="objForm" v-model="labelPosition" label-width="130px">
+          <el-row class="rowss">
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="营销员工号">
+                  <el-input v-model="objForm.num"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="营销员姓名">
+                  <el-input v-model="objForm.name" maxlength="20"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="所属营销服务部">
+                  <el-select v-model="objForm.company" filterable clearable placeholder="请选择">
+                    <el-option
+                      v-for="(item,index) in cardTypeList"
+                      :key="index"
+                      :label="item.name"
+                      :value="item.comcode"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-button
+              v-if="objForm.num || objForm.name || objForm.company"
+              style="margin-left:50px"
+              type="primary"
+              round
+              @click="queryagentby()"
+            >查 询</el-button>
+            <el-button
+              v-else
+              style="margin-left:50px"
+              type="primary"
+              round
+              @click="initMessage()"
+            >查 询</el-button>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+    <div class="work_queue">
+      <!-- <img src="../../assets/images/report/tab_btn@1x.png" alt=""> -->
+      <span>营销员信息</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        :data="tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)"
+        style="width: 100%"
+        @row-click="toAdd"
+        highlight-current-row
+      >
+        <el-table-column label="序号" type="index" :index="indexMethod"></el-table-column>
+        <el-table-column prop="contno" label="保单号" width="150"></el-table-column>
+        <el-table-column prop="agentcode" label="营销员工号"></el-table-column>
+        <el-table-column prop="name" label="营销员姓名"></el-table-column>
+        <el-table-column prop="sex" label="营销员性别" :formatter="formatRole"></el-table-column>
+        <el-table-column prop="phone" label="营销员电话"></el-table-column>
+        <el-table-column prop="homeaddress" label="营销员地址"></el-table-column>
+        <el-table-column prop="agentgroup" label="所属营销服务部"></el-table-column>
+        <el-table-column prop="managecom" label="所属机构"></el-table-column>
+        <el-table-column prop="agentstatename" label="状态"></el-table-column>
+      </el-table>
+      <div style="margin-top:10px;">
+        <el-pagination
+          background
+          @size-change="currentPage1"
+          @current-change="currentChange(currentPage1)"
+          :current-page.sync="currentPage1"
+          :page-size="10"
+          layout="prev, pager, next, jumper"
+          :total="total"
+        ></el-pagination>
+      </div>
+    </div>
+    <div style="text-align:right;margin-top:20px;">
+      <el-button type="primary" round @click="salePhoneNo()">确 定</el-button>
+      <el-button type="primary" round @click="goBack()">返 回</el-button>
+    </div>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+export default {
+  data() {
+    return {
+      total: 0,
+      phone: "",
+      currentPage: 1,
+      currentPage1: 1,
+      pagesize: 10,
+      currpage: 1,
+      tableData: [],
+      // 新增查询条件
+      activeName: "1",
+      labelPosition: "right",
+      objForm: {
+        num: "",
+        name: "",
+        company: ""
+      },
+      cardTypeList: [],
+      currentRow: "",
+      phone: "",
+      agentcode: ""
+    };
+  },
+  created() {
+    this.queryagentgroup();
+    this.initMessage();
+  },
+  methods: {
+    queryagentgroup() {
+      post(service.queryagentgroup, {
+        bodys: {}
+      }).then(res => {
+        this.cardTypeList = res.data.bodys.rows;
+      });
+    },
+    // 新增查询条件
+    queryagentby() {
+      post(service.queryagentby, {
+        bodys: {
+          agentcode: this.objForm.num,
+          name: this.objForm.name,
+          agentgroup: this.objForm.company
+        }
+      }).then(res => {
+        // this.objForm = {}
+        if (res.data.headers.code === "200") {
+          this.tableData = res.data.bodys.rows;
+          this.total = res.data.bodys.rows.length;
+        }
+      });
+    },
+    // end
+    tableList() {
+      this.displayData = [];
+      for (
+        var j = this.total * (this.currentPage - 1);
+        j < this.total * this.currentPage;
+        j++
+      ) {
+        if (this.tableData[j]) {
+          this.displayData.push(this.tableData[j]);
+        }
+      }
+    },
+    currentChange: function(page) {
+      this.currentPage = page;
+      this.tableList();
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currentPage1 - 1) * 10;
+    },
+    formatRole: function(row, column) {
+      return row.sex == "0" ? "男" : row.sex == "1" ? "女" : "";
+    },
+    toAdd(row) {
+      this.currentRow = row.contno;
+      this.phone = row.phone;
+      this.agentcode = row.agentcode;
+    },
+    salePhoneNo() {
+      if (!this.currentRow) {
+        this.$message.warning("请选择营销员信息！");
+        return false;
+      } else {
+        this.$router.push({
+          name: "AddFiling",
+          query: {
+            rgtno: this.$route.query.rgtno,
+            customerno: this.$route.query.customerno,
+            phone: this.phone,
+            agentcode: this.agentcode,
+            contno: this.currentRow
+          }
+        });
+      }
+    },
+    //返回按钮点击事件
+    goBack() {
+      this.$router.go(-1);
+    },
+    initMessage() {
+      post(service.queryagent, {
+        bodys: {
+          customerno: this.$route.query.customerno
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.tableData = res.data.bodys.rows;
+          this.total = res.data.bodys.rows.length;
+        }
+      });
+    },
+  }
+};
+</script>
+<style lang="less" scoped>
+.marketerSelection {
+  margin: 10px;
+  .work_queue {
+    position: relative;
+    //   img{
+    //      position: relative;
+    //   }
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 27px;
+    box-sizing: border-box;
+  }
+}
+.rowss {
+  padding: 20px 0;
+}
+/deep/ .el-input {
+  width: auto !important;
+}
+/deep/.el-collapse-item__arrow {
+  display: none;
+}
+/deep/ .el-collapse-item__header {
+  background-color: #0673ff;
+  height: 30px;
+  line-height: 30px;
+  border-radius: 10px 10px 0 0;
+  padding: 0 15px;
+  overflow: hidden;
+  color: #fff;
+  font-size: 16px;
+  font-family: Source Han Sans CN;
+}
+/deep/.el-collapse-item:last-child {
+  margin-bottom: 15px;
+}
+</style>
+<style>
+.marketerSelection
+  .el-table--striped
+  .el-table__body
+  tr.el-table__row--striped.current-row
+  td,
+.el-table__body tr.current-row > td,
+.el-table__body tr.hover-row.current-row > td,
+.el-table__body tr.hover-row.el-table__row--striped.current-row > td,
+.el-table__body tr.hover-row.el-table__row--striped > td,
+.el-table__body tr.hover-row > td {
+  background-color: #409eff !important;
+  z-index: 999;
+}
+</style>

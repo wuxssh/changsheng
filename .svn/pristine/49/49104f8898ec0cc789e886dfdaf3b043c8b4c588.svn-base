@@ -1,0 +1,922 @@
+<template>
+  <div class="accumulator">
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          产品信息查询
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form :label-position="labelPosition" :model="forms" label-width="120px">
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem firstcolItem">
+                <el-form-item label="产品险种代码">
+                  <el-input v-model="forms.riskCode" disabled></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem firstcolItem">
+                <el-form-item label="责任编码">
+                  <el-input v-model="forms.dutycode" disabled></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem firstcolItem">
+                <el-form-item label="给付责任编码">
+                  <el-input v-model="forms.getdutycode" disabled></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+    <div>
+      <div class="work_queue">
+        <span>已定义的累加器信息</span>
+        <div class="box"></div>
+      </div>
+      <div class="work_table">
+        <el-table
+          :data="tableData1.slice((currpage1 - 1) * pagesize1, currpage1 * pagesize1)"
+          style="width: 100%"
+          highlight-current-row
+          @row-click="getcalculatorcode"
+        >
+          <el-table-column label="序号" type="index" width="60" :index="indexMethod1" align="center"></el-table-column>
+          <el-table-column prop="calculatorcode" label="累加器编号" align="center"></el-table-column>
+          <el-table-column prop="ctrllevelname" label="累加器层级" align="center"></el-table-column>
+          <el-table-column prop="kindcode" label="险种编码" align="center"></el-table-column>
+          <el-table-column prop="dutycode" label="责任编码" align="center"></el-table-column>
+          <el-table-column prop="getdutycode" label="给付责任编码" align="center"></el-table-column>
+          <el-table-column label="操作" align="center">
+            <template slot-scope="scope">
+              <el-button
+                size="mini"
+                type="danger"
+                @click="deletecalculatorcode(scope.row,scope.$index)"
+              >删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <div class="block">
+          <el-pagination
+            @size-change="handleSizeChange1"
+            @current-change="handleCurrentChange1"
+            :page-size="pagesize1"
+            background
+            layout="prev, pager, next, jumper"
+            :total="tableData1.length"
+          ></el-pagination>
+        </div>
+      </div>
+    </div>
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="3">
+        <template slot="title">
+          累加器详细配置信息
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form
+          :label-position="labelPosition"
+          label-width="120px"
+          ref="formData"
+          :model="formData"
+          :rules="formDatarules"
+        >
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="累加器名称" prop="calculatorname">
+                  <el-input v-model="formData.calculatorname"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="累加器层级" prop="ctrllevel">
+                  <el-select v-model="formData.ctrllevel" placeholder="请选择" clearable>
+                    <el-option
+                      v-for="item in ctrlevelList"
+                      :key="item.code"
+                      :label="item.codename"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="累加器类型" prop="type">
+                  <el-select v-model="formData.type" placeholder="请选择" clearable>
+                    <el-option
+                      v-for="item in calculatortypeList"
+                      :key="item.code"
+                      :label="item.codename"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="要素类型" prop="ctrlfactortype">
+                  <el-select v-model="formData.ctrlfactortype" placeholder="请选择" clearable>
+                    <el-option
+                      v-for="item in ctrlfactortypeList"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="要素值" prop="ctrlfactorvalue">
+                  <el-input v-model="formData.ctrlfactorvalue"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="要素单位" prop="ctrlfactorunit">
+                  <el-select v-model="formData.ctrlfactorunit" placeholder="请选择" clearable>
+                    <el-option
+                      v-for="item in ctrlfactorunitList"
+                      :key="item.code"
+                      :label="item.codename"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="要素值计算方式" prop="calmode">
+                  <el-select v-model="formData.calmode" placeholder="请选择" clearable>
+                    <el-option
+                      v-for="item in calmodeList"
+                      :key="item.code"
+                      :label="item.codename"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem" v-if="formData.calmode == '1'">
+                <el-form-item v-show="formData.calmode == '1'" label="默认值" prop="defaultvalue">
+                  <el-input v-model="formData.defaultvalue"></el-input>
+                </el-form-item>
+              </div>
+              <div class="colItem" v-show="formData.calmode != '1'">
+                <el-form-item label="默认值">
+                  <el-input v-model="formData.defaultvalue"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="要素值计算公式" prop="calcode">
+                  <el-input v-model="formData.calcode"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="生效起期" prop="startdate">
+                  <el-date-picker
+                    v-model="formData.startdate"
+                    value-format="yyyy-MM-dd"
+                    placeholder="选择日期"
+                    type="date"
+                  ></el-date-picker>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="生效止期" prop="enddate">
+                  <el-date-picker
+                    v-model="formData.enddate"
+                    value-format="yyyy-MM-dd"
+                    placeholder="选择日期"
+                    type="date"
+                  >></el-date-picker>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="生效时长" prop="validperiod">
+                  <el-input v-model="formData.validperiod"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="生效时长单位" prop="validperiodunit">
+                  <el-select v-model="formData.validperiodunit" placeholder="请选择" clearable>
+                    <el-option
+                      v-for="item in validperiodunitList"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id"
+                    ></el-option>
+                  </el-select>
+
+
+                  <!-- <el-select v-model="formData.ctrlfactortype" placeholder="请选择" clearable>
+                    <el-option
+                      v-for="item in ctrlfactortypeList"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id"
+                    ></el-option>
+                  </el-select> -->
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="累加步骤" prop="calorder">
+                  <el-input v-model="formData.calorder"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="后置累加器编号" prop="calcode1">
+                  <el-input v-model="formData.calcode1" maxlength="10"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="16">
+              <div class="colItem">
+                <el-form-item label="算法" prop="calsql">
+                  <el-input
+                    type="textarea"
+                    resize="none"
+                    v-model="formData.calsql"
+                    :rows="6"
+                    maxlength="700"
+                  ></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+        </el-form>
+        <div class="footBtnAll">
+          <el-button class="elButton" type="primary" @click="clearSecond('formData')">重置</el-button>
+          <el-button class="elButton" type="primary" @click="toAddSecond('formData')">新增</el-button>
+          <el-button class="elButton" type="primary" @click="toUpdateSecond('formData')">修改</el-button>
+        </div>
+      </el-collapse-item>
+    </el-collapse>
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="2">
+        <template slot="title">
+          未定义的累加器查询
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form :label-position="labelPosition" label-width="120px" :model="form3" ref="form3">
+          <el-row>
+            <el-col :span="6">
+              <div class="colItem firstcolItem">
+                <el-form-item label="责任编码">
+                  <el-input v-model="form3.getdutycode"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="colItem firstcolItem">
+                <el-form-item label="给付责任编码">
+                  <el-input v-model="form3.getdutyname"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="colItem firstcolItem">
+                <el-form-item label="累加器编码">
+                  <el-input v-model="form3.calculatorcode"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="colItem firstcolItem">
+                <el-button type="primary" round @click="getSecondData">查询</el-button>
+              </div>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+    <div>
+      <div class="work_queue">
+        <span>未定义的累加器信息</span>
+        <div class="box"></div>
+      </div>
+      <div class="work_table">
+        <el-table
+          :data="productAttributenQueryUnList.slice((currpage1 - 1) * pagesize1, currpage1 * pagesize1)"
+          style="width: 100%"
+          highlight-current-row
+        >
+          <el-table-column label="序号" type="index" width="60" :index="indexMethod1" align="center"></el-table-column>
+          <el-table-column prop="calculatorcode" label="累加器编号" align="center"></el-table-column>
+          <el-table-column prop="ctrllevelname" label="累加器层级" align="center"></el-table-column>
+          <el-table-column prop="kindcode" label="险种编码" align="center"></el-table-column>
+          <el-table-column prop="dutycode" label="责任编码" align="center"></el-table-column>
+          <el-table-column prop="getdutycode" label="给付责任编码" align="center"></el-table-column>
+          <el-table-column label="操作" align="center">
+            <template slot-scope="scope">
+              <el-button size="mini" type="primary" @click="addCalculate(scope.row,scope.$index)">添加</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <div class="block">
+          <el-pagination
+            @size-change="handleSizeChange1"
+            @current-change="handleCurrentChange1"
+            :page-size="pagesize1"
+            background
+            layout="prev, pager, next, jumper"
+            :total="productAttributenQueryUnList.length"
+          ></el-pagination>
+        </div>
+      </div>
+    </div>
+    <el-button type="primary" style="float:right;margin-right:30px;" @click="goback">返回</el-button>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+import { getCodeType } from "../../utils/service.js";
+export default {
+  name: "accumulator",
+  data() {
+    return {
+      labelPosition: "left",
+      activeName: ["1", "2", "3"],
+
+      forms: {
+        riskCode: "", // 产品险种代码
+        dutycode: "", // 责任编码
+        getdutycode: "" // 给付责任编码
+      },
+
+      getdutykindList: [],
+      aftergetList: [],
+      inpflagList: [],
+      stattypeList: [],
+      recognizedList: [
+        { id: "Y", name: "是" },
+        { id: "N", name: "否" }
+      ],
+      deadvaliflagList: [
+        { id: "Y", name: "有效" },
+        { id: "N", name: "无效" }
+      ],
+      lmcalmodetypeList: [],
+      //------------------------
+      formData: {
+        calculatorname: "",
+        ctrllevel: "",
+        type: "",
+        ctrlfactortype: "",
+        ctrlfactorunit: "",
+        calmode: "",
+        calcode: "",
+        validperiodunit: "",
+        ctrlfactorvalue: "",
+        defaultvalue: "",
+        startdate: "",
+        enddate: "",
+        validperiod: "",
+        calorder: "",
+        calcode1: "",
+        calsql: ""
+      },
+      formDatarules: {
+        calculatorname: [
+          {
+            required: true,
+            message: "累加器名称不能为空",
+            trigger: ["blur", "change"]
+          }
+        ],
+        calorder: [
+          {
+            required: true,
+            message: "累加步骤不能为空",
+            trigger: ["blur", "change"]
+          }
+        ],
+        ctrllevel: [
+          {
+            required: true,
+            message: "累加器层级不能为空",
+            trigger: "change"
+          }
+        ],
+        type: [
+          {
+            required: true,
+            message: "累加器类型不能为空",
+            trigger: "change"
+          }
+        ],
+        ctrlfactortype: [
+          {
+            required: true,
+            message: "要素类型不能为空",
+            trigger: "change"
+          }
+        ],
+        ctrlfactorunit: [
+          {
+            required: true,
+            message: "要素单位不能为空",
+            trigger: "change"
+          }
+        ],
+
+        defaultvalue: [
+          {
+            required: true,
+            message: "默认值不能为空",
+            trigger: ["blur", "change"]
+          }
+        ],
+        calsql: [
+          {
+            required: true,
+            message: "算法不能为空",
+            trigger: ["blur", "change"]
+          }
+        ]
+      },
+      ctrlevelList: [],
+      calculatortypeList: [],
+      ctrlfactortypeList: [
+        { id: "1", name: "金额" },
+        { id: "2", name: "天数" },
+        { id: "3", name: "次数" },
+        { id: "4", name: "天金额" },
+        { id: "5", name: "次金额" }
+      ],
+      ctrlfactorunitList: [],
+      calmodeList: [],
+      validperiodunitList: [
+        { id: "Y", name: "Y-年" },
+        { id: "S", name: "S-季" },
+        { id: "M", name: "M-月" },
+        { id: "W", name: "W-周" },
+        { id: "D", name: "D-天" }
+      ],
+      //------------------------
+      tableData: [],
+      tableData1: [],
+      pagesize1: 10,
+      currpage1: 1,
+      pagesize: 10,
+      currpage: 1,
+      calculatorcode: "", // 累加器编号
+      serialno: "", // 交易流水号
+      getdutycode: "",
+      getdutykind: "",
+      dutycode: "",
+      dutycodeList: [],
+      productAttributenQueryUnList: [],
+      form3: {
+        calculatorcode: "",
+        getdutyname: "",
+        getdutycode: ""
+      }
+    };
+  },
+  created() {
+    this.forms.riskCode = this.$route.query.riskcode;
+    this.forms.getdutycode = this.$route.query.getdutycode;
+    this.forms.dutycode = this.$route.query.dutycode;
+    this.calculateQuery();
+  },
+    beforeRouteEnter(to, from, next) {
+    if (to.path == "/accumulator") {
+      to.meta.keepAlive = true;
+    } else {
+      to.meta.keepAlive = false;
+    }
+    next();
+  },
+  mounted() {
+    this.ctrlevelList = getCodeType("ctrlevel"); // 累加器层级
+    this.calculatortypeList = getCodeType("calculatortype"); // 累加器类型
+    this.ctrlfactorunitList = getCodeType("ctrlfactorunit"); // 要素单位
+    this.calmodeList = getCodeType("calmode"); // 要素值计算方式
+    this.lmcalmodetypeList = getCodeType("lmcalmodetype"); // 要素值计算方式
+  },
+  methods: {
+    goback() {
+      this.$router.push({ path: "/accumulator", query: this.$route.query });
+      console.log("xxx", this.$route.query);
+    },
+    getrowdata(row) {
+      console.log("AAA", row);
+      this.form = row;
+      this.getdutycode = row.getdutycode;
+      this.getdutykind = row.getdutykind;
+      this.dutycode = row.dutycode;
+      this.calculateQuery(row);
+    },
+    clearSecond(formName) {
+      // this.$refs[formName].resetFields();
+      // this.calculateQuery();
+      this.formData = JSON.parse(localStorage.getItem("rowdatas")) || {};
+    },
+    // 新增累加器
+    toAddSecond(formName) {
+      this.$refs[formName].validate(valid => {
+        if (!valid) {
+          this.$message.error("请先填写必填项！");
+          return false;
+        } else {
+          post(service.insertCalculate, {
+            bodys: {
+              riskcode: this.forms.riskCode,
+              kindcode: this.$route.query.kindcode,
+              calculatorcode: "",
+              calculatorname: this.formData.calculatorname || "",
+              ctrllevel: this.formData.ctrllevel || "",
+              type: this.formData.type || "",
+              ctrlfactortype: this.formData.ctrlfactortype || "",
+              ctrlfactorvalue: this.formData.ctrlfactorvalue || "",
+              ctrlfactorunit: this.formData.ctrlfactorunit || "",
+              calmode: this.formData.calmode || "",
+              calcode: this.formData.calcode || "",
+              serialno: "",
+              defaultvalue: this.formData.defaultvalue || "",
+              dutycode: this.forms.dutycode,
+              getdutycode: this.forms.getdutycode,
+              getdutykind: this.$route.query.getdutykind,
+              calorder: this.formData.calorder || "",
+              calcode1: this.formData.calcode1 || "",
+              startdate: this.formData.startdate || "",
+              enddate: this.formData.enddate || "",
+              validperiod: this.formData.validperiod || "",
+              validperiodunit: this.formData.validperiodunit || "",
+              calsql: this.formData.calsql,
+            }
+          }).then(res => {
+            if (res.data.header.code === "200") {
+              this.$message.success("操作成功");
+              this.calculateQuery();
+              this.$refs[formName].resetFields();
+               this.formData.defaultvalue = ''
+            } else {
+              this.$message.error(res.data.header.message);
+            }
+          });
+        }
+      });
+    },
+    // 未定义的累加器查询
+    getSecondData() {
+      if (
+        !this.form3.getdutycode &&
+        !this.form3.getdutyname &&
+        !this.form3.calculatorcode
+      ) {
+        this.$message.error("责任编码、给付责任编码、累加器编码至少输入一项");
+        return;
+      }
+      post(service.calculateQueryUn, {
+        bodys: {
+          kindcode: this.$route.query.kindcode,
+          tempduty: this.$route.query.dutycode,
+          tempgetduty: this.$route.query.getdutycode,
+          getdutycode: this.form3.getdutyname,
+          dutycode: this.form3.getdutycode,
+          calculatorcode: this.form3.calculatorcode
+        }
+      }).then(res => {
+        this.productAttributenQueryUnList = res.data.bodys.rows;
+      });
+    },
+    // 未定义的累加器添加
+    addCalculate(row) {
+      console.log(row);
+      post(service.addCalculate, {
+        bodys: {
+          kindcode: this.forms.riskCode,
+          calculatorcode: row.calculatorcode,
+          serialno: "",
+          dutycode: this.forms.dutycode,
+          getdutycode: this.forms.getdutycode
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.$message.success("操作成功！");
+          this.getSecondData();
+          this.calculateQuery();
+        }
+      });
+    },
+    getcalculatorcode(row) {
+      console.log(row);
+      this.calculatorcode = row.calculatorcode;
+      this.formData = row;
+      localStorage.setItem("rowdatas", JSON.stringify(row));
+    },
+    // 修改累加器
+    toUpdateSecond(formName) {
+      this.$refs[formName].validate(valid => {
+        if (!valid) {
+          this.$message.error("请先填写必填项！");
+          return false;
+        } else {
+          post(service.updateCalculate, {
+            bodys: {
+              riskcode: this.$route.query.riskcode,
+              kindcode: this.$route.query.kindcode,
+              calculatorcode: this.calculatorcode,
+              calculatorname: this.formData.calculatorname || "",
+              ctrllevel: this.formData.ctrllevel || "",
+              type: this.formData.type || "",
+              ctrlfactortype: this.formData.ctrlfactortype || "",
+              ctrlfactorvalue: this.formData.ctrlfactorvalue || "",
+              ctrlfactorunit: this.formData.ctrlfactorunit || "",
+              calmode: this.formData.calmode || "",
+              calcode: this.formData.calcode || "",
+              serialno: this.serialno,
+              defaultvalue: this.formData.defaultvalue || "",
+              dutycode: this.dutycode,
+              getdutycode: this.getdutycode,
+              getdutykind: this.getdutykind,
+              calorder: this.formData.calorder || "",
+              calcode1: this.formData.calcode1 || "",
+              startdate: this.formData.startdate || "",
+              enddate: this.formData.enddate || "",
+              validperiod: this.formData.validperiod || "",
+              validperiodunit: this.formData.validperiodunit || "",
+              calsql: this.formData.calsql,
+            }
+          }).then(res => {
+            if (res.data.header.code === "200") {
+              this.$message.success("操作成功");
+              this.calculateQuery();
+              this.$refs[formName].resetFields();
+              this.formData.defaultvalue = ''
+            }else{
+              this.$message.error(res.data.header.message)
+            }
+          });
+        }
+      });
+    },
+    lookLJQ(row) {},
+    // 删除已有累加器
+    deleteItem1(row) {
+      post(service.deleteCalculate, {
+        bodys: {
+          calculatorcode: row.calculatorcode
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.$message.success("操作成功");
+          this.calculateQuery();
+        }
+      });
+    },
+    // 已定义的累加器
+    calculateQuery() {
+      post(service.calculateQuery, {
+        bodys: {
+          kindcode: this.forms.riskCode,
+          getdutycode: this.forms.getdutycode,
+          dutycode: this.forms.dutycode
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.tableData1 = res.data.bodys.rows;
+          localStorage.removeItem("rowdatas");
+        }
+      });
+    },
+    // 已定义的累加器删除
+    deletecalculatorcode(row) {
+      post(service.deleteCalculate, {
+        bodys: {
+          calculatorcode: row.calculatorcode,
+          serialno: row.serialno
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.$message.success("操作成功！");
+          this.calculateQuery();
+        }
+      });
+    },
+    //
+    // 分页
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currpage - 1) * 10;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    },
+    handleSizeChange1(val) {
+      this.pagesize1 = val;
+    },
+    indexMethod1(index) {
+      return index + 1 + (this.currpage1 - 1) * 10;
+    },
+    handleCurrentChange1(val) {
+      this.currpage1 = val;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+/deep/ .el-form-item__label {
+  width: 120px !important;
+  padding: 0 !important;
+}
+/deep/ .el-form-item__content {
+  margin-left: 120px !important;
+}
+/deep/ .el-date-editor.el-input {
+  width: 100%;
+}
+/deep/.el-collapse-item__arrow {
+  display: none;
+}
+/deep/.el-collapse-item__header {
+  background-color: #0673ff;
+  height: 30px;
+  line-height: 30px;
+  border-radius: 10px 10px 0 0;
+  padding: 0 15px;
+  overflow: hidden;
+  color: #fff;
+  font-size: 16px;
+  font-family: Source Han Sans CN;
+}
+/deep/.el-collapse-item__content {
+  padding-bottom: 0;
+}
+.colItem {
+  padding: 0 30px;
+}
+.firstcolItem {
+  margin-top: 30px;
+}
+/deep/.el-form-item {
+  margin-bottom: 35px;
+}
+.footBtnAll {
+  margin-left: 40px;
+  padding-bottom: 30px;
+}
+.accumulator {
+  margin: 20px;
+
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+  }
+  .work_queue {
+    position: relative;
+    margin-top: 21px;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      font-size: 16px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 20px;
+    box-sizing: border-box;
+    margin-bottom: 30px;
+  }
+  .img_style {
+    width: 27px;
+    height: 22px;
+  }
+}
+</style>
+<style lang="less">
+.accumulator {
+  .el-row {
+    // padding-top: 20px;
+    &:first-child {
+      padding-top: 20px;
+    }
+    &:last-child {
+      padding-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+}
+.accumulator {
+  //   .el-input {
+  //     width: 80% !important;
+  //   }
+  .date_style {
+    .el-input {
+      width: 46% !important;
+    }
+  }
+
+  .el-select {
+    width: 100% !important;
+    .el-input {
+      width: 100% !important;
+    }
+  }
+
+  .el-table--striped .el-table__body tr.el-table__row--striped.current-row td,
+  .el-table__body tr.current-row > td,
+  .el-table__body tr.hover-row.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped > td,
+  .el-table__body tr.hover-row > td {
+    background-color: #409eff;
+  }
+}
+</style>

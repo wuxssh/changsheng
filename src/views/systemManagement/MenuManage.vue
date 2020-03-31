@@ -1,0 +1,384 @@
+<template>
+  <div class="menuManage">
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          查询条件
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form ref="form" :model="form" v-model="labelPosition" label-width="35%">
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="菜单组编码">
+                  <el-input v-model="form.menugrpcode" maxlength="100" @keyup.enter.native="initTable"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="菜单组描述">
+                  <el-input v-model="form.menugrpdescription" maxlength="100" @keyup.enter.native="initTable"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="菜单组名称">
+                  <el-input v-model="form.menugrpname" maxlength="100" @keyup.enter.native="initTable"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="操作员">
+                  <!-- <el-input v-model="form.operator" maxlength="100"></el-input> -->
+                  <el-select v-model="form.operator" clearable placeholder="请选择" filterable>
+                    <el-option
+                      v-for="item in operatorList"
+                      :key="item.operator"
+                      :label="item.username"
+                      :value="item.operator"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row style="text-align:right;padding-right:30px;">
+            <el-button type="primary" @click="initTable" round>查询菜单组</el-button>
+            <el-button type="primary" round @click="addTable">增加菜单组</el-button>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+
+    <div class="work_queue">
+      <span>菜单列表</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        :data="tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)"
+        style="width: 100%"
+      >
+        <el-table-column label="序号" type="index" :index="indexMethod" align="center"></el-table-column>
+        <el-table-column prop="menugrpname" label="菜单组名称" align="center"></el-table-column>
+        <el-table-column prop="menugrpcode" label="菜单组编码" align="center"></el-table-column>
+        <el-table-column prop="menugrpdescription" label="菜单描述" align="center"></el-table-column>
+        <el-table-column prop="username" label="操作员" align="center"></el-table-column>
+        <el-table-column label="操作" align="center">
+          <template slot-scope="scope">
+            <el-button size="mini" @click="toMenuConfig(scope.$index, scope.row)">菜单配置</el-button>
+            <el-button size="mini" @click="deleteOne(scope.$index, scope.row)">删除菜单组</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="block">
+        <el-pagination
+          @size-change="currentPage1"
+          @current-change="currentChange"
+          :current-page.sync="currentPage1"
+          :page-size="10"
+          background
+          layout="prev, pager, next, jumper"
+          :total="total"
+        ></el-pagination>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+// import { getCodeArr } from "../../utils/service";
+export default {
+  name: "ListQuery",
+  data() {
+    return {
+      form: {
+        menugrpcode: "",
+        menugrpname: "",
+        menugrpdescription: "",
+        menusign: "",
+        operator: ""
+      },
+      listForm: {
+        clmNo: "",
+        clmState: "",
+        accDateStart: "",
+        accDateEnd: "",
+        filingAgency: "",
+        idCardNo: "",
+        endCaseDateStart: "",
+        endCaseDateEnd: "",
+        rgtDateStart: "",
+        rgtDateEnd: "",
+        policyNo: ""
+      },
+      userStatusList: [
+        {
+          value: "120",
+          name: "有效"
+        },
+        {
+          value: "20",
+          name: "无效"
+        }
+      ],
+      operatorList: [],
+      activeName: ["1", "2"],
+      labelPosition: "right",
+      currentPage: 1,
+      currentPage1: 1,
+      tableData: [],
+      pagesize: 10,
+      currpage: 1,
+      total: 0,
+      currentRow: "",
+      menugrpcode: ""
+    };
+  },
+  inject: ["reload"],
+  created() {
+    this.getOperator();
+    // debugger
+    // this.idTypes = getCodeArr(['llidtype'])
+    // console.log(getCodeArr(['llidtype']))
+  },
+  mounted() {
+    // this.initTable();
+  },
+  methods: {
+    getOperator() {
+      post(service.operatorInfoQuery, {
+        bodys: {}
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.operatorList = res.data.bodys;
+        }
+      });
+    },
+    // gobanck() {
+    //   this.$router.go(-1);
+    // },
+    initTable: function() {
+      this.currentPage=1;
+      this.currentPage1=1;
+      post(service.menuGrpInfoQuery, {
+        bodys: this.form
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.tableData = res.data.bodys.rows;
+          this.total = res.data.bodys.total;
+        }
+      });
+    },
+    addTable: function() {
+      if (!this.form.menugrpcode) {
+        this.$message.error("菜单组编码不能为空！");
+        return;
+      } else if (!this.form.menugrpdescription) {
+        this.$message.error("菜单组描述不能为空！");
+        return;
+      } else if (!this.form.menugrpname) {
+        this.$message.error("菜单组名称不能为空！");
+        return;
+      }
+      this.form.operator=localStorage.getItem('userCode')
+      post(service.menuGrpInfoInsert, {
+        bodys: this.form
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          // this.tableData = res.data.bodys.rows;
+          // this.total = res.data.bodys.total;
+          this.$message.success(res.data.header.message);
+          this.initTable();
+        } else {
+          this.$message.error(res.data.header.message);
+        }
+      });
+    },
+    deleteOne(index, row) {
+      post(service.menuGrpInfoDelete, {
+        bodys: {
+          menugrpcode: row.menugrpcode
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.$message.success(res.data.header.message);
+          this.initTable();
+        } else {
+          this.$message.error(res.data.header.message);
+        }
+      });
+    },
+
+    toMenuConfig(index, row) {
+      this.menugrpcode = row.menugrpcode;
+      //  alert(this.menugrpcode)
+      this.$router.push({
+        name: "MenuConfig",
+        query: { menugrpcode: this.menugrpcode }
+      });
+    },
+
+    tableList() {
+      this.displayData = [];
+      for (
+        var j = this.total * (this.currentPage - 1);
+        j < this.total * this.currentPage;
+        j++
+      ) {
+        if (this.tableData[j]) {
+          this.displayData.push(this.tableData[j]);
+        }
+      }
+      // console.log(this.displayData);
+    },
+    currentChange: function(page) {
+      this.currentPage = page;
+      // this.tableList();
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currentPage - 1) * 10;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.menuManage {
+  margin: 10px;
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 20px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+  }
+  .work_queue {
+    position: relative;
+    margin-top: 21px;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .work_table {
+    margin-bottom: 21px;
+    background-color: #fff;
+    padding: 20px 8px;
+    .el-form-item__content {
+      margin-left: 0 !important;
+    }
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 20px;
+    box-sizing: border-box;
+  }
+  .img_style {
+    width: 27px;
+    height: 22px;
+  }
+}
+</style>
+<style lang="less">
+.menuManage {
+  .el-row {
+    // padding-top: 20px;
+    &:first-child {
+      padding-top: 20px;
+    }
+    &:last-child {
+      padding-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+}
+.menuManage {
+  //   .el-input {
+  //     width: 80% !important;
+  //   }
+  .date_style {
+    .el-input {
+      width: 46% !important;
+    }
+  }
+
+  .el-select {
+    width: 100% !important;
+    .el-input {
+      width: 100% !important;
+    }
+  }
+  .el-collapse-item__arrow {
+    display: none;
+  }
+  .el-collapse-item__header {
+    background-color: #0673ff;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 10px 10px 0 0;
+    padding: 0 15px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+  }
+  .el-collapse-item__content {
+    padding-bottom: 17px;
+  }
+  .el-table--striped .el-table__body tr.el-table__row--striped.current-row td,
+  .el-table__body tr.current-row > td,
+  .el-table__body tr.hover-row.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped > td,
+  .el-table__body tr.hover-row > td {
+    background-color: #409eff;
+  }
+}
+</style>

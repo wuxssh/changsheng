@@ -1,0 +1,335 @@
+<template>
+  <div class="accumulator">
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          查询
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form :label-position="labelPosition" :model="forms" label-width="120px">
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem firstcolItem">
+                <el-form-item label="理赔号">
+                  <el-input v-model="forms.rgtno" maxlength="13" @keyup.enter.native="toQuery"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem firstcolItem">
+                <el-button type="primary" @click="toQuery">查询</el-button>
+              </div>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+    <div>
+      <div class="work_queue">
+        <span>可选赔案</span>
+        <div class="box"></div>
+      </div>
+      <div class="work_table">
+        <el-table
+          :data="claimData.slice((currpage - 1) * pagesize, currpage * pagesize)"
+          style="width: 100%"
+          highlight-current-row
+          @row-dblclick="toChoose"
+        >
+          <el-table-column label="序号" type="index" width="60" :index="indexMethod" align="center"></el-table-column>
+          <el-table-column prop="clmno" label="理赔号" align="center"></el-table-column>
+          <el-table-column prop="rgtname" label="申请人姓名" align="center"></el-table-column>
+          <el-table-column prop="rgtconfdate" label="立案日期" align="center"></el-table-column>
+          <el-table-column prop="customername" label="出险人姓名" align="center"></el-table-column>
+          <el-table-column prop="clmstate" label="案件状态" align="center"></el-table-column>
+          <el-table-column prop="accidentdate" label="出险日期" align="center"></el-table-column>
+          <el-table-column prop="endcasedate" label="结案日期" align="center"></el-table-column>
+        </el-table>
+        <div class="block">
+          <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :page-size="pagesize"
+            background
+            layout="prev, pager, next, jumper"
+            :total="claimData.length"
+          ></el-pagination>
+          <!-- <div class="gobackBtn">
+            <el-button class="elButton" type="primary" @click="gobackApply">申请回退</el-button>
+          </div> -->
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="work_queue">
+        <span>回退队列</span>
+        <div class="box"></div>
+      </div>
+      <div class="work_table">
+        <el-table
+          :data="gobackData.slice((currpage1 - 1) * pagesize1, currpage1 * pagesize1)"
+          style="width: 100%"
+          highlight-current-row
+          @row-dblclick="gobackDetail"
+        >
+          <el-table-column label="序号" type="index" width="60" :index="indexMethod1" align="center"></el-table-column>
+          <el-table-column prop="backno" label="回退号" align="center"></el-table-column>
+          <el-table-column prop="clmno" label="理赔号" align="center"></el-table-column>
+          <el-table-column prop="backdate" label="回退日期" align="center"></el-table-column>
+          <el-table-column prop="backdesc" label="回退描述" show-overflow-tooltip align="center"></el-table-column>
+        </el-table>
+        <div class="blocks">
+          <el-pagination
+            @size-change="handleSizeChange1"
+            @current-change="handleCurrentChange1"
+            :page-size="pagesize1"
+            background
+            layout="prev, pager, next, jumper"
+            :total="gobackData.length"
+          ></el-pagination>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+export default {
+  name: "accumulator",
+  data() {
+    return {
+      labelPosition: "left",
+      activeName: "1",
+      forms: {
+        rgtno: "" // 产品险种代码
+      },
+      clmnos: "",
+      gobackList: {},
+      //------------------------
+      claimData: [],
+      gobackData: [],
+      pagesize1: 10,
+      currpage1: 1,
+      pagesize: 10,
+      currpage: 1
+    };
+  },
+  created() {
+    this.getGobackList();
+  },
+  methods: {
+    // 查询 ==> 可选赔案列表
+    toQuery() {
+      if (!this.forms.rgtno) {
+        this.$message.error("请输入理赔号！");
+        return;
+      }
+      this.$forceUpdate();
+      post(service.queryWaitCaseBackInfo, {
+        bodys: {
+          clmno: this.forms.rgtno,
+          operate: "01"
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          if (res.data.bodys) {
+            this.claimData = res.data.bodys;
+          }else{
+            this.claimData = []
+          }
+        }
+      });
+    },
+    // 单选
+    toChooseOne() {},
+    toChoose(row) {
+      // this.clmnos = row.clmno;
+      // console.log(row);
+      // this.gobackList = row;
+      post(service.queryWaitCaseBackInfo, {
+        bodys: {
+          clmno: row.clmno,
+          operate: "02"
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.$router.push({
+            name: "gobackDetail",
+            query: row
+          });
+        } else if (res.data.headers.code === "500") {
+          this.$message.error(res.data.headers.message);
+        }
+      });
+    },
+    // 全选
+    toChooseAll() {},
+    // 申请回退
+    gobackApply() {
+      if (!this.clmnos) {
+        // this.$message.error("请先选中一条数据");
+        this.$message({
+          message: "请先选中一条数据",
+          type: "error",
+        });
+        return;
+      }
+      post(service.queryWaitCaseBackInfo, {
+        bodys: {
+          clmno: this.clmnos,
+          operate: "02"
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.$router.push({
+            name: "gobackDetail",
+            query: this.gobackList
+          });
+        } else if (res.data.headers.code === "500") {
+          this.$message.error(res.data.headers.message);
+        }
+      });
+    },
+    // 回退队列列表
+    getGobackList() {
+      post(service.queryCaseBackInfo, {
+        bodys: {}
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          if (res.data.bodys) {
+            this.gobackData = res.data.bodys;
+          } else {
+          }
+        }
+      });
+    },
+    // 双击进入回退处理页面
+    gobackDetail(row) {
+      // this.$router.push({ name: "gobackDetail" });
+    },
+    // 分页
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currpage - 1) * 10;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    },
+    handleSizeChange1(val) {
+      this.pagesize1 = val;
+    },
+    indexMethod1(index) {
+      return index + 1 + (this.currpage1 - 1) * 10;
+    },
+    handleCurrentChange1(val) {
+      this.currpage1 = val;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+/deep/ .el-date-editor.el-input {
+  width: 100%;
+}
+/deep/.el-collapse-item__arrow {
+  display: none;
+}
+/deep/.el-collapse-item__header {
+  background-color: #0673ff;
+  height: 30px;
+  line-height: 30px;
+  border-radius: 10px 10px 0 0;
+  padding: 0 30px;
+  overflow: hidden;
+  color: #fff;
+  font-size: 16px;
+  font-family: Source Han Sans CN;
+}
+/deep/.el-collapse-item__content {
+  padding-bottom: 0;
+}
+.colItem {
+  padding: 0 30px;
+}
+.firstcolItem {
+  margin-top: 30px;
+}
+/deep/.el-form-item {
+  margin-bottom: 35px;
+}
+.footBtnAll {
+  margin-left: 40px;
+  padding-bottom: 30px;
+}
+.accumulator {
+  margin: 20px;
+
+  .header {
+    background-color: #0673ff;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+  }
+  .work_queue {
+    position: relative;
+    margin-top: 21px;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      font-size: 16px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .blocks {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 20px;
+    box-sizing: border-box;
+  }
+  .block {
+    background-color: #fff;
+    height: 120px;
+    padding-top: 20px;
+    box-sizing: border-box;
+    margin-bottom: 30px;
+    .gobackBtn {
+      margin: 15px 30px 0 30px;
+    }
+  }
+}
+</style>
+

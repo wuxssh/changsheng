@@ -1,0 +1,286 @@
+<template>
+  <div class="reportInquiry">
+    <!-- 报案查询 -->
+    <!-- 工作队列 -->
+    <div class="work_queue">
+      <!-- <img src="../../assets/images/report/tab_btn@1x.png" alt=""> -->
+      <span>照会信息</span>
+      <div class="box"></div>
+    </div>
+    <el-table
+      :data="policyInListArr.slice((currentPage - 1) * pagesize, currentPage * pagesize)"
+      style="width: 100%"
+    >
+      <el-table-column type="expand">
+        <template slot-scope="props">
+          <el-form v-model="labelPosition">
+            <el-row>
+              <el-col
+                :span="8"
+                v-show="props.row.noticestatuname !== '待审批'||props.row.noticestatuname !== '待生成'"
+              >
+                <div class="grid-content">
+                  <el-form-item label="照会终止日期">
+                    <el-input disabled v-model="props.row.noticeenddate"></el-input>
+                  </el-form-item>
+                </div>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="12">
+                <div class="grid-content">
+                  <el-form-item label="照会描述">
+                    <el-input
+                      style="width:100%"
+                      disabled
+                      type="textarea"
+                      resize="none"
+                      v-model="props.row.noticedesc"
+                      :rows="6"
+                    ></el-input>
+                  </el-form-item>
+                </div>
+              </el-col>
+            </el-row>
+          </el-form>
+        </template>
+      </el-table-column>
+      <el-table-column type="index" width="50" label="序号" :index="indexMethod"></el-table-column>
+      <el-table-column prop="rgtno" label="理赔号" align="center"></el-table-column>
+      <el-table-column prop="receivename" label="接收对象" align="center"></el-table-column>
+      <!-- <el-table-column prop="receivename" label="被保险人" align="center"></el-table-column> -->
+      <el-table-column prop="noticekind" label="照会种类" align="center"></el-table-column>
+      <el-table-column prop="noticetype" label="照会类型" align="center"></el-table-column>
+      <el-table-column prop="noticesigndate" label="下发日期" align="center"></el-table-column>
+      <el-table-column prop="noticestatuname" label="照会状态" align="center"></el-table-column>
+      <el-table-column label="操作" align="center">
+        <template slot-scope="scope">
+          <el-button size="mini" @click="lookPDF(scope.row,scope.$index)">预览</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <div style="margin-top:10px;">
+      <el-pagination
+        background
+        @size-change="currentPage1"
+        @current-change="currentChange"
+        :current-page.sync="currentPage1"
+        :page-size="pagesize"
+        layout="prev, pager, next,jumper"
+        :total="policyInListArr.length"
+      ></el-pagination>
+    </div>
+    <div
+      class="elButton"
+      style="display: flex;
+            justify-content: flex-end;
+            margin-right: 20px;"
+    >
+      <el-button type="primary" @click="goBack()" round>返回</el-button>
+    </div>
+  </div>
+</template>
+    <script>
+import axios from "axios";
+// import Banners from "@/components/Banners";
+import { IDType } from "../../utils/service.js";
+import { post, service } from "../../utils/request.js";
+export default {
+  name: "ReportInquiry",
+  // components: {
+  //   Banners
+  // },
+  data() {
+    return {
+      policyInListArr: [], // 审批列表
+      pagesize: 10,
+      currentPage: 1,
+      currentPage1: 1,
+      className: "工作队列",
+      labelPosition: "right",
+      head_pic: require("../../assets/images/eapproval/gold.png"),
+      preArray: [] // 照会对列
+    };
+  },
+  mounted() {
+    // this.find();
+    (this.rgtno = JSON.parse(this.$route.params.dataOfTable).rgtno),
+      this.searchAudit();
+  },
+  methods: {
+    lookPDF(row, index) {
+      post(service.noticepdfprint, {
+        rgtno: this.rgtno ? this.rgtno : this.$route.params.dataOfTable,
+        noticeno: row.noticeno,
+        printtype: "01"
+      }).then(res => {
+        this.pdfList = res.data.pdflist;
+        if (this.pdfList) {
+          window.open(this.pdfList[0].pdfurl, "_blank");
+        } else {
+          this.$message.error("未查询到照会预览pdf路径！");
+        }
+      });
+    },
+    goBack() {
+      this.$router.go(-1);
+    },
+    typeToname(code) {
+      var a = null;
+      IDType().forEach(element => {
+        if (element.value === code) {
+          a = element.text;
+        }
+      });
+      return a;
+    },
+
+    // 查询审批的列表
+    searchAudit() {
+      post(service.zhaohuiDetail, {
+        bodys: {
+          rgtno: this.rgtno ? this.rgtno : this.$route.params.dataOfTable
+        }
+      })
+        .then(result => {
+          if (result.data.header.code === "200") {
+            this.policyInListArr = result.data.bodys;
+          }
+        })
+        .catch();
+    },
+    handle(row, event, column) {
+      this.$router.push({
+        name: "EAListDetails1",
+        params: { dataOfTable: JSON.stringify(row) }
+      });
+    },
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    },
+
+    currentChange: function(page) {
+      this.currentPage = page;
+      // this.tableList();
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currentPage - 1) * 10;
+    },
+  }
+};
+</script>
+    <style scoped lang="less">
+    /deep/ .el-row{
+      margin-bottom: 0!important;
+    }
+.simplesimple {
+  height: 14px;
+  background: #ffffff;
+  box-shadow: 0px 13px 9px rgba(204, 204, 204, 0.15);
+  opacity: 1;
+}
+
+.tables {
+  width: 1541px;
+  height: 364px;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0px 13px 9px rgba(204, 204, 204, 0.15);
+  opacity: 1;
+  border-radius: 0px 0px 6px 6px;
+}
+
+.reportInquiry {
+  margin: 10px;
+
+  .work_queue {
+    position: relative;
+
+    //   img{
+    //      position: relative;
+    //   }
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+
+  .title {
+    width: 82px;
+    height: 20px;
+    font-size: 20px;
+    font-family: Source Han Sans CN;
+    font-weight: bold;
+    line-height: 25px;
+    color: rgba(238, 238, 238, 1);
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    opacity: 1;
+  }
+}
+
+//rgba(238,238,238,1)
+.el-row {
+  text-align: center;
+  margin-bottom: 20px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.grid-content {
+  border-radius: 4px;
+  min-height: 36px;
+
+  span {
+    display: inline-block;
+    width: 20%;
+  }
+}
+
+.row-bg {
+  padding: 10px 0;
+  background-color: #f9fafc;
+}
+</style>
+    <style lang="less">
+.reportInquiry {
+  .el-input {
+    width: 58%;
+  }
+
+  .el-select {
+    width: 58%;
+
+    .el-input {
+      width: 100%;
+    }
+  }
+
+  .elButton {
+    margin-top: 10px;
+    margin-left: 750px;
+  }
+}
+</style>

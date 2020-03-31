@@ -1,0 +1,359 @@
+<template>
+  <div class="accumulator">
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          查询
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form class="formData" :label-position="labelPosition" label-width="130px" :model="form">
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="理赔号">
+                  <el-input
+                    v-model="form.rgtno"
+                    maxlength="13"
+                    clearable
+                    @keyup.enter.native="toQuery"
+                  ></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="出险人客户号">
+                  <el-input v-model="form.customerno" clearable @keyup.enter.native="toQuery"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="出险人姓名">
+                  <el-input
+                    v-model="form.name"
+                    maxlength="20"
+                    clearable
+                    @keyup.enter.native="toQuery"
+                  ></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="出险人性别">
+                  <el-select v-model="form.sex" placeholder="请选择" clearable>
+                    <el-option
+                      v-for="item in sexList"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="受理日期">
+                  <el-date-picker
+                    v-model="form.startdate"
+                    value-format="yyyy-MM-dd"
+                    placeholder="选择日期"
+                    type="date"
+                  ></el-date-picker>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="出险日期">
+                  <el-date-picker
+                    v-model="form.enddate"
+                    value-format="yyyy-MM-dd"
+                    placeholder="选择日期"
+                    type="date"
+                  ></el-date-picker>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+        </el-form>
+        <div class="footBtnAll">
+          <el-button class="elButton" round type="primary" @click="toQuery">查询</el-button>
+        </div>
+      </el-collapse-item>
+    </el-collapse>
+    <div>
+      <div class="work_queue">
+        <span>可选赔案</span>
+        <div class="box"></div>
+      </div>
+      <div class="work_table">
+        <el-table
+          :data="tableData.slice((currpage - 1) * pagesize, currpage * pagesize)"
+          style="width: 100%"
+          @row-click="getClmno"
+          highlight-current-row
+        >
+          <el-table-column label="序号" type="index" width="60" :index="indexMethod" align="center"></el-table-column>
+          <el-table-column prop="clmno" label="理赔号" align="center"></el-table-column>
+          <el-table-column prop="dealdate" label="受理日期" align="center"></el-table-column>
+          <el-table-column prop="customerno" label="客户编码" align="center"></el-table-column>
+          <el-table-column prop="customername" label="客户姓名" align="center"></el-table-column>
+          <el-table-column prop="customersex" label="性别" align="center"></el-table-column>
+          <el-table-column prop="accidentdate" label="出险日期" align="center"></el-table-column>
+        </el-table>
+        <div class="block">
+          <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :page-size="pagesize"
+            background
+            layout="prev, pager, next, jumper"
+            :total="tableData.length"
+          ></el-pagination>
+        </div>
+      </div>
+    </div>
+
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="2">
+        <template slot="title">
+          修改原因
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form :label-position="labelPosition" label-width="120px" :model="forms">
+          <el-row>
+            <div>
+              <div class="textareaTitle">
+                <span class="redStar" style="margin-top:4px;">&nbsp*&nbsp</span>修改原因
+              </div>
+              <el-input
+                class="textareaCenter"
+                type="textarea"
+                placeholder="请填写修改原因"
+                :rows="6"
+                maxlength="700"
+                resize="none"
+                show-word-limit
+                v-model="forms.reason"
+              ></el-input>
+            </div>
+          </el-row>
+        </el-form>
+        <div class="footBtnAll">
+          <el-button type="primary" round :disabled="!this.clmno" @click="update">保单挂起修改</el-button>
+        </div>
+      </el-collapse-item>
+    </el-collapse>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+export default {
+  name: "accumulator",
+  data() {
+    return {
+      labelPosition: "right",
+      activeName: ["1", "2"],
+      // -----------------------
+      form: {
+        rgtno: "",
+        customerno: "",
+        name: "",
+        sex: "",
+        startdate: "",
+        enddate: ""
+      },
+      forms: { reason: "" },
+      sexList: [
+        {
+          id: "0",
+          name: "男"
+        },
+        {
+          id: "1",
+          name: "女"
+        }
+      ],
+      //------------------------
+      tableData: [],
+      pagesize: 10,
+      currpage: 1,
+      clmno: ""
+    };
+  },
+  inject: ["reload"],
+  created() {},
+  methods: {
+    // 查询
+    toQuery() {
+      post(service.queryHangupInfo, {
+        bodys: {
+          clmno: this.form.rgtno,
+          customerno: this.form.customerno,
+          customername: this.form.name,
+          customersex: this.form.sex,
+          dealdate: this.form.startdate,
+          accidentdate: this.form.enddate
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.tableData = res.data.bodys;
+          this.currpage = 1;
+        }
+      });
+    },
+    getClmno(row) {
+      this.clmno = row.clmno;
+    },
+    // 保单挂起修改
+    update() {
+      if (!this.forms.reason) {
+        this.$message.error("修改原因不能为空！");
+        return;
+      }
+      post(service.modifyHangupInfo, {
+        bodys: {
+          clmno: this.clmno,
+          modifyreason: this.forms.reason
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.$message.success("解挂成功！");
+          this.forms.reason = null;
+          this.toQuery();
+        } else {
+          this.$message.error("解挂失败！");
+        }
+      });
+    },
+    // 分页
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currpage - 1) * 10;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+/deep/ .el-input {
+  width: 90%!important
+}
+/deep/.el-select{
+  width: 100%!important
+}
+.formData {
+  margin-top: 30px;
+}
+.textareaTitle {
+  padding: 10px 16px 10px;
+  font-size: 14px;
+  margin: 0;
+}
+.textareaCenter {
+  margin: 0 auto;
+  text-align: center;
+  width: 96%;
+  display: block;
+}
+/deep/.el-collapse-item__arrow {
+  display: none;
+}
+/deep/.el-collapse-item__header {
+  background-color: #0673ff;
+  height: 30px;
+  line-height: 30px;
+  border-radius: 10px 10px 0 0;
+  padding: 0 15px;
+  overflow: hidden;
+  color: #fff;
+  font-size: 16px;
+  font-family: Source Han Sans CN;
+}
+/deep/.el-collapse-item__content {
+  padding-bottom: 0;
+}
+.footBtnAll {
+  background: #fff;
+  padding: 20px 0px 20px 40px;
+  text-align: left;
+}
+.accumulator {
+  margin: 20px;
+
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+  }
+  .work_queue {
+    position: relative;
+    margin-top: 21px;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      font-size: 16px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  /deep/ .block .el-input {
+    width: auto !important;
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 20px;
+    box-sizing: border-box;
+    margin-bottom: 30px;
+  }
+  .img_style {
+    width: 27px;
+    height: 22px;
+  }
+}
+</style>

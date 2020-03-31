@@ -1,0 +1,759 @@
+<template>
+  <div class="secondary">
+    <div class="work_queue">
+      <!-- <img src="../../assets/images/report/tab_btn@1x.png" alt=""> -->
+      <span>保单信息查询</span>
+      <div class="box"></div>
+    </div>
+    <el-table
+      :data="tableData.slice((currpage - 1) * pagesize, currpage * pagesize)"
+      tooltip-effect="dark"
+      style="width: 100%"
+      highlight-current-row
+      @current-change="ToGetCotno"
+    >
+      <el-table-column width="60" align="center">
+        <template slot-scope="scope">
+          <div v-if="scope.row.mark == '1'" style="color:#f00;font-weight:bold">!</div>
+        </template>
+      </el-table-column>
+      <el-table-column label="序号" type="index" width="60" :index="indexMethod" align="center"></el-table-column>
+      <el-table-column prop="contno" label="保单号" align="center"></el-table-column>
+      <el-table-column prop="appntname" label="投保人姓名" align="center"></el-table-column>
+      <el-table-column prop="insuredname" label="被保人姓名" align="center"></el-table-column>
+      <el-table-column prop="cvalidate" label="生效日期" align="center"></el-table-column>
+      <el-table-column prop="enddate" label="保单到期日" align="center"></el-table-column>
+      <el-table-column label="核保决定" align="center">
+        <template slot-scope="scope" prop="uwdecision">
+          <div>
+            <el-select v-model="scope.row.uwdecision" @change="getRow(scope.row)">
+              <el-option
+                v-for="item in newresolveList[scope.$index]"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+              ></el-option>
+            </el-select>
+          </div>
+        </template>
+      </el-table-column>
+    </el-table>
+    <div style="margin:15px 0;">
+      <el-pagination
+        background
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :page-size="pagesize"
+        layout="prev, pager, next,jumper"
+        :total="tableData.length"
+      ></el-pagination>
+    </div>
+    <el-form>
+      <div style="background-color:#fff;padding:20px 28px 0 29px;">
+        <div v-if="isshowuwidea == true">
+          <p style="margin-bottom:5px;margin-top:0">核保决定说明</p>
+          <el-input
+            type="textarea"
+            v-model="uwidea"
+            :autosize="{ minRows: 8}"
+            maxlength="700"
+            show-word-limit
+            resize="none"
+          ></el-input>
+          <div class="saveUwidea">
+            <el-button type="primary" @click="saveResolve()">保存</el-button>
+          </div>
+        </div>
+        <p style="margin-bottom:5px;margin-top:0">事故经过</p>
+        <el-input
+          type="textarea"
+          v-model="accident"
+          :autosize="{ minRows: 8}"
+          maxlength="700"
+          show-word-limit
+          resize="none"
+          disabled
+        ></el-input>
+        <p style="margin-bottom:5px;">伤病诊断</p>
+        <!-- v-model="diagnose" -->
+        <el-input
+          type="textarea"
+          v-model="diagnose"
+          :autosize="{ minRows: 8}"
+          maxlength="700"
+          show-word-limit
+          resize="none"
+          disabled
+        >{{diagnose}}</el-input>
+        <div class="toshowContent">
+          <p style="margin-bottom:5px;">投保前异常情况</p>
+          <el-form-item prop="abnormals">
+            <el-input
+              disabled
+              type="textarea"
+              placeholder="请输入内容"
+              v-model="aor"
+              :autosize="{ minRows: 8}"
+              maxlength="700"
+              resize="none"
+              show-word-limit
+            ></el-input>
+          </el-form-item>
+          <div style="background-color:#fff" prop="type">
+            <el-checkbox-group v-model="secondinfo" disabled>
+              <el-checkbox
+                class="checkItem"
+                v-for="(item) in checkItem"
+                :key="item.id"
+                :label="item.id"
+              >{{item.name}}</el-checkbox>
+            </el-checkbox-group>
+          </div>
+          <div v-if="isideaexplain == true && isideaexplain1 == true" style="padding-bottom:10px">
+            <p style="margin-bottom:5px;">补充意见</p>
+            <el-form-item prop="abnormals">
+              <el-input
+                disabled
+                type="textarea"
+                placeholder="请输入内容"
+                v-model="ideaexplain"
+                :autosize="{ minRows: 8}"
+                maxlength="700"
+                resize="none"
+                show-word-limit
+              ></el-input>
+            </el-form-item>
+          </div>
+        </div>
+      </div>
+    </el-form>
+    <div v-if="isShowHistory">
+      <div class="work_queue work_queued">
+        <span>历史核保意见</span>
+        <div class="box"></div>
+      </div>
+      <el-table
+        :data="hostoryData.slice((currpage1 - 1) * pagesize1, currpage1 * pagesize1)"
+        tooltip-effect="dark"
+        style="width: 100%"
+        highlight-current-row
+      >
+        <el-table-column type="expand">
+          <template slot-scope="props">
+            <div>
+              <p style="padding:0 0 10px 0;margin:0;">核保意见</p>
+              <el-input disabled type="textarea" resize="none" v-model="props.row.uwidea" :rows="9"></el-input>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="序号" type="index" width="60" :index="indexMethod1" align="center"></el-table-column>
+        <el-table-column prop="repliercode" label="回复人工号" align="center"></el-table-column>
+        <el-table-column prop="repliername" label="回复人姓名" align="center"></el-table-column>
+        <el-table-column prop="uwidea" label="核保意见" align="center" class-name="uwideaContent"></el-table-column>
+        <el-table-column prop="repliertime" label="回复时间" align="center"></el-table-column>
+      </el-table>
+      <div style="margin-top:10px;">
+        <el-pagination
+          background
+          @size-change="handleSizeChange1"
+          @current-change="handleCurrentChange1"
+          :page-size="pagesize1"
+          layout="prev, pager, next,jumper"
+          :total="hostoryData.length"
+        ></el-pagination>
+      </div>
+    </div>
+    <div v-if="isShowLipei">
+      <div class="work_queue work_queued">
+        <span>理赔回退意见</span>
+        <div class="box"></div>
+      </div>
+      <el-table
+        :data="liPeiData.slice((currpage2 - 1) * pagesize2, currpage2 * pagesize2)"
+        tooltip-effect="dark"
+        style="width: 100%"
+        highlight-current-row
+      >
+        <el-table-column type="expand">
+          <template slot-scope="props">
+            <div>
+              <p style="padding:0 0 10px 0;margin:0;">核保意见</p>
+              <el-input
+                disabled
+                type="textarea"
+                resize="none"
+                v-model="props.row.claimopinion"
+                :rows="9"
+              ></el-input>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="序号" type="index" width="60" :index="indexMethod2" align="center"></el-table-column>
+        <el-table-column prop="operatorcode" label="处理人工号" align="center"></el-table-column>
+        <el-table-column prop="operatorname" label="处理人姓名" align="center"></el-table-column>
+        <el-table-column
+          prop="claimopinion"
+          label="理赔回退意见"
+          align="center"
+          class-name="uwideaContent"
+        ></el-table-column>
+        <el-table-column prop="operatortime" label="处理时间" align="center"></el-table-column>
+      </el-table>
+      <div style="margin-top:10px;">
+        <el-pagination
+          background
+          @size-change="handleSizeChange2"
+          @current-change="handleCurrentChange2"
+          :page-size="pagesize2"
+          layout="prev, pager, next,jumper"
+          :total="liPeiData.length"
+        ></el-pagination>
+      </div>
+    </div>
+    <div class="footBtnAll">
+      <el-button class="elButton" type="primary" @click="getConfirmsubmit()">确认提交</el-button>
+      <el-button class="elButton" type="primary" @click="toInitImg()">影像查询</el-button>
+      <el-button class="elButton" type="primary" @click="goBack()">返回</el-button>
+    </div>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+import { getDate, getTime } from "../../utils/common.js";
+export default {
+  data() {
+    return {
+      pagesize: 5,
+      currpage: 1,
+      pagesize1: 10,
+      currpage1: 1,
+      pagesize2: 10,
+      currpage2: 1,
+      isShowLipei: false, // 是否显示理赔意见
+      isShowHistory: false, // 是否显示历史核保意见
+      caseNo: "",
+      customerno: "",
+      uwdecision: "01",
+      uwidea: "",
+      accident: "",
+      diagnose: "",
+      aor: "",
+      polnoa: [],
+      polnoss: [],
+      tableData: [],
+      tableDatanew: [],
+      liPeiData: [], // 理赔意见
+      hostoryData: [], // 历史核保意见
+      checkItem: [
+        {
+          id: "01",
+          name: "请重新评估合同风险"
+        },
+        {
+          id: "02",
+          name: "请重新评估附加合同风险"
+        },
+        {
+          id: "03",
+          name: "请重新评估被保人职业等级"
+        },
+        {
+          id: "04",
+          name: "请告知相应健告模块"
+        }
+      ],
+      resolveList: [
+        {
+          id: "01",
+          name: "维持原决定"
+        },
+        {
+          id: "02",
+          name: "异常"
+        }
+      ],
+      newresolveList: [],
+      standbyflag1: "",
+      form: {
+        inqideadesc: ""
+      },
+      secondinfo: [],
+      opinion: [
+        {
+          value: "01",
+          label: "同意"
+        },
+        {
+          value: "02",
+          label: "回退"
+        }
+      ],
+      resultCode: "",
+      polno: "",
+      standbyflag3: "",
+      replyno: "",
+      uwdecision: "",
+      isshowuwidea: false,
+      mark: "",
+      index: "",
+      ideaexplain: "",
+      isideaexplain: false,
+      isideaexplain1: false,
+      uwideaList: []
+    };
+  },
+  created() {
+    this.clmno = this.$route.query.clmno;
+    this.rgtno = this.$route.query.rgtno;
+    this.contno = this.$route.query.contno;
+    this.accidenttype = this.$route.query.accidenttype;
+    this.customerno = this.$route.query.customerno;
+    this.secondno = this.$route.query.secondno;
+    this.getTwoNuclear();
+    this.getTwoAccident();
+    this.getTwoDiagnose();
+    this.getsecondabnormal(); // 二核内容
+    this.getApprovalabnormal(); // 异常情况
+  },
+  mounted() {
+    setTimeout(() => {
+      for (let key = 0; key < this.tableData.length; key++) {
+        this.newresolveList.push(this.resolveList);
+        this.newresolveList[key] = this.resolveList;
+      }
+    }, 1000);
+  },
+  methods: {
+    ToGetCotno(row) {
+      // console.log("AA", row);
+      console.log("AA", row.uwdecision);
+      this.mark = row.mark;
+      this.polno = row.contno;
+      this.uwdecision = row.uwdecision;
+      this.isshowuwidea = true; // 核保决定说明
+      this.isShowHistory = true; // 历史核保意见
+      this.isideaexplain = true;
+      if (this.ideaexplain) {
+        this.isideaexplain1 = true;
+      } else {
+        this.isideaexplain1 = false;
+      }
+
+      for (let key = 0; key < this.tableData.length; key++) {
+        if (this.polno == this.tableData[key].contno) {
+          this.index = key + 1;
+        }
+      }
+      console.log("BB", this.index);
+      this.getClaimopinion(); // 理赔意见
+      this.getUwopinion(); // 历史核保意见
+      this.queryuwopinion(); // 理赔意见查询
+    },
+    getRow(row) {
+      console.log("AAAAA", row.uwdecision);
+      this.mark = row.mark;
+      this.polno = row.contno;
+      this.uwdecision = row.uwdecision;
+      this.isshowuwidea = true; // 核保决定说明
+      for (let key = 0; key < this.tableData.length; key++) {
+        if (this.polno == this.tableData[key].contno) {
+          this.index = key + 1;
+        }
+      }
+    },
+    // 二核回复保单信息查询
+    getTwoNuclear() {
+      post(service.waitreply, {
+        bodys: {
+          caseno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+          secondno: JSON.parse(this.$route.params.dataOfTable).secondno
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          console.log("二核保单信息", res);
+          this.tableData = res.data.bodys;
+          console.log(this.tableData);
+        }
+      });
+    },
+    //  事故经过
+    getTwoAccident() {
+      post(service.accidentaduit, {
+        bodys: {
+          rgtno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+          accidenttype: JSON.parse(this.$route.params.dataOfTable).accidenttype
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.accident = res.data.bodys.accident;
+        }
+      });
+    },
+    // 伤病诊断
+    getTwoDiagnose() {
+      post(service.diagnose, {
+        bodys: {
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          if (res.data.bodys) {
+            res.data.bodys.forEach(item => {
+              this.diagnose += item.diagcode + "，";
+            });
+            this.diagnose = this.diagnose.substring(
+              0,
+              this.diagnose.length - 1
+            );
+          }
+        }
+      });
+    },
+    //  投保前异常情况
+    getApprovalabnormal() {
+      post(service.abnormaladuit, {
+        bodys: {
+          secondno: JSON.parse(this.$route.params.dataOfTable).secondno,
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.aor = res.data.bodys.aor;
+          this.ideaexplain = res.data.bodys.ideaexplain;
+        }
+      });
+    },
+    //  二核内容
+    getsecondabnormal() {
+      post(service.secondaduit, {
+        bodys: {
+          secondno: JSON.parse(this.$route.params.dataOfTable).secondno,
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.secondinfo = res.data.bodys.secondinfos;
+        }
+      });
+    },
+    // 保存核保决定
+    saveResolve() {
+      if (this.uwdecision == "02") {
+        if (!this.uwidea) {
+          this.$message.error("序号" + this.index + "未填写核保决定说明！");
+          return;
+        }
+      }
+      console.log("XXX", this.uwdecision);
+      post(service.saveaduit, {
+        bodys: {
+          secondno: JSON.parse(this.$route.params.dataOfTable).secondno,
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+          uwdecision: this.uwdecision,
+          uwidea: this.uwidea,
+          polno: this.polno,
+          replyno: this.replyno || "",
+          repliercode: localStorage.getItem("userCode"),
+          repliername: localStorage.getItem("userName"),
+          repliertime: getDate() + " " + getTime()
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.$message.success("操作成功！");
+        }
+      });
+    },
+    // 返回按钮
+    goBack() {
+      this.$router.go(-1);
+    },
+    // 核保决定查询
+    queryuwopinion() {
+      post(service.queryuwopinion, {
+        bodys: {
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+          secondno: JSON.parse(this.$route.params.dataOfTable).secondno,
+          polno: this.polno
+        }
+      }).then(res => {
+        if (res.data.header.success === true) {
+          if (res.data.bodys) {
+            this.uwidea = res.data.bodys.uwidea;
+            // this.uwdecision = res.data.bodys.uwdecision;
+            this.replyno = res.data.bodys.replyno;
+          } else {
+            this.uwidea = "";
+          }
+        }
+      });
+    },
+    // 历史核保意见
+    getUwopinion() {
+      post(service.uwopinion, {
+        bodys: {
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+          polno: this.polno,
+          secondno: JSON.parse(this.$route.params.dataOfTable).secondno
+        }
+      }).then(res => {
+        this.hostoryData = res.data.bodys;
+      });
+    },
+    // 理赔意见
+    getClaimopinion() {
+      post(service.claimopinion, {
+        bodys: {
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+          polno: this.polno,
+          secondno: JSON.parse(this.$route.params.dataOfTable).secondno
+        }
+      }).then(res => {
+        console.log("理赔意见查询", res);
+        this.liPeiData = res.data.bodys;
+        if (this.liPeiData && this.liPeiData.length == 0) {
+          this.isShowLipei = false;
+        } else {
+          this.isShowLipei = true;
+        }
+      });
+    },
+    // 二核回复确认
+    getConfirmsubmit() {
+      // if (this.uwdecision == "02") {
+      //   if (!this.uwidea) {
+      //     this.$message.error("序号" + this.index + "未填写核保决定说明！");
+      //     return;
+      //   }
+      // }
+      // console.log("AA", this.tableData);
+      // for(let key = 0;key<this.tableData.length;key++){
+      //   if(this.tableData[key].uwdecision)
+      // }
+      // post(service.waitreply, {
+      //   bodys: {
+      //     caseno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+      //     secondno: JSON.parse(this.$route.params.dataOfTable).secondno
+      //   }
+      // }).then(res => {
+      //   if (res.data.header.code === "200") {
+      //     console.log("二核保单信息", res);
+      //     this.tableDatanew = res.data.bodys;
+      //     // console.log(this.tableData);
+      //     for (let key = 0; key < this.tableDatanew.length; key++) {
+      //       if (this.tableDatanew[key].uwdecision != this.tableData[key].uwdecision) {
+      //         this.$message.error('页面信息未保存,是否确认提交？')
+      //       }
+      //     }
+      //   }
+      // });
+      // // this.getTwoNuclear()
+      // for (let key = 0; key < this.tableData.length; key++) {
+      //   post(service.queryuwopinion, {
+      //     bodys: {
+      //       clmno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+      //       secondno: JSON.parse(this.$route.params.dataOfTable).secondno,
+      //       polno: this.tableData[key].contno
+      //     }
+      //   }).then(res => {
+      //     if (res.data.header.success === true) {
+      //       // if (res.data.bodys) {
+      //       if (
+      //         this.tableData[key].uwdecision == "02" &&
+      //         res.data.bodys.uwidea != ""
+      //       ) {
+      //         this.uwideaList.push(res.data.bodys.uwidea);
+      //         // }
+      //       } else if (this.tableData[key].uwdecision == "02") {
+      //         // this.uwideaList[key].uwidea = "";
+
+      //         this.uwideaList.push("aa");
+      //       }
+      //     }
+      //   });
+      // }
+      // console.log("111", this.uwideaList);
+      // console.log("222", this.uwideaList[0]);
+      // // {
+      // // var that = this;
+      // console.log("VVVV", this.tableData[0].uwdecision);
+
+      // let resdata = JSON.parse(JSON.stringify(this.uwideaList));
+      // console.log(resdata);
+      // // }
+
+      // // setTimeout(() => {
+      // // var that = thiss
+      // setTimeout(() => {
+      //   console.log("ZZZ", JSON.parse(JSON.stringify(this.uwideaList)));
+      // }, 500);
+
+      // // {
+      // //   let newUwideaList = JSON.parse(JSON.stringify(this.uwideaList));
+      // //   console.log("000", newUwideaList);
+      // //   console.log("111", newUwideaList[0]);
+      // //   console.log("555", this.uwideaList);
+
+      // //   // for (let key = 0; key < this.uwideaList.length; key++) {
+      // //   //   if (this.newUwideaList[key] == "") {
+      // //   //     this.$message.error("有保单未填写核保决定说明！");
+      // //   //     return false;
+      // //   //   }
+      // //   // }
+
+      // //   newUwideaList.find(value => {
+      // //     if (value == "") {
+      // //       this.$message.error("有保单未填写核保决定说明！");
+      // //     }
+      // //   });
+      // // }
+      // // }, 1000);
+
+      // // for (let key = 0; key < this.uwideaList.length; key++) {
+      // //   console.log("555", this.uwideaList);
+      // //   if (this.uwideaList[key] == "") {
+      // //     this.$message.error("有保单未填写核保决定说明！");
+      // //     return false;
+      // //   }
+      // // }
+      // // if (!this.uwideaList) {
+      // //   this.$message.error("有保单未填写核保决定说明！");
+      // //   // break;
+      // //   return false;
+      // // }
+
+      // setTimeout(() => {
+      //   this.uwideaList = [];
+      // }, 100);
+      // setTimeout(() => {
+
+      // }, 200);
+      // this.uwideaList = [];
+      // if (!this.polno) {
+      //   this.$message.error("请先选择保单行！");
+      //   return;
+      // }
+
+      // setTimeout(() => {
+      post(service.confirmsubmit, {
+        bodys: {
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+          secondno: JSON.parse(this.$route.params.dataOfTable).secondno,
+          polnos: [],
+          repliercode: localStorage.getItem("userCode"),
+          repliername: localStorage.getItem("userName")
+        }
+      }).then(res => {
+        if (res.data.bodys.resultcode === "200") {
+          this.$message({
+            type: "success",
+            message: "操作成功!"
+          });
+          this.$router.go(-1);
+        } else {
+          this.$message.error(res.data.bodys.resultdesc);
+        }
+      });
+      // }, 500);
+    },
+    // 影像查询
+    toInitImg() {
+      let routeUrl = this.$router.resolve({
+        name: "initImg",
+        query: {
+          rgtno: JSON.parse(this.$route.params.dataOfTable).rgtno
+        }
+      });
+      window.open(routeUrl.href, "_blank");
+    },
+    // 分页
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    },
+    handleSizeChange1(val) {
+      this.pagesize1 = val;
+    },
+    handleCurrentChange1(val) {
+      this.currpage1 = val;
+    },
+    handleSizeChange2(val) {
+      this.pagesize2 = val;
+    },
+    handleCurrentChange2(val) {
+      this.currpage2 = val;
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currpage - 1) * 5;
+    },
+    indexMethod1(index) {
+      return index + 1 + (this.currpage1 - 1) * 10;
+    },
+    indexMethod2(index) {
+      return index + 1 + (this.currpage2 - 1) * 10;
+    }
+  }
+};
+</script>
+<style scoped lang="less">
+.saveUwidea {
+  padding: 20px 0;
+}
+/deep/.el-table__expanded-cell[class*="cell"] {
+  padding: 10px 20px;
+}
+/deep/.uwideaContent .cell {
+  white-space: nowrap;
+}
+.survey_selects {
+  // margin-top: 20px;
+  padding: 20px 30px 0 30px;
+  margin-bottom: 0 !important;
+}
+.work_queued {
+  margin-top: 30px;
+}
+.formContent {
+  background: #fff;
+}
+.footBtnAll {
+  padding-top: 20px;
+  padding-bottom: 20px;
+  margin-left: 30px;
+}
+.secondary {
+  margin: 20px;
+  .work_queue {
+    position: relative;
+    //   img{
+    //      position: relative;
+    //   }
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+}
+.checkItem {
+  display: block;
+  padding-bottom: 20px;
+}
+</style>

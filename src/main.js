@@ -1,0 +1,45 @@
+// The Vue build version to load with the `import` command
+// (runtime-only or standalone) has been set in webpack.base.conf with an alias.
+import Vue from 'vue'
+import App from './App'
+import router from './router'
+import { store } from './store/store'
+import echarts from 'echarts'
+import ElementUI from 'element-ui'
+import { Loading } from 'element-ui'
+import { $axios } from "./utils/request.js";
+Vue.prototype.$axios = $axios;
+import 'element-ui/lib/theme-chalk/index.css'
+// import '@/mock/index.js'
+import * as filters from '@/utils/filters.js'
+Object.keys(filters).forEach(key => {
+  Vue.filter(key, filters[key])
+})
+// process.env.MOCK && require('@/mock')
+
+Vue.use(ElementUI)
+Vue.use(Loading);
+Vue.config.productionTip = false
+Vue.prototype.$baseUrl = process.env.baseUrl
+Vue.prototype.$echarts = echarts;
+/* eslint-disable no-new */
+import VueAwesomeSwiper from 'vue-awesome-swiper'
+import "swiper/dist/css/swiper.css";
+Vue.use(VueAwesomeSwiper)
+import Router from 'vue-router'
+const routerPush = Router.prototype.push
+Router.prototype.push = function push(location) {
+  return routerPush.call(this, location).catch(error => error)
+}
+
+new Vue({
+  el: '#app',
+  router,
+  store,
+  components: { App },
+  template: '<App/>'
+})
+window.addEventListener("popstate", function (e) {
+
+  //根据自己的需求实现自己的功能 
+}, false);

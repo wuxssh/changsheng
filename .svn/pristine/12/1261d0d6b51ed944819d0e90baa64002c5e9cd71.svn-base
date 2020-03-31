@@ -1,0 +1,331 @@
+<template>
+  <div class="reportInquiry">
+    <!-- 报案查询 -->
+    <!-- 工作队列 -->
+    <div class="work_queue">
+      <span>二核信息</span>
+      <div class="box"></div>
+    </div>
+    <el-table
+      :data="policyInListArr.slice((currpage - 1) * pagesize, currpage * pagesize)"
+      style="width: 100%"
+      @row-click="getDetail"
+    >
+      <el-table-column type="expand">
+        <template slot-scope="props">
+          <el-form v-model="labelPosition">
+            <el-row>
+              <el-col :span="24">
+                <div class="grid-content">
+                  <el-form-item label="投保前异常情况">
+                    <el-input
+                      disabled
+                      type="textarea"
+                      v-model="props.row.aor"
+                      resize="none"
+                      :rows="6"
+                    ></el-input>
+                  </el-form-item>
+                </div>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="24">
+                <div class="grid-content">
+                  <el-form-item label="审批意见">
+                    <el-input
+                      disabled
+                      type="textarea"
+                      v-model="props.row.ideaname"
+                      resize="none"
+                      :rows="6"
+                    ></el-input>
+                  </el-form-item>
+                </div>
+              </el-col>
+            </el-row>
+          </el-form>
+        </template>
+      </el-table-column>
+      <el-table-column type="index" width="50" label="序号" :index="indexMethod"></el-table-column>
+      <el-table-column prop="secondno" label="二核编号" align="center"></el-table-column>
+      <el-table-column prop="newsenddate" label="下发日期" align="center"></el-table-column>
+      <el-table-column prop="newreplierdate" label="回复日期" align="center"></el-table-column>
+      <el-table-column prop="newenddate" label="完成日期" align="center"></el-table-column>
+      <el-table-column prop="uwstatename" label="状态" align="center"></el-table-column>
+      <el-table-column prop="uwdecision" label="核保结论" align="center"></el-table-column>
+    </el-table>
+    <div style="margin:10px 0;">
+      <el-pagination
+        background
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :page-size="pagesize"
+        layout="prev, pager, next,jumper"
+        :total="policyInListArr.length"
+      ></el-pagination>
+    </div>
+    <div class="work_queue">
+      <span>保单核保信息</span>
+      <div class="box"></div>
+    </div>
+    <el-table
+      :data="policyData.slice((currpage1 - 1) * pagesize1, currpage1 * pagesize1)"
+      style="width: 100%"
+    >
+      <el-table-column type="expand">
+        <template slot-scope="props">
+          <el-form v-model="labelPosition">
+            <el-row>
+              <el-col :span="24">
+                <div class="grid-content">
+                  <el-form-item label="核保决定说明">
+                    <el-input
+                      disabled
+                      type="textarea"
+                      v-model="props.row.uwidea"
+                      resize="none"
+                      :rows="6"
+                    ></el-input>
+                  </el-form-item>
+                </div>
+              </el-col>
+            </el-row>
+          </el-form>
+        </template>
+      </el-table-column>
+      <el-table-column type="index" width="50" label="序号" :index="indexMethod1"></el-table-column>
+      <el-table-column prop="contno" label="保单号" align="center"></el-table-column>
+      <el-table-column prop="cvalidate" label="生效日期" align="center"></el-table-column>
+      <el-table-column prop="enddate" label="保单到期日" align="center"></el-table-column>
+      <el-table-column prop="uwdecision" label="核保决定" align="center"></el-table-column>
+    </el-table>
+    <div style="margin-top:10px;">
+      <el-pagination
+        background
+        @size-change="handleSizeChange1"
+        @current-change="handleCurrentChange1"
+        :page-size="pagesize1"
+        layout="prev, pager, next,jumper"
+        :total="policyData.length"
+      ></el-pagination>
+    </div>
+    <div class="elButton" style="display: flex;justify-content: flex-end;margin-right: 20px;">
+      <el-button type="primary" @click="goBack()" round>返回</el-button>
+    </div>
+  </div>
+</template>
+    <script>
+import axios from "axios";
+// import Banners from "@/components/Banners";
+import { IDType } from "../../utils/service.js";
+import { post, service } from "../../utils/request.js";
+export default {
+  name: "ReportInquiry",
+  // components: {
+  //   Banners
+  // },
+  data() {
+    return {
+      policyInListArr: [], // 二核信息列表
+      policyData: [], // 核保信息列表
+      pagesize: 10,
+      currpage: 1,
+      pagesize1: 5,
+      currpage1: 1,
+      labelPosition: "right",
+      secondno: "" // 二核流水号
+    };
+  },
+  mounted() {
+    this.searchAudit();
+  },
+  methods: {
+    goBack() {
+      this.$router.go(-1);
+    },
+    // 二核信息查询
+    searchAudit() {
+      post(service.querySecond, {
+        bodys: {
+          rgtno: JSON.parse(this.$route.params.dataOfTable).rgtno
+        }
+      }).then(result => {
+        if (result.data.header.code === "200") {
+          this.policyInListArr = result.data.bodys;
+          this.policyInListArr.forEach(item => {
+            if (item.senddate) {
+              item.newsenddate = item.senddate.slice(0, 10);
+            }
+            if (item.replierdate) {
+              item.newreplierdate = item.replierdate.slice(0, 10);
+            }
+            if (item.enddate) {
+              item.newenddate = item.enddate.slice(0, 10);
+            }
+          });
+        }
+      });
+    },
+    // 单击二核信息行
+    getDetail(row) {
+      this.secondno = row.secondno;
+      this.queryData();
+    },
+    // 核保信息查询
+    queryData() {
+      post(service.queryContUW, {
+        bodys: {
+          secondno: this.secondno,
+          rgtno: JSON.parse(this.$route.params.dataOfTable).rgtno
+        }
+      }).then(res => {
+        this.policyData = res.data.bodys;
+      });
+    },
+    // 分页
+    indexMethod1(index) {
+      return index + 1 + (this.currpage1 - 1) * 5;
+    },
+    handleSizeChange1(val) {
+      this.pagesize1 = val;
+    },
+    handleCurrentChange1(val) {
+      this.currpage1 = val;
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currpage - 1) * 10;
+    },
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    }
+  }
+};
+</script>
+    <style scoped lang="less">
+/deep/ .el-form {
+  margin-bottom: 20px;
+}
+/deep/ .el-row:first-child {
+  padding-top: 0 !important;
+}
+/deep/ .el-row {
+  margin-bottom: 0 !important;
+}
+/deep/.el-form-item {
+  margin-bottom: 0;
+}
+/deep/.el-table__expanded-cell[class*="cell"] {
+  padding: 10px 15px 0;
+}
+.simplesimple {
+  height: 14px;
+  background: #ffffff;
+  box-shadow: 0px 13px 9px rgba(204, 204, 204, 0.15);
+  opacity: 1;
+}
+
+.tables {
+  width: 1541px;
+  height: 364px;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0px 13px 9px rgba(204, 204, 204, 0.15);
+  opacity: 1;
+  border-radius: 0px 0px 6px 6px;
+}
+
+.reportInquiry {
+  margin: 10px;
+
+  .work_queue {
+    position: relative;
+
+    //   img{
+    //      position: relative;
+    //   }
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+
+  .title {
+    width: 82px;
+    height: 20px;
+    font-size: 20px;
+    font-family: Source Han Sans CN;
+    font-weight: bold;
+    line-height: 25px;
+    color: rgba(238, 238, 238, 1);
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    opacity: 1;
+  }
+}
+
+//rgba(238,238,238,1)
+.el-row {
+  text-align: center;
+  margin-bottom: 20px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.grid-content {
+  border-radius: 4px;
+  min-height: 36px;
+
+  span {
+    display: inline-block;
+    width: 20%;
+  }
+}
+
+.row-bg {
+  padding: 10px 0;
+  background-color: #f9fafc;
+}
+</style>
+    <style lang="less">
+.reportInquiry {
+  .el-input {
+    width: 58%;
+  }
+
+  .el-select {
+    width: 58%;
+
+    .el-input {
+      width: 100%;
+    }
+  }
+
+  .elButton {
+    margin-top: 10px;
+    margin-left: 750px;
+  }
+}
+</style>

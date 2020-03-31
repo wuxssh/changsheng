@@ -1,0 +1,472 @@
+<template>
+  <div class="customerIdentifi">
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          客户信息
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form ref="listForm" :model="listForm" v-model="labelPosition" label-width="34%">
+          <el-row style="padding-right:40px;">
+           <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="姓名">
+                  <el-input v-model="listForm.name" maxlength="20" @keyup.enter.native="initList"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="证件号码">
+                  <el-input v-model="listForm.idno" maxlength="100" @keyup.enter.native="initList"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="客户标识">
+                  <el-select v-model="listForm.identifyname" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in IdentifyNameList"
+                      :key="item.value"
+                      :label="item.name"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row style="padding-right:40px;">
+            <!-- <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="性别">
+                  <el-radio-group v-model="listForm.sex">
+                    <el-radio label="0">男</el-radio>
+                    <el-radio label="1">女</el-radio>
+                  </el-radio-group>
+                </el-form-item>
+              </div>
+            </el-col> -->
+           <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="证件类型" >
+                  <el-select v-model="listForm.idtype" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in IdTypeList"
+                      :key="item.code"
+                      :label="item.codename"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row style="text-align:right;padding-right:140px;">
+            <el-button type="primary" round @click="initList">查 询</el-button>
+            <el-button type="primary" round @click="downLoad">批量下载</el-button>
+            <!-- <el-button type="primary" id="fileUpdate-button" round @click="batchImport">批量导入</el-button> -->
+           <el-upload
+              class="import-btn"
+              action=""
+              :http-request="beforeUpload"
+              accept=".xlsx,.xls"
+              :show-file-list="false"
+              style="width:0;display:inline-block;margin-left:10px;"
+            >
+            <el-button type="primary" round>批量导入</el-button>
+            </el-upload>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+
+    <div class="work_queue">
+      <span>客户标识列表</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        :data="tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)"
+        style="width: 100%"
+        highlight-current-row
+        @row-dblclick="toDetails"
+      >
+        <el-table-column label="序号" type="index" :index="indexMethod" align="center" width="80"></el-table-column>
+        <el-table-column prop="name" label="姓名" align="center"></el-table-column>
+        <el-table-column prop="codename" label="证件类型" align="center">
+          <!-- <template slot-scope="scope">
+            <span>{{scope.row.idtype|cardType}}</span>
+          </template> -->
+        </el-table-column>
+        <el-table-column prop="idno" label="证件号码" align="center"></el-table-column>
+        <el-table-column prop="nativeplace" label="国籍" align="center"></el-table-column>
+        <el-table-column prop="inputdate" label="记录时间" align="center"></el-table-column>
+        <el-table-column prop="reason" label="查询原因分类" align="center"></el-table-column>
+        <el-table-column prop="sourcesubcom" label="查询源分公司" align="center"></el-table-column>
+        <el-table-column prop="identifyname" label="客户标识" align="center">
+          <template slot-scope="scope">
+                       <img
+              v-for="(item,index) in scope.row.identifyname"
+              :key="index"
+              :src="item.url"
+              :title="item.title"
+              class="head_pic"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column prop="remark" label="备注" align="center"></el-table-column>
+      </el-table>
+      <div class="block">
+        <el-pagination
+          @size-change="currentPage1"
+          @current-change="currentChange"
+          :current-page.sync="currentPage1"
+          :page-size="10"
+          background
+          layout="prev, pager, next, jumper"
+          :total="total"
+        ></el-pagination>
+      </div>
+    </div>
+    <!-- 备注框 -->
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+import { IDType } from "../../utils/service.js";
+// import { getCodeArr } from "../../utils/service";
+export default {
+  name: "customerIdentifi",
+  data() {
+    return {
+      head_pic: require("../../assets/images/eapproval/vip.png"),
+      hea_pic: require("../../assets/images/eapproval/fraud.png"),
+      he_pic: require("../../assets/images/eapproval/money.png"),
+      h_pic: require("../../assets/images/eapproval/grey.png"),
+      pic: require("../../assets/images/eapproval/black.png"),
+      // vipImg: require("../../assets/images/filing/vip.png"),
+      identifyname: false,
+      listForm: {
+        sex:'',
+        name:'',
+        idno: "",
+        idtype:'',
+        codename:'',
+        identifyname: "",//客户标识
+        identifycode: "",//客户标识代码
+        nativeplace:'',//国籍
+        inputdate:'',//记录时间
+        reason:'',//查询原因分类
+        sourcesubcom:'',//查询源分公司
+        remark:''//备注
+      },
+      IdentifyNameList: [
+        {
+          value: '1',
+          name: "黑名单"
+        },
+        {
+          value: '2',
+          name: "灰名单"
+        },
+        {
+          value: '4',
+          name: "反欺诈"
+        }
+      ],
+      IdTypeList:[],
+      activeName: "1",
+      labelPosition: "right",
+      currentPage: 1,
+      currentPage1: 1,
+      tableData: [],
+      pagesize: 10,
+      currpage: 1,
+      total: 0,
+      currentRow: "",
+    };
+  },
+  inject: ["reload"],
+  mounted() {
+    this.getCodeList();
+  },
+  methods: {
+    gobanck() {
+      this.$router.go(-1);
+    },
+    getCodeList: function() {
+      post(service.getCodeList, {
+        codetype: ["llidtype"]
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.IdTypeList= res.data.bodys["llidtype"]; // 证件类型
+        }
+      });
+    },
+
+    // name转code
+    initList() {
+      this.currentPage = 1;
+      this.currentPage1 = 1;
+      this.total = 0;
+      this.tableData = [];
+      this.$forceUpdate();
+      post(service.personQuery, {
+        bodys: {
+          name: this.listForm.name,
+          idtype: this.listForm.idtype,
+          idno: this.listForm.idno,
+          identifyname:this.listForm.identifyname
+        }
+      })
+        .then(result => {
+          if (result.data.headers.code === "200") {
+            this.tableData = result.data.bodys.rows;
+            this.total = result.data.bodys.total;
+
+             this.tableData.forEach(item => {
+            if (item.identifyname) {
+              item.identifyname = item.identifyname.split(",");
+                 if (item.identifyname.indexOf("5") != -1) {
+                item.identifyname.push({
+                  url: require("../../assets/images/eapproval/vip.png"),
+                  title:"vip"
+                });
+              }
+                 if (item.identifyname.indexOf("1") != -1) {
+                item.identifyname.push({
+                  url: require("../../assets/images/eapproval/black.png"),
+                  title:"黑名单"
+                });
+              }
+              if (item.identifyname.indexOf("2") != -1) {
+                item.identifyname.push({
+                  url: require("../../assets/images/eapproval/grey.png"),
+                  title:"灰名单"
+                });
+              }
+           
+              if (item.identifyname.indexOf("3") != -1) {
+                item.identifyname.push({
+                  url: require("../../assets/images/eapproval/money.png"),
+                  title:"反洗钱"
+                });
+              }
+              if (item.identifyname.indexOf("4") != -1) {
+                item.identifyname.push({
+                  url: require("../../assets/images/eapproval/fraud.png"),
+                  title:"反欺诈"
+                });
+              }
+           
+            }
+          });
+          }
+        })
+        .catch(error => {
+        });
+    },
+    downLoad(){
+      post(service.down,
+      {
+        bodys:{
+          
+        }
+      }
+      ).then(result => {
+          // if(result.data.headers.code === '200'){
+            location.href = result.data.bodys
+          // }
+      }).catch(error => {
+          
+      })
+    },
+    beforeUpload(f){
+      let param = new FormData();
+      param.append("file", f.file); //通过append向form对象添加数据
+      param.append("operator",localStorage.getItem("userCode"));
+      //添加请求头
+      let config = {
+        "content-type": "multipart/form-data"
+      };
+      // var fileNames = f.target.files;
+      
+      this.$axios.post(
+        service.import,
+        param,
+        config
+      )
+      .then(res => {
+        // this.$message({
+        //   message: res.header.message,
+        //   type: "success"
+        // });
+        if(res.header.success == true){
+          this.$message({
+            message: res.header.message,
+            type: "success"
+          });
+          this.initList()
+        }else if(res.header.success == false){
+          this.$message({
+            message: res.header.message,
+            type: "error"
+          });
+        }
+      });
+    },
+    
+    toDetails(row) {
+      this.currentRow = row.customerno;
+    },
+    tableList() {
+      this.displayData = [];
+      for (
+        var j = this.total * (this.currentPage - 1);
+        j < this.total * this.currentPage;
+        j++
+      ) {
+        if (this.tableData[j]) {
+          this.displayData.push(this.tableData[j]);
+        }
+      }
+    },
+    currentChange: function(page) {
+      this.currentPage = page;
+      // this.tableList();
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currentPage - 1) * 10;
+    },
+  }
+};
+</script>
+<style lang="less" scoped>
+.customerIdentifi {
+  margin: 20px;
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 20px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+  }
+  .work_queue {
+    position: relative;
+    margin-top: 21px;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 20px;
+    box-sizing: border-box;
+  }
+  .img_style {
+    width: 27px;
+    height: 22px;
+  }
+}
+</style>
+<style lang="less">
+.customerIdentifi {
+  .el-row {
+    // padding-top: 20px;
+    &:first-child {
+      padding-top: 20px;
+    }
+    &:last-child {
+      padding-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+}
+.customerIdentifi {
+  .el-input {
+    width: 85% !important;
+  }
+  .date_style {
+    .el-input {
+      width: 46% !important;
+    }
+  }
+
+  .el-select {
+    width: 85% !important;
+    .el-input {
+      width: 100% !important;
+    }
+  }
+  .el-collapse-item__arrow {
+    display: none;
+  }
+  .el-collapse-item__header {
+    background-color: #0673ff;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 10px 10px 0 0;
+    padding: 0 15px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+  }
+  .el-collapse-item__content {
+    padding-bottom: 17px;
+  }
+  .el-table--striped .el-table__body tr.el-table__row--striped.current-row td,
+  .el-table__body tr.current-row > td,
+  .el-table__body tr.hover-row.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped > td,
+  .el-table__body tr.hover-row > td {
+    background-color: #409eff;
+  }
+}
+</style>

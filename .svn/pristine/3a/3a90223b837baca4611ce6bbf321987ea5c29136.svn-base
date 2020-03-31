@@ -1,0 +1,1182 @@
+<template>
+  <div class="hospitalConfig">
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          医院信息查询
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form
+          ref="listForm"
+          :model="listForm"
+          v-model="labelPosition"
+          label-width="130px"
+          class="demo-ruleForm"
+        >
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="医院全称" prop="hospitalname">
+                  <el-input v-model="listForm.hospitalname" maxlength="100" @keyup.enter.native="initList"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="医院性质" prop="hospitalprop">
+                  <el-select v-model="listForm.hospitalprop" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in natureList"
+                      :key="item.value"
+                      :label="item.name"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="医院级别" prop="level">
+                  <el-select v-model="listForm.level" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in GradenList"
+                      :key="item.value"
+                      :label="item.name"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="等级" prop="etc">
+                  <el-select v-model="listForm.etc" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in gradeList"
+                      :key="item.value"
+                      :label="item.name"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="我司是否认可" prop="blacklistflag">
+                  <el-select v-model="listForm.blacklistflag" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in stateList"
+                      :key="item.value"
+                      :label="item.name"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="16">
+              <div class="grid-content apply_address">
+                <el-form-item label="所在地" prop="province">
+                  <el-select
+                    v-model="listForm.province"
+                    placeholder="所在省"
+                    clearable
+                    @change="changevince(listForm.province)"
+                    @clear="clearMes()"
+                    style="width:120px !important;"
+                  >
+                    <el-option
+                      v-for="item in provinceList"
+                      :key="item.code"
+                      :label="item.province"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                  <el-select
+                    v-model="listForm.city"
+                    placeholder="所在市"
+                    clearable
+                    @change="changaccity(listForm.city)"
+                    @clear="clearArea()"
+                    style="width:120px !important;"
+                  >
+                    <el-option
+                      v-for="item in cityList"
+                      :key="item.code"
+                      :label="item.city"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                  <el-select
+                    v-model="listForm.county"
+                    placeholder="所在区"
+                    clearable
+                    @change="changeCounty()"
+                    style="width:120px !important;"
+                  >
+                    <el-option
+                      v-for="item in areaList"
+                      :key="item.code"
+                      :label="item.country"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+
+          <el-row style="text-align:right;padding-right:30px;">
+            <el-button type="primary" round @click="initList">查 询</el-button>
+            <!-- <el-button type="primary" round @click="resetForm('listForm')">重 填</el-button> -->
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+    <div class="work_queue">
+      <span>医院信息查询列表</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        :data="tableData"
+        style="width: 100%"
+        highlight-current-row
+        @row-click="toDetails"
+      >
+        <el-table-column label="序号" type="index" :index="indexMethod" align="center" width="80"></el-table-column>
+        <el-table-column prop="hospitcode" label="医院代码" align="center"  width="130"></el-table-column>
+        <el-table-column prop="hospitalname" label="医院名称" align="center"  width="160"></el-table-column>
+        <el-table-column prop="provincename" label="所属省（直辖市）" align="center"  width="150"></el-table-column>
+        <el-table-column prop="cityname" label="所在市" align="center"  width="130"></el-table-column>
+        <el-table-column prop="districtname" label="所在区（县）" align="center"  width="130"></el-table-column>
+        <el-table-column prop="hospitalpropname" label="医院性质" align="center"></el-table-column>
+        <el-table-column prop="levelname" label="医院级别" align="center"></el-table-column>
+        <el-table-column prop="etcname" label="等级" align="center"></el-table-column>
+        <el-table-column prop="blacklistflagname" label="我司是否认可" align="center"  width="130"></el-table-column>
+        <el-table-column prop="alias" label="医院别名" align="center"  width="130"></el-table-column>
+        <el-table-column prop="phone" label="电话" align="center"  width="130"></el-table-column>
+      </el-table>
+      <div class="block">
+        <el-pagination
+          @size-change="currentPage1"
+          @current-change="currentChange"
+          :current-page.sync="currentPage1"
+          :page-size="10"
+          background
+          layout="prev, pager, next, jumper"
+          :total="total"
+        ></el-pagination>
+      </div>
+    </div>
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="2">
+        <template slot="title">
+          医院信息管理
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form
+          ref="listForm2"
+          :model="listForm2"
+          v-model="labelPosition"
+          label-width="130px"
+          :rules="rules"
+        >
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="医院全称" prop="hospitalname">
+                  <el-input v-model="listForm2.hospitalname" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="电话" prop="phone">
+                  <el-input v-model="listForm2.phone" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="我司是否认可" prop="blacklistflag">
+                  <el-select v-model="listForm2.blacklistflag" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in stateList"
+                      :key="item.value"
+                      :label="item.name"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="医院简称" prop="hospitshortname">
+                  <el-input v-model="listForm2.hospitshortname" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="邮编" prop="postcode">
+                  <el-input v-model="listForm2.postcode" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="网址" prop="website">
+                  <el-input v-model="listForm2.website" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+         
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="医院性质" prop="hospitalprop">
+                  <el-select v-model="listForm2.hospitalprop" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in natureList"
+                      :key="item.value"
+                      :label="item.name"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="医院别名" prop="alias">
+                  <el-input v-model="listForm2.alias" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="医院级别" prop="level">
+                  <el-select v-model="listForm2.level" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in GradenList"
+                      :key="item.value"
+                      :label="item.name"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="等级" prop="etc">
+                  <el-select v-model="listForm2.etc" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in gradeList"
+                      :key="item.value"
+                      :label="item.name"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="16">
+              <div class="grid-content apply_address">
+                <el-form-item label="所在地" prop="province">
+                  <el-select
+                    v-model="listForm2.province"
+                    placeholder="所在省"
+                    clearable
+                    @change="changevince2(listForm2.province)"
+                    @clear="clearMes2()"
+                    style="width:120px !important;"
+                  >
+                    <el-option
+                      v-for="item in provinceList2"
+                      :key="item.code"
+                      :label="item.province"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+                <el-form-item prop="city" class="adress_style" style="margin:0 5px">
+                  <el-select
+                    v-model="listForm2.city"
+                    placeholder="所在市"
+                    clearable
+                    @change="changaccity2(listForm2.city)"
+                    @clear="clearArea2()"
+                    style="width:120px !important;"
+                  >
+                    <el-option
+                      v-for="item in cityList2"
+                      :key="item.code"
+                      :label="item.city"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+                <el-form-item prop="district" class="adress_style">
+                  <el-select
+                    v-model="listForm2.district"
+                    placeholder="所在区"
+                    clearable
+                    @change="changeCounty2()"
+                    style="width:120px !important;"
+                  >
+                    <el-option
+                      v-for="item in areaList2"
+                      :key="item.code"
+                      :label="item.country"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                  
+                </el-form-item>
+                
+              </div>
+            </el-col>
+            
+          </el-row>
+           <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="地址" prop="address">
+                  <el-input v-model="listForm2.address" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="区号" prop="areacode">
+                  <el-input v-model="listForm2.areacode" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="备注" prop="remark">
+                  <el-input v-model="listForm2.remark" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row style="text-align:right;padding-right:30px;">
+            <el-button type="primary" round @click="add('listForm2')">增 加</el-button>
+            <el-button type="primary" round @click="update('listForm2')" :disabled="updata">修 改</el-button>
+            <el-button type="primary" round @click="deleteOne" :disabled="updata">删除</el-button>
+            <el-button type="primary" round @click="empty('listForm2')">重 置</el-button>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+// import { getCodeArr } from "../../utils/service";
+export default {
+  name: "hospitalConfig",
+  data() {
+    var isMobileNumber = (rule, value, callback) => {
+      if (!value) {
+        return new Error("请输入电话");
+      } else {
+        var reg = /^\d+$|^\d+[.]?\d+$/;
+        if (!reg.test(value)) {
+          callback(new Error("电话号码不合法!"));
+        } else {
+          if (value.substr(0, 1) == 1) {
+            // debugger;
+            if (value.length != 11) {
+              callback(new Error("电话号码不合法!"));
+            } else {
+              callback();
+            }
+          } else {
+            callback();
+          }
+        }
+      }
+    };
+    return {
+      updata: true,
+      listForm: {
+        hospitalname: "",
+        province: "",
+        city: "",
+        county: "",
+        hospitalprop:"",
+        level: "",
+        etc:"",
+        blacklistflag:"",
+        pagestart:"1",
+        rows:"10"
+      },
+      upusercodeList: [],
+      listForm2: {
+        hospitcode: "",
+        hospitalname: "",
+        province: "",
+        provincename: "",
+        city: "",
+        cityname: "",
+        district: "",
+        districtname: "",
+        level: "",
+        etc: "",
+        hospitalprop: "",
+        blacklistflag:"",
+        hospitshortname:"",
+        alias:"",
+        phone:"",
+        levelname:"",
+        etcname:"",
+        blacklistflag:"",
+        remark:"",
+        website:"",
+        areacode:"",
+        postcode:"",
+        address:"",
+      },
+      natureList:[
+        {
+          value: "0",
+          name: "民办"
+        },
+        {
+          value: "1",
+          name: "公立"
+        },
+        {
+          value: "2",
+          name: "外资"
+        },
+        {
+          value: "3",
+          name: "其他"
+        }
+      ],
+      stateList: [
+        {
+          value: "Y",
+          name: "是"
+        },
+        {
+          value: "N",
+          name: "否"
+        }
+      ],
+      GradenList: [
+        {
+          value: "0",
+          name: "一级"
+        },
+        {
+          value: "1",
+          name: "二级"
+        },
+        {
+          value: "2",
+          name: "三级"
+        },
+        {
+          value: "3",
+          name: "其他"
+        }
+      ],
+      gradeList:[
+        {
+          value: "0",
+          name: "甲等"
+        },
+        {
+          value: "1",
+          name: "乙等"
+        }
+      ],
+      manageAgency: [],
+      roleList: [],
+      agencyList: [],
+      activeName: ["1", "2"],
+      labelPosition: "right",
+      currentPage: 1,
+      currentPage1: 1,
+      tableData: [],
+      provinceList:[],
+      cityList:[],
+      areaList:[],
+      provinceList2:[],
+      cityList2:[],
+      areaList2:[],
+      pagesize: 10,
+      currpage: 1,
+      total: 0,
+      currentRow: "",
+      resetModStr: "",
+      rules: {
+        hospitalname: [
+          {
+            required: true,
+            message: "请输入医院全称",
+            trigger: ["blur", "change"]
+          }
+        ],
+        blacklistflag: [
+          { required: true, message: "请选择是否认可", trigger: "change" }
+        ],
+        phone: [
+          {
+            required: true,
+            message: "请输入电话号码",
+            trigger: ["blur", "change"]
+          },
+          { validator: isMobileNumber, trigger: "blur" }
+        ],
+        postcode: [
+          {
+            required: true,
+            message: "请输入邮编",
+            trigger: ["blur", "change"]
+          }
+        ],
+        address: [
+          {
+            required: true,
+            message: "请输入地址",
+            trigger: ["blur", "change"]
+          }
+        ],
+        areacode: [
+          {
+            required: true,
+            message: "请输入区号",
+            trigger: ["blur", "change"]
+          }
+        ],
+        hospitalprop: [
+          { required: true, message: "请选择医院性质", trigger: "change" }
+        ],
+        level: [
+          { required: true, message: "请选择医院级别", trigger: "change" }
+        ],
+        etc: [
+          { required: true, message: "请选择等级", trigger: "change" }
+        ],
+        province: [
+          { required: true, message: "请选择所在省", trigger: "change" }
+        ],
+        city: [
+          { required: true, message: "请选择所在市", trigger: ["blur","change"] }
+        ],
+        district: [
+          { required: true, message: "请选择所在区", trigger: "change" }
+        ],
+        email: [
+          {
+            required: true,
+            message: "请输入工作邮箱",
+            trigger: ["blur", "change"]
+          }
+        ]
+      },
+      listFormUp: {}
+    };
+  },
+  inject: ["reload"],
+  created() {
+  
+  },
+  mounted() {
+    this.getSheng();
+    this.getCityCode();
+    this.getcountyCode();
+  },
+  methods: {
+    // 列表
+    initList() {
+      this.currentPage = 1;
+      this.currentPage1 = 1;
+      this.$forceUpdate();
+      post(service.getHospitalInfos, {
+        bodys: this.listForm
+      })
+        .then(result => {
+          if (result.data.headers.code === "200") {
+            this.tableData = result.data.bodys.rows;
+            this.total = result.data.bodys.total;
+          }
+        })
+        .catch(error => {
+          console.log("请求失败");
+        });
+    },
+
+    resetForm(formName) {
+      this.$refs[formName].resetFields();
+    },
+
+    toDetails(row) {
+      this.updata = false;
+      this.resetModStr = row.hospitcode;
+      sessionStorage.setItem("row", JSON.stringify(row));
+      // this.listForm2 = JSON.parse("row");
+      post(service.getHospitalInfo, {
+        bodys: {
+          hospitcode: this.resetModStr
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.listForm2 = res.data.bodys;
+          this.getSheng();
+          this.getCityCode();
+          this.getcountyCode();
+        }
+      });
+    },
+    add(formName) {
+      if(this.listForm2.hospitalname == ''){
+        this.$message.error("医院全称不能为空！");
+          return;
+      }
+      if(this.listForm2.phone == ''){
+        this.$message.error("电话不能为空！");
+          return;
+      }
+      if(this.listForm2.blacklistflag == ''){
+        this.$message.error("我司是否认可不能为空！");
+          return;
+      }
+      if(this.listForm2.postcode == ''){
+        this.$message.error("邮编不能为空！");
+          return;
+      }
+      if(this.listForm2.hospitalprop == ''){
+        this.$message.error("医院性质不能为空！");
+          return;
+      }
+      if(this.listForm2.level == ''){
+        this.$message.error("医院级别不能为空！");
+          return;
+      }
+      if(this.listForm2.etc == ''){
+        this.$message.error("等级不能为空！");
+          return;
+      }
+      if(this.listForm2.province == '' || this.listForm2.province == null){
+        this.$message.error("所在省不能为空！");
+          return;
+      }
+      if(this.listForm2.city == '' || this.listForm2.city == null){
+        this.$message.error("所在市不能为空！");
+          return;
+      }
+      if(this.listForm2.district == '' || this.listForm2.district == null){
+        this.$message.error("所在区不能为空！");
+          return;
+      }
+      if(this.listForm2.address == ''){
+        this.$message.error("地址不能为空！");
+          return;
+      }
+      if(this.listForm2.areacode == ''){
+        this.$message.error("区号不能为空！");
+          return;
+      }
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          post(service.insertHospitalInfo, {
+            bodys: {
+              // hospitcode:this.listForm2.hospitcode,
+              hospitalname:this.listForm2.hospitalname,
+              hospitshortname:this.listForm2.hospitshortname,
+              province:this.listForm2.province,
+              city:this.listForm2.city,
+              address:this.listForm2.address,
+              district:this.listForm2.district,
+              phone:this.listForm2.phone,
+              postcode:this.listForm2.postcode,
+              hospitalprop:this.listForm2.hospitalprop,
+              level:this.listForm2.level,
+              etc:this.listForm2.etc,
+              areacode:this.listForm2.areacode,
+              blacklistflag:this.listForm2.blacklistflag,
+              website:this.listForm2.website,
+              alias:this.listForm2.alias,
+              remark:this.listForm2.remark,
+            }
+          }).then(res => {
+            if (res.data.header.code === "200" && res.data.header.success) {
+              this.$message.success(res.data.header.message);
+              this.reload();
+            } else {
+              this.$message.error(res.data.header.message);
+            }
+          });
+        } else {
+          return false;
+        }
+      });
+    },
+    update(formName) {
+      if(this.listForm2.hospitalname == ''){
+        this.$message.error("医院全称不能为空！");
+          return;
+      }
+      if(this.listForm2.phone == ''){
+        this.$message.error("电话不能为空！");
+          return;
+      }
+      if(this.listForm2.blacklistflag == ''){
+        this.$message.error("我司是否认可不能为空！");
+          return;
+      }
+      if(this.listForm2.postcode == ''){
+        this.$message.error("邮编不能为空！");
+          return;
+      }
+      if(this.listForm2.hospitalprop == ''){
+        this.$message.error("医院性质不能为空！");
+          return;
+      }
+      if(this.listForm2.level == ''){
+        this.$message.error("医院级别不能为空！");
+          return;
+      }
+      if(this.listForm2.etc == ''){
+        this.$message.error("等级不能为空！");
+          return;
+      }
+      if(this.listForm2.province == '' || this.listForm2.province == null){
+        this.$message.error("所在省不能为空！");
+          return;
+      }
+      if(this.listForm2.city == '' || this.listForm2.city == null){
+        this.$message.error("所在市不能为空！");
+          return;
+      }
+      if(this.listForm2.district == '' || this.listForm2.district == null){
+        this.$message.error("所在区不能为空！");
+          return;
+      }
+      if(this.listForm2.address == ''){
+        this.$message.error("地址不能为空！");
+          return;
+      }
+      if(this.listForm2.areacode == ''){
+        this.$message.error("区号不能为空！");
+          return;
+      }
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          post(service.updateHospitalInfo, {
+            bodys: {
+              hospitcode:this.listForm2.hospitcode,
+              hospitalname:this.listForm2.hospitalname,
+              hospitshortname:this.listForm2.hospitshortname,
+              province:this.listForm2.province,
+              city:this.listForm2.city,
+              address:this.listForm2.address,
+              district:this.listForm2.district,
+              phone:this.listForm2.phone,
+              postcode:this.listForm2.postcode,
+              hospitalprop:this.listForm2.hospitalprop,
+              level:this.listForm2.level,
+              etc:this.listForm2.etc,
+              areacode:this.listForm2.areacode,
+              blacklistflag:this.listForm2.blacklistflag,
+              website:this.listForm2.website,
+              alias:this.listForm2.alias,
+              remark:this.listForm2.remark,
+            }
+          }).then(res => {
+            if (res.data.header.code === "200" && res.data.header.success) {
+              this.$message.success(res.data.header.message);
+               this.reload();
+            } else {
+              this.$message.error(res.data.header.message);
+            }
+          });
+        } else {
+          return false;
+        }
+      });
+    },
+    empty(formName) {
+      if (!this.updata) {
+        this.listForm2 = JSON.parse(sessionStorage.getItem("row"));
+        console.log(this.listForm2)
+        this.getSheng();
+        this.getCityCode();
+        this.getcountyCode();
+      } else {
+        this.$refs[formName].resetFields();
+      }
+    },
+    deleteOne() {
+      post(service.deleteHospitalInfo, {
+        bodys: {
+          hospitcode: this.resetModStr
+        }
+      }).then(res => {
+        if (res.data.header.code === "200" && res.data.header.success) {
+          this.$message.success(res.data.header.message);
+          this.reload();
+        } else {
+          this.$message.error(res.data.header.message);
+        }
+      });
+    },
+
+    // 获取省==市
+    changevince(key) {
+      post(service.getCity, {
+        bodys: {
+          state: "city",
+          code: key
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.cityList = res.data.bodys.rows;
+          this.listForm.city = null;
+          this.listForm.county = null;
+          this.areaList = null;
+          // this.listForm.rgtantaddress = null;
+        }
+      });
+    },
+    changevince2(key) {
+      post(service.getCity, {
+        bodys: {
+          state: "city",
+          code: key
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.cityList2 = res.data.bodys.rows;
+          this.listForm2.city = null;
+          this.listForm2.district = null;
+          this.areaList2 = null;
+        }
+      });
+    },
+    // 获取市==县
+    changaccity(key) {
+      post(service.getCity, {
+        bodys: {
+          state: "country",
+          code: key
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.areaList = res.data.bodys.rows;
+          this.listForm.county = null;
+          // this.listForm.rgtantaddress = null;
+        }
+      });
+    },
+    changaccity2(key) {
+      post(service.getCity, {
+        bodys: {
+          state: "country",
+          code: key
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.areaList2 = res.data.bodys.rows;
+          this.listForm2.district = null;
+        }
+      });
+    },
+    // 获取省
+    getSheng() {
+      post(service.getCity, {
+        bodys: {
+          state: "province",
+          code: ""
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.provinceList = res.data.bodys.rows;
+          this.provinceList2 = res.data.bodys.rows;
+        }
+      });
+    },
+    
+    getCityCode() {
+      if (this.listForm.province) {
+        post(service.getCity, {
+          bodys: {
+            state: "city",
+            code: this.listForm.province
+          }
+        }).then(res => {
+          if (res.data.headers.code === "200") {
+            this.cityList = res.data.bodys.rows;
+          }
+        });
+      }
+      if (this.listForm2.province) {
+        post(service.getCity, {
+          bodys: {
+            state: "city",
+            code: this.listForm2.province
+          }
+        }).then(res => {
+          if (res.data.headers.code === "200") {
+            this.cityList2 = res.data.bodys.rows;
+          }
+        });
+      }
+    },
+    getcountyCode() {
+      if (this.listForm.city) {
+        post(service.getCity, {
+          bodys: {
+            state: "country",
+            code: this.listForm.city
+          }
+        }).then(res => {
+          if (res.data.headers.code === "200") {
+            this.areaList = res.data.bodys.rows;
+          }
+        });
+      }
+      if (this.listForm2.city) {
+        post(service.getCity, {
+          bodys: {
+            state: "country",
+            code: this.listForm2.city
+          }
+        }).then(res => {
+          if (res.data.headers.code === "200") {
+            this.areaList2 = res.data.bodys.rows;
+          }
+        });
+      }
+    },
+
+    changeCounty() {
+      // this.listForm.rgtantaddress = null;
+    },
+    changeCounty2() {
+      // this.listForm.rgtantaddress = null;
+    },
+    clearMes() {
+      this.listForm.city = null;
+      this.listForm.county = null;
+      this.cityList = null;
+      this.areaList = null;
+    },
+    clearMes2() {
+      this.listForm2.city = null;
+      this.listForm2.district = null;
+      this.cityList2 = null;
+      this.areaList2 = null;
+    },
+    clearArea() {
+      this.listForm.county = null;
+      this.areaList = null;
+    },
+    clearArea2() {
+      this.listForm2.district = null;
+      this.areaList2 = null;
+    },
+    currentChange: function(page) {
+      this.currentPage = page;
+      // this.tableList();
+      post(service.getHospitalInfos, {
+        bodys: {
+          hospitalname: this.listForm.hospitalname,
+          province: this.listForm.province,
+          city: this.listForm.city,
+          county: this.listForm.county,
+          hospitalprop:this.listForm.hospitalprop,
+          level: this.listForm.level,
+          etc:this.listForm.etc,
+          blacklistflag:this.listForm.blacklistflag,
+          pagestart:this.currentPage,
+          rows:"10"
+        }
+      })
+      .then(result => {
+        if (result.data.headers.code === "200") {
+          this.tableData = result.data.bodys.rows;
+          console.log(this.tableData)
+          this.total = result.data.bodys.total;
+        }
+      })
+      .catch(error => {
+        console.log("请求失败");
+      });
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currentPage - 1) * 10;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.hospitalConfig {
+  margin: 20px;
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 20px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+  }
+  .work_queue {
+    position: relative;
+    margin-top: 21px;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .work_table {
+    margin-bottom: 21px;
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 20px;
+    box-sizing: border-box;
+  }
+  .img_style {
+    width: 27px;
+    height: 22px;
+  }
+}
+</style>
+<style lang="less">
+.hospitalConfig {
+  .el-row {
+    // padding-top: 20px;
+    &:first-child {
+      padding-top: 20px;
+    }
+    &:last-child {
+      padding-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+}
+.hospitalConfig {
+  .el-input {
+    width: 85% !important;
+  }
+  .date_style {
+    .el-input {
+      width: 46% !important;
+    }
+  }
+  .apply_address {
+    display: flex;
+    .full {
+      .el-input {
+        width: 150px;
+      }
+    }
+    .el-select {
+      width: 130px;
+    }
+    .adress_style {
+      .el-form-item__content {
+        margin-left: 2px !important;
+      }
+    }
+  }
+
+  .el-select {
+    width: 85% !important;
+    .el-input {
+      width: 100% !important;
+    }
+  }
+  .el-collapse-item__arrow {
+    display: none;
+  }
+  .el-collapse-item__header {
+    background-color: #0673ff;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 10px 10px 0 0;
+    padding: 0 15px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+  }
+  .el-collapse-item__content {
+    padding-bottom: 17px;
+  }
+  .el-table--striped .el-table__body tr.el-table__row--striped.current-row td,
+  .el-table__body tr.current-row > td,
+  .el-table__body tr.hover-row.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped > td,
+  .el-table__body tr.hover-row > td {
+    background-color: #409eff;
+  }
+}
+</style>

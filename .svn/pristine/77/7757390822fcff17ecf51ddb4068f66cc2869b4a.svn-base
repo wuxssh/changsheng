@@ -1,0 +1,940 @@
+<template>
+  <div class="sumUp">
+    <el-form>
+      <el-row type="flex" justify="space-between">
+        <el-col :span="10" class="leftItem">
+          <el-col :span="10" class="leftSon">
+            <div class="leftSonItem">
+              <el-progress
+                type="circle"
+                :percentage="0"
+                v-if="this.percentage1 == null"
+                color="#FCCD63"
+              ></el-progress>
+              <el-progress type="circle" :percentage="percentage1" v-else color="#FCCD63"></el-progress>
+            </div>
+            <div></div>
+            <p class="anjian">
+              当月案件回退率
+              <span style="color:#FCCD63" v-if="this.percentage1 == null">0%</span>
+              <span style="color:#FCCD63" v-else>{{queryList.backrant}}</span>
+            </p>
+          </el-col>
+          <el-col :span="2" style="visibility: hidden;">.</el-col>
+          <el-col :span="12" class="rightRow">
+            <!-- <el-row class="rowss">
+              <el-col :span="2">
+                <div class>
+                  <img src="../../assets/images/home/report@1x.png" alt />
+                </div>
+              </el-col>
+              <el-col :span="10">
+                <div class="text">报案（件）</div>
+              </el-col>
+              <el-col :span="12">
+                <div class>{{percentage2}}</div>
+              </el-col>
+            </el-row>-->
+            <el-row class="rowss" v-show="this.primary.registerflag == '1'">
+              <div @click="goPage('taskList','理赔系统','立案登记')">
+                <el-col :span="2">
+                  <div class>
+                    <img src="../../assets/images/home/filing@1x.png" alt />
+                  </div>
+                </el-col>
+                <el-col :span="10">
+                  <div class="text">立案（件）</div>
+                </el-col>
+                <el-col :span="12">
+                  <div class>{{percentage3}}</div>
+                </el-col>
+              </div>
+            </el-row>
+            <el-row class="rowss" v-show="this.primary.checkflag == '1'">
+              <div @click="goPage('workPool','理赔系统','审核管理')">
+                <el-col :span="2">
+                  <div class="pink">
+                    <img src="../../assets/images/home/review@1x.png" alt />
+                  </div>
+                </el-col>
+                <el-col :span="10">
+                  <div class="text">审核（件）</div>
+                </el-col>
+                <el-col :span="12">
+                  <div class>{{percentage4}}</div>
+                </el-col>
+              </div>
+            </el-row>
+            <el-row class="rowss" v-show="this.primary.uwflag == '1'">
+              <div @click="goPage('eAList','理赔系统','审批管理')">
+                <el-col :span="2">
+                  <div class="pink">
+                    <img src="../../assets/images/home/review@1x.png" alt />
+                  </div>
+                </el-col>
+                <el-col :span="10">
+                  <div class="text">审批（件）</div>
+                </el-col>
+                <el-col :span="12">
+                  <div class>{{percentage5}}</div>
+                </el-col>
+              </div>
+            </el-row>
+            <el-row class="rowss" v-show="this.primary.noteuwflag == '1'">
+              <div @click="goPage('DiplomaticnoteManger','理赔系统','照会管理')">
+                <el-col :span="2">
+                  <div class>
+                    <img src="../../assets/images/home/note@1x.png" alt />
+                  </div>
+                </el-col>
+                <el-col :span="10">
+                  <div class="text">照会审批(件)</div>
+                </el-col>
+                <el-col :span="12">
+                  <div class>{{percentage6}}</div>
+                </el-col>
+              </div>
+            </el-row>
+            <el-row class="rowss" v-show="this.primary.inquwflag == '1'">
+              <div @click="goPage('InvestigationIndex','理赔系统','调查管理')">
+                <el-col :span="2">
+                  <div class>
+                    <img src="../../assets/images/home/investigation@1x.png" alt />
+                  </div>
+                </el-col>
+                <el-col :span="10">
+                  <div class="text">调查审批(件)</div>
+                </el-col>
+                <el-col :span="12">
+                  <div class>{{percentage7}}</div>
+                </el-col>
+              </div>
+            </el-row>
+            <el-row class="rowss" v-show="this.primary.seconduwflag == '1'">
+              <div @click="goPage('secondary','理赔系统','二次核保')">
+                <el-col :span="2">
+                  <div class>
+                    <img src="../../assets/images/home/renew@1x.png" alt />
+                  </div>
+                </el-col>
+                <el-col :span="10">
+                  <div class="text">二核审批(件)</div>
+                </el-col>
+                <el-col :span="12">
+                  <div class>{{percentage8}}</div>
+                </el-col>
+              </div>
+            </el-row>
+          </el-col>
+        </el-col>
+        <el-col :span="14" style="margin-left:20px;">
+          <div class="grid-content" style="background-color:#fff;">
+            <p class="notice">
+              <img src="../../assets/images/home/notice@1x..png" alt />
+              <span class="num">{{this.pulicList.length}}</span>
+              <span class="announcement">实时公告</span>
+              <span class="more" @click="togetMore">
+                查看更多
+                <i class="el-icon-d-arrow-right"></i>
+              </span>
+            </p>
+            <div class="notice_box">
+              <swiper v-if="toShowMore" :options="swiperOption" class="swiper-no-swiping">
+                <swiper-slide v-for="(item,index) in strList" :key="index" class="clearfix">
+                  <span class="swiperItem">
+                    {{item.left}}
+                    <span class="clicknum" @click="toOtherPage(item)">{{item.center}}</span>
+                    {{item.right}}
+                  </span>
+                </swiper-slide>
+              </swiper>
+              <div v-else class="allPublic">
+                <ul>
+                  <li v-for="(item,index) in strList" :key="index" class="clearfix">
+                    <span class="swiperItem">
+                      {{item.left}}
+                      <span class="clicknum" @click="toOtherPage(item)">{{item.center}}</span>
+                      {{item.right}}
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </el-col>
+      </el-row>
+    </el-form>
+  </div>
+</template>
+<script>
+import { post, service } from "../../utils/request.js";
+// import "swiper/dist/css/swiper.css";
+import { swiper, swiperSlide } from "vue-awesome-swiper";
+export default {
+  name: "SumUp",
+  props: {
+    queryList: Object
+  },
+  components: {
+    swiper,
+    swiperSlide
+  },
+  data() {
+    return {
+      registerflag: localStorage.getItem("registerflag"),
+      checkflag: localStorage.getItem("checkflag"),
+      uwflag: localStorage.getItem("uwflag"),
+      noteuwflag: localStorage.getItem("noteuwflag"),
+      inquwflag: localStorage.getItem("inquwflag"),
+      seconduwflag: localStorage.getItem("seconduwflag"),
+      template: ``,
+      swiperOption: {
+        // 显示分页
+        direction: "vertical",
+        pagination: {
+          el: ".swiper-pagination",
+          clickable: true
+        },
+        slidesPerView: 5,
+        stopOnLastSlide: false,
+        autoplay: {
+          delay: 2000,
+          stopOnLastSlide: false,
+          disableOnInteraction: false
+        },
+        observer: true
+        // 开启无限循环
+        // loop: true,
+      },
+      queryItemList: {},
+      percentage1: 0,
+      percentage2: 0,
+      percentage3: 0,
+      percentage4: 0,
+      percentage5: 0,
+      percentage6: 0,
+      percentage7: 0,
+      percentage8: 0,
+      pulicList: [],
+      strList: [],
+      toShowMore: true,
+      primary: {}
+    };
+  },
+  mounted() {
+    setInterval(() => {
+      setTimeout(this.announcedList(), 0);
+    }, 1000 * 60 * 5);
+  },
+  created() {
+    this.getPrimery();
+    this.announcedList();
+  },
+  methods: {
+    // 用户权限信息
+    getPrimery() {
+      post(service.getPrimery, {
+        bodys: {
+          operator: localStorage.getItem("userCode"),
+          mngcom: localStorage.getItem("comCode")
+        }
+      }).then(result => {
+        this.primary = result.data.bodys;
+        // console.log("vvvvvvvv", result);
+        // localStorage.setItem("registerflag", this.primary.registerflag); // 立案权限
+        // localStorage.setItem("notesignflag", this.primary.notesignflag); // 下发照会权限
+        // localStorage.setItem("noteuwflag", this.primary.noteuwflag); // 照会审批权限
+        // localStorage.setItem("startinqflag", this.primary.startinqflag); // 提起调查权限
+        // localStorage.setItem("inquwflag", this.primary.inquwflag); // 调查审批权限
+        // localStorage.setItem("taskassignflag", this.primary.taskassignflag); // 任务分配权限
+        // localStorage.setItem("startsecondflag", this.primary.startsecondflag); // 提起二核权限
+        // localStorage.setItem("seconduwflag", this.primary.seconduwflag); // 二核审批权限
+        // localStorage.setItem("secondreplayflag", this.primary.secondreplayflag); // 二核回复权限
+        // localStorage.setItem("checkflag", this.primary.checkflag); // 案件审核权限
+        // localStorage.setItem("uwflag", this.primary.uwflag); // 案件审批权限
+        // localStorage.setItem("exemptflag", this.primary.exemptflag); // 豁免权限
+        // localStorage.setItem("homepageflag", this.primary.homepageflag); // 首页权限
+      });
+    },
+    // 查看更多按钮
+    togetMore() {
+      this.toShowMore = !this.toShowMore;
+    },
+    // 页面跳转
+    goPage(key1, key2, key3) {
+      if (key1 === "taskList" && this.percentage3 != 0) {
+        this.$router.push({ name: "TaskList" });
+      } else if (key1 === "workPool" && this.percentage4 != 0) {
+        this.$router.push({ name: "WorkPool" });
+      } else if (key1 === "eAList" && this.percentage5 != 0) {
+        this.$router.push({ name: "EAList" });
+      } else if (key1 === "secondary" && this.percentage8 != 0) {
+        this.$router.push({ name: "secondCore" });
+      } else if (key1 === "DiplomaticnoteManger" && this.percentage6 != 0) {
+        this.$router.push({ name: "diplomaticnoteManger" });
+      } else if (key1 === "InvestigationIndex" && this.percentage7 != 0) {
+        this.$router.push({ name: "InvestigationIndex" });
+      }
+    },
+    // 数据回显
+    getData() {
+      this.queryItemList = this.queryList;
+      this.percentage1 = this.queryItemList.backrant;
+      this.percentage2 = this.queryItemList.rptwait;
+      this.percentage3 = this.queryItemList.rgtwait;
+      this.percentage4 = this.queryItemList.audiwait;
+      this.percentage5 = this.queryItemList.apprwait;
+      this.percentage6 = this.queryItemList.notiwait;
+      this.percentage7 = this.queryItemList.inqwait;
+      this.percentage8 = this.queryItemList.uwwait;
+      if (this.percentage1 != null) {
+        this.percentage1 = new Number(
+          this.percentage1.substring(0, this.percentage1.length - 1)
+        );
+      }
+    },
+    // 公告信息跳转
+    toOtherPage(key) {
+      switch (key.current) {
+        case "noticeWaitReply": // 照会回复
+          this.$router.push({
+            name: "diplomaticnoteDetail",
+            params: {
+              dataOfTable: JSON.stringify({
+                caseno: key.center,
+                noticeno: key.otherno,
+                noticestatus: "04"
+              })
+            }
+          });
+          break;
+        case "noticeYSellBack": // 照会已回销
+          if (key.clmstate == "20") {
+            this.$router.push({
+              name: "AddFiling",
+              params: {
+                dataOfTable: JSON.stringify({
+                  caseno: key.center,
+                  customerno: key.otherno,
+                  rgtno: key.center
+                })
+              }
+            });
+          } else if (key.clmstate == "30") {
+            this.$router.push({
+              name: "ReviewInformation",
+              params: {
+                dataOfTable: JSON.stringify({
+                  caseno: key.center,
+                  customerno: key.otherno,
+                  rgtno: key.center
+                })
+              }
+            });
+          } else if (key.clmstate == "40") {
+            this.$router.push({
+              name: "eAListDetails1",
+              params: {
+                dataOfTable: JSON.stringify({
+                  caseno: key.center,
+                  customerno: key.otherno
+                })
+              }
+            });
+          }
+          break;
+        case "inqWaitReply": // 待回复
+          this.$router.push({
+            name: "InvestigationResale",
+            params: {
+              dataOfTable: JSON.stringify({
+                clmno: key.center,
+                inqno: key.otherno
+              })
+            }
+          });
+          break;
+        case "inqYSellBack": // 调查已回销
+          if (key.clmstate == "20") {
+            this.$router.push({
+              name: "AddFiling",
+              params: {
+                dataOfTable: JSON.stringify({
+                  customerno: key.otherno,
+                  rgtno: key.center
+                })
+              }
+            });
+          } else if (key.clmstate == "30") {
+            this.$router.push({
+              name: "ReviewInformation",
+              params: {
+                dataOfTable: JSON.stringify({
+                  caseno: key.center,
+                  customerno: key.otherno,
+                  rgtno: key.center
+                })
+              }
+            });
+          } else if (key.clmstate == "40") {
+            this.$router.push({
+              name: "eAListDetails1",
+              params: {
+                dataOfTable: JSON.stringify({
+                  rgtno: key.center,
+                  customerno: key.otherno
+                })
+              }
+            });
+          }
+          break;
+        case "waitAudit": // 审核
+          post(service.toAutdit, {
+            bodys: {
+              operator: localStorage.getItem("userCode"),
+              rgtno: key.center
+            }
+          }).then(res => {
+            if (res.data.header.success == true) {
+              this.$router.push({
+                name: "ReviewInformation",
+                params: {
+                  dataOfTable: JSON.stringify({
+                    caseno: key.center,
+                    customerno: key.otherno,
+                    rgtno: key.center
+                  })
+                }
+              });
+            } else {
+              this.$message.error(res.data.header.message);
+            }
+          });
+          break;
+        case "waitApprove": // 审批详情
+          this.$router.push({
+            name: "EAListDetails1",
+            params: {
+              dataOfTable: JSON.stringify({
+                rgtno: key.center,
+                customerno: key.otherno
+              })
+            }
+          });
+
+          break;
+        case "noticeApprove": // 照会审批
+          this.$router.push({
+            name: "diplomaticnoteDetail",
+            params: {
+              dataOfTable: JSON.stringify({
+                caseno: key.center,
+                noticeno: key.otherno,
+                noticestatus: "02"
+              })
+            }
+          });
+          break;
+        case "noticeSellBack": // 照会回销
+          this.$router.push({
+            name: "diplomaticnoteDetail",
+            params: {
+              dataOfTable: JSON.stringify({
+                caseno: key.center,
+                noticeno: key.otherno,
+                noticestatus: "05"
+              })
+            }
+          });
+          break;
+        case "timeOut":
+          if (key.clmstate == "20") {
+            this.$router.push({
+              name: "AddFiling",
+              params: {
+                dataOfTable: JSON.stringify({
+                  customerno: key.otherno,
+                  rgtno: key.center
+                })
+              }
+            });
+          } else if (key.clmstate == "30") {
+            this.$router.push({
+              name: "ReviewInformation",
+              params: {
+                dataOfTable: JSON.stringify({
+                  caseno: key.center,
+                  customerno: key.otherno,
+                  rgtno: key.center
+                })
+              }
+            });
+          } else if (key.clmstate == "40") {
+            this.$router.push({
+              name: "eAListDetails1",
+              params: {
+                dataOfTable: JSON.stringify({
+                  rgtno: key.center,
+                  customerno: key.otherno
+                })
+              }
+            });
+          }
+          break;
+        case "inqApprove": // 调查审批
+          this.$router.push({
+            name: "InvestigationReview",
+            params: {
+              dataOfTable: JSON.stringify({
+                clmno: key.center,
+                inqno: key.otherno
+              })
+            }
+          });
+          break;
+        case "inqSellBack": // 调查回销
+          this.$router.push({
+            name: "InvestigationResale",
+            params: {
+              dataOfTable: JSON.stringify({
+                clmno: key.center,
+                inqno: key.otherno
+              })
+            }
+          });
+          break;
+        case "uwApprove": // 二核待审核
+          this.$router.push({
+            name: "secondDetail",
+            params: {
+              dataOfTable: JSON.stringify({
+                rgtno: key.center,
+                secondno: key.otherno
+              })
+            }
+          });
+          break;
+        case "uwSellBack": // 二核待回销
+          this.$router.push({
+            name: "secondDeal",
+            params: {
+              dataOfTable: JSON.stringify({
+                rgtno: key.center,
+                secondno: key.otherno
+              })
+            }
+          });
+          break;
+        case "workerRest": // 休假
+          this.$router.push({
+            name: "Task",
+            params: {
+              userCode: JSON.stringify(key.otherno)
+            }
+          });
+          break;
+        // 报案
+        case "rptAndAsk":
+          break;
+        case "shortRisk":
+          break;
+        case "unNumorDeath":
+          break;
+        case "moreClaim":
+          break;
+        default:
+          break;
+      }
+    },
+    // 工作台公告信息
+    announcedList() {
+      post(service.announcedList, {
+        bodys: {
+          operator: localStorage.getItem("userCode"),
+          mngcom: localStorage.getItem("comCode")
+        }
+      }).then(res => {
+        this.pulicList = res.data.bodys.rows;
+        this.strList = [];
+        for (var key in this.pulicList) {
+          switch (this.pulicList[key].mark) {
+            case "noticeWaitReply":
+              this.strList.push({
+                otherno: this.pulicList[key].noticesreila,
+                current: this.pulicList[key].mark,
+                left: "照会已下发，理赔号：",
+                center: this.pulicList[key].rgtno,
+                right:
+                  "，出险人姓名：" +
+                  this.pulicList[key].name +
+                  "，时间：" +
+                  this.pulicList[key].releasedate
+              });
+              break;
+            case "noticeYSellBack":
+              this.strList.push({
+                // otherno: this.pulicList[key].noticesreila,
+                otherno: this.pulicList[key].customerno,
+                clmstate: this.pulicList[key].clmstate,
+                current: this.pulicList[key].mark,
+                left: "照会已回销，理赔号：",
+                center: this.pulicList[key].rgtno,
+                right:
+                  "，出险人姓名：" +
+                  this.pulicList[key].name +
+                  "，时间：" +
+                  this.pulicList[key].releasedate
+              });
+              break;
+            case "inqWaitReply":
+              this.strList.push({
+                otherno: this.pulicList[key].inqserilia,
+                current: this.pulicList[key].mark,
+                left: "调查已下发，理赔号：",
+                center: this.pulicList[key].rgtno,
+                right:
+                  "，出险人姓名：" +
+                  this.pulicList[key].name +
+                  "，时间：" +
+                  this.pulicList[key].releasedate
+              });
+              break;
+            case "inqYSellBack":
+              this.strList.push({
+                clmstate: this.pulicList[key].clmstate,
+                otherno: this.pulicList[key].customerno,
+                current: this.pulicList[key].mark,
+                left: "调查已回销，理赔号：",
+                center: this.pulicList[key].rgtno,
+                right:
+                  "，出险人姓名：" +
+                  this.pulicList[key].name +
+                  "，时间：" +
+                  this.pulicList[key].releasedate
+              });
+              break;
+            case "waitAudit":
+              this.strList.push({
+                otherno: this.pulicList[key].customerno,
+                current: this.pulicList[key].mark,
+                left: "您好！有一条案件提交审核，请及时处理！理赔号：",
+                center: this.pulicList[key].rgtno,
+                right: "，立案时间：" + this.pulicList[key].rgtconfdate
+              });
+              break;
+            case "waitApprove":
+              this.strList.push({
+                otherno: this.pulicList[key].customerno,
+                current: this.pulicList[key].mark,
+                left: "您好！有一条案件提交审批，请及时处理！理赔号：",
+                center: this.pulicList[key].rgtno,
+                right: "，立案时间：" + this.pulicList[key].releasedate
+              });
+              break;
+            case "noticeApprove":
+              this.strList.push({
+                otherno: this.pulicList[key].noticesreila,
+                current: this.pulicList[key].mark,
+                left: "您好！有照会需要审核！理赔号：",
+                center: this.pulicList[key].rgtno,
+                right:
+                  "，出险人姓名：" +
+                  this.pulicList[key].name +
+                  "，时间：" +
+                  this.pulicList[key].releasedate
+              });
+              break;
+            case "noticeSellBack":
+              this.strList.push({
+                otherno: this.pulicList[key].noticesreila,
+                current: this.pulicList[key].mark,
+                left: "您好！有照会需要回销！理赔号：",
+                center: this.pulicList[key].rgtno,
+                right:
+                  "，出险人姓名：" +
+                  this.pulicList[key].name +
+                  "，时间：" +
+                  this.pulicList[key].releasedate
+              });
+              break;
+            case "timeOut":
+              this.strList.push({
+                clmstate: this.pulicList[key].clmstate,
+                current: this.pulicList[key].mark,
+                left:
+                  "您好！该案件已超" +
+                  this.pulicList[key].time +
+                  "天未结案，请予以关注！理赔号：",
+                center: this.pulicList[key].rgtno,
+                right: "，出险人姓名：" + this.pulicList[key].name
+              });
+              break;
+            case "inqApprove":
+              this.strList.push({
+                otherno: this.pulicList[key].inqserilia,
+                current: this.pulicList[key].mark,
+                left: "您好！有调查需要审核！理赔号：",
+                center: this.pulicList[key].rgtno,
+                right:
+                  "，出险人姓名：" +
+                  this.pulicList[key].name +
+                  "，时间：" +
+                  this.pulicList[key].releasedate
+              });
+              break;
+            case "inqSellBack":
+              this.strList.push({
+                otherno: this.pulicList[key].inqserilia,
+                current: this.pulicList[key].mark,
+                left: "您好！有调查需要回销！理赔号：",
+                center: this.pulicList[key].rgtno,
+                right:
+                  "，出险人姓名：" +
+                  this.pulicList[key].name +
+                  "，时间：" +
+                  this.pulicList[key].releasedate
+              });
+              break;
+            case "uwApprove":
+              this.strList.push({
+                otherno: this.pulicList[key].secondno,
+                current: this.pulicList[key].mark,
+                left: "您好！有二核需要审核！理赔号：",
+                center: this.pulicList[key].rgtno,
+                right:
+                  "，出险人姓名：" +
+                  this.pulicList[key].name +
+                  "，时间：" +
+                  this.pulicList[key].releasedate
+              });
+              break;
+            case "uwSellBack":
+              this.strList.push({
+                otherno: this.pulicList[key].secondno,
+                current: this.pulicList[key].mark,
+                left: "您好！有二核需要回销！理赔号：",
+                center: this.pulicList[key].rgtno,
+                right:
+                  "，出险人姓名：" +
+                  this.pulicList[key].name +
+                  "，时间：" +
+                  this.pulicList[key].releasedate
+              });
+              break;
+            case "workerRest":
+              sessionStorage.setItem(
+                "defaultoperator",
+                this.pulicList[key].usercode
+              ),
+                this.strList.push({
+                  otherno: this.pulicList[key].usercode,
+                  current: this.pulicList[key].mark,
+                  left:
+                    "您好！作业人员" +
+                    this.pulicList[key].name +
+                    "休假，休假时间：" +
+                    this.pulicList[key].section +
+                    "，请进行",
+                  center: "任务分配",
+                  right: "!"
+                });
+              break;
+            case "rptAndAsk":
+              this.strList.push({
+                current: this.pulicList[key].mark,
+                left:
+                  "您好！有一条新的报案需要理赔辅助咨询，请及时处理！报案号：",
+                center: this.pulicList[key].rptno,
+                right: "，报案时间：" + this.pulicList[key].rptdate
+              });
+              break;
+            case "shortRisk":
+              this.strList.push({
+                current: this.pulicList[key].mark,
+                left: "您好！有一条新的报案短期出险，请及时处理！报案号：",
+                center: this.pulicList[key].rptno,
+                right: "，报案时间：" + this.pulicList[key].rptdate
+              });
+              break;
+            case "unNumorDeath":
+              this.strList.push({
+                current: this.pulicList[key].mark,
+                left: "您好！有一条新的报案非正常伤亡，请及时处理！报案号：",
+                center: this.pulicList[key].rptno,
+                right: "，报案时间：" + this.pulicList[key].rptdate
+              });
+              break;
+            case "moreClaim":
+              this.strList.push({
+                current: this.pulicList[key].mark,
+                left: "您好！有一条新的报案多次理赔，请及时处理！报案号：",
+                center: this.pulicList[key].rptno,
+                right: "，报案时间：" + this.pulicList[key].rptdate
+              });
+              break;
+            default:
+              break;
+          }
+        }
+      });
+    }
+  },
+
+  watch: {
+    queryList() {
+      this.getData();
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.clicknum {
+  color: royalblue;
+  cursor: pointer;
+}
+.leftSon {
+  margin-top: 80px;
+  border-right: 1px solid #ccc;
+}
+.leftSonItem {
+  display: inline-block;
+}
+.anjian {
+  display: inline-block;
+}
+.leftItem {
+  text-align: center;
+  margin: 0 auto;
+  background: #fff;
+  padding: 10px 0px;
+  position: relative;
+  border-radius: 4px;
+}
+.rightRow {
+  position: absolute;
+  top: 50%;
+  left: 75%;
+  transform: translate(-50%, -50%);
+}
+.rowss {
+  padding: 12px 0 !important;
+  //   line-height:3;
+  // height: 30px;
+  img {
+    width: 20px;
+    height: 20px;
+  }
+}
+.sumUp {
+  user-select: none;
+  .el-row {
+    border-radius: 4px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  .grid-content {
+    border-radius: 4px;
+    height: 360px;
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+  .right {
+    .el-row {
+      //   margin-bottom: 20px;
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+    .grid-content {
+      border-radius: 4px;
+      height: 56px;
+      line-height: 56px;
+      img {
+        vertical-align: middle;
+      }
+    }
+    .row-bg {
+      padding: 10px 0;
+      background-color: #f9fafc;
+    }
+    .text {
+      font-size: 14px;
+      // padding-right: 20px;
+    }
+  }
+  .notice {
+    position: relative;
+    margin: 0;
+    height: 53px;
+    border-bottom: 1px solid #ccc;
+    .num {
+      font-size: 12px;
+      color: #fff;
+      position: absolute;
+      left: 20px;
+      top: 8px;
+    }
+    .announcement {
+      position: absolute;
+      left: 44px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      font-family: Source Han Sans CN;
+      font-weight: 400;
+      color: rgba(51, 51, 51, 1);
+    }
+    .more {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: Source Han Sans CN;
+      font-size: 14px;
+      color: rgba(0, 62, 255, 1);
+    }
+  }
+  .notice_box {
+    margin: 0;
+    height: 280px;
+    padding-left: 20px;
+    padding-right: 10px;
+    .swiperItem {
+      display: inline-block;
+      padding: 12px 0;
+    }
+    .swiper-no-swiping {
+      clear: both;
+      height: 275px;
+    }
+    .clearfix {
+      // clear: both;
+      height: 55px !important;
+    }
+    .allPublic {
+      height: 100%;
+    }
+    ul {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      overflow-y: scroll;
+    }
+    li {
+      list-style: none;
+    }
+  }
+}
+</style>
+<style lang="less">
+.sumUp {
+  .right {
+    .el-progress {
+      line-height: 3 !important;
+    }
+  }
+}
+</style>

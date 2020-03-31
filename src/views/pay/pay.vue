@@ -1,0 +1,584 @@
+<template>
+  <div class="accumulator">
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          支付信息查询
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form class="formData" :label-position="labelPosition" label-width="120px" :model="form">
+          <el-row class="twice">
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="结案时间">
+                  <!-- type="date" -->
+                  <el-date-picker
+                    @blur="getdate"
+                    v-model="form.date"
+                    type="daterange"
+                    value-format="yyyy-MM-dd"
+                    range-separator="至"
+                    start-placeholder="开始日期"
+                    end-placeholder="结束日期"
+                  ></el-date-picker>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="账户所有人姓名">
+                  <el-input v-model="form.accountownername" maxlength="20" clearable></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="证件类型">
+                  <el-select v-model="form.idtype" placeholder="请选择" clearable>
+                    <el-option
+                      v-for="item in cardTypeList"
+                      :key="item.code"
+                      :label="item.codename"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row class="twice">
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="证件号码">
+                  <el-input v-model="form.idno" maxlength="100" clearable></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="保单号">
+                  <el-input v-model="form.policyno" maxlength="10" clearable></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="理赔号">
+                  <el-input v-model="form.claimno" maxlength="13" clearable></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row class="twice">
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="支付状态">
+                  <el-select v-model="form.paymenttype" placeholder="请选择" clearable>
+                    <el-option
+                      v-for="item in payStateList"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="授权账户号码">
+                  <el-input v-model="form.authoraccountno" maxlength="100" clearable></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+        </el-form>
+        <div class="footBtnAll">
+          <el-button class="elButton" type="primary" @click="toQuery">查询</el-button>
+        </div>
+      </el-collapse-item>
+    </el-collapse>
+    <div>
+      <div class="work_queue">
+        <span>支付信息列表</span>
+        <div class="box"></div>
+      </div>
+      <div class="work_table">
+        <el-table
+          :data="tableData.slice((currpage - 1) * pagesize, currpage * pagesize)"
+          style="width: 100%"
+          highlight-current-row
+        >
+          <el-table-column label="序号" type="index" width="50" :index="indexMethod" align="center"></el-table-column>
+          <el-table-column prop="claimno" label="理赔号" align="center"></el-table-column>
+          <el-table-column prop="policyno" label="保单号" align="center"></el-table-column>
+          <el-table-column prop="accountownername" label="账户所有人" align="center"></el-table-column>
+          <el-table-column prop="idtype" label="证件类型" align="center"></el-table-column>
+          <el-table-column prop="idno" label="证件号码" align="center"></el-table-column>
+          <el-table-column prop="authoraccountno" label="授权账户号码" align="center"></el-table-column>
+          <el-table-column prop="authoraccountbankname" label="授权银行名称" align="center"></el-table-column>
+          <el-table-column prop="amountofmoney" label="领款金额" align="center"></el-table-column>
+          <el-table-column prop="paymenttype" label="支付状态" align="center"></el-table-column>
+          <el-table-column prop="failreason" label="失败原因" align="center"></el-table-column>
+          <el-table-column label="操作" align="center">
+            <template slot-scope="scope">
+              <el-button
+                size="mini"
+                type="primary"
+                :disabled="scope.row.paymenttype == '成功' || scope.row.paymenttype == '支付中'"
+                @click="updatePay(scope.row,scope.$index)"
+              >更改支付信息</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <div class="block">
+          <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page.sync="currpage"
+            :page-size="pagesize"
+            background
+            layout="prev, pager, next, jumper"
+            :total="tableData.length"
+          ></el-pagination>
+        </div>
+      </div>
+    </div>
+    <el-dialog class="dialog" title="客户领款信息" :visible.sync="dialogFormVisible" width="80%">
+      <el-form :model="dialogForm">
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="授权银行">
+              <el-select
+                v-model="dialogForm.bank"
+                placeholder="请选择"
+                clearable
+                @change="getBanchBank"
+                v-el-select-loadmore="loadmoreBank"
+                @focus="clearPageData"
+              >
+                <el-option
+                  v-for="item in bankList"
+                  :key="item.bankid"
+                  :label="item.bankname"
+                  :value="item.bankid"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="所在地区">
+              <!-- v-el-select-loadmore="loadmoreBankLocation" -->
+              <el-select
+                v-model="dialogForm.bankAddress"
+                @change="getBanchBank"
+                placeholder="请选择"
+                clearable
+              >
+                <el-option
+                  v-for="item in bankAddressList"
+                  :key="item.standardareasid"
+                  :label="item.standardareasname"
+                  :value="item.standardareasid"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="支行">
+              <el-select v-model="dialogForm.bankBranch" placeholder="请选择" clearable>
+                <el-option
+                  v-for="item in bankbranchList"
+                  :key="item.banklocationsid"
+                  :label="item.banklocationsname"
+                  :value="item.banklocationsid"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="授权账户号码">
+              <el-input v-model="dialogForm.bankNum" maxlength='20'></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="toPay">发起支付</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+import { generateUUID, getDate, getTime } from "../../utils/common.js";
+import { getCodeType } from "../../utils/service.js";
+export default {
+  name: "accumulator",
+  directives: {
+    "el-select-loadmore": {
+      bind(el, binding) {
+        const elss = el.querySelector(
+          ".el-select-dropdown .el-select-dropdown__wrap"
+        );
+        elss.addEventListener("scroll", function() {
+          const condition =
+            this.scrollHeight - this.scrollTop - 1 <= this.clientHeight;
+          if (condition) {
+            binding.value();
+          }
+        });
+      }
+    }
+  },
+  data() {
+    return {
+      labelPosition: "left",
+      activeName: "1",
+      form: {
+        date: ["", ""],
+        accountownername: "",
+        idtype: "",
+        idno: "",
+        policyno: "",
+        claimno: "",
+        paymenttype: "3",
+        authoraccountno: ""
+      },
+      dialogForm: {
+        bank: "",
+        bankbname: "",
+        bankAddress: "",
+        bankBranch: "",
+        bankNum: "",
+        payno: ""
+      },
+      pageData: {
+        startpage: 0,
+        endpage: 99
+      },
+      pageData1: {
+        startpage: 0,
+        endpage: 99
+      },
+      pageData2: {
+        startpage: 0,
+        endpage: 99
+      },
+      dialogFormVisible: false, // 更改支付信息弹框
+      //------------------------
+      cardTypeList: [],
+      payStateList: [
+        {
+          id: "99",
+          name: "全部"
+        },
+        {
+          id: "2",
+          name: "成功"
+        },
+        {
+          id: "1",
+          name: "支付中"
+        },
+        {
+          id: "3",
+          name: "失败"
+        }
+      ],
+      // -----------------------
+      tableData: [],
+      pagesize: 10,
+      currpage: 1,
+      bankList: [],
+      bankAddressList: [],
+      bankbranchList: []
+    };
+  },
+  created() {
+    this.cardTypeList = getCodeType("llidtype"); // 证件类型
+    this.queryBank();
+    this.queryBankLocation();
+    this.getBanchBank();
+    this.toQuery();
+  },
+  methods: {
+    // 支付信息查询
+    toQuery() {
+      post(service.paymentMangerQuery, {
+        bodys: {
+          endcasestartdate: this.form.date[0],
+          endcaseenddate: this.form.date[1],
+          accountownername: this.form.accountownername,
+          idtype: this.form.idtype,
+          idno: this.form.idno,
+          policyno: this.form.policyno,
+          claimno: this.form.claimno,
+          paymenttype: this.form.paymenttype,
+          authoraccountno: this.form.authoraccountno
+        }
+      }).then(res => {
+        this.tableData = res.data.bodys;
+      });
+    },
+    // 更改支付信息
+    updatePay(row) {
+      this.dialogFormVisible = true;
+      this.dialogForm.bank = row.bankcode;
+      this.dialogForm.bankAddress = row.bankprovince;
+      this.dialogForm.bankBranch = row.bankbranch;
+      this.dialogForm.bankNum = row.bankaccount;
+      this.dialogForm.payno = row.payno;
+      this.dialogForm.bankbname = row.bankbname;
+      post(service.queryTbanklocations, {
+        bodys: {
+          bankid: this.dialogForm.bank,
+          standardareasid: this.dialogForm.bankAddress
+        }
+      }).then(res => {
+        this.bankbranchList = res.data.bodys;
+      });
+    },
+    // 结案日期失焦校验
+    getdate() {
+      console.log("11", this.form.date);
+      if (
+        Math.ceil(
+          (new Date(this.form.date[1]).getTime() -
+            new Date(this.form.date[0]).getTime()) /
+            86400000
+        ) > 365
+      ) {
+        this.$message.error("时间区间跨度最大不得大于365天!");
+        this.form.date = "";
+      }
+    },
+    toPay() {
+      post(service.paymentMangerSend, {
+        bodys: {
+          bankcode: this.dialogForm.bank,
+          // bankname: this.dialogForm.bankbname,
+          bankprovince: this.dialogForm.bankAddress,
+          bankbranch: this.dialogForm.bankBranch,
+          bankaccount: this.dialogForm.bankNum,
+          payserialno: this.dialogForm.payno
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.dialogFormVisible = false;
+          this.toQuery()
+        } else {
+          this.$message.error(res.data.header.message);
+        }
+      });
+    },
+    // 授权银行
+    queryBank() {
+      post(service.queryBank, {
+        pagestart: this.pageData.startpage,
+        pageend: this.pageData.endpage
+        // likename: this.dialogForm.bank
+      }).then(res => {
+        this.bankList = res.data.bodys;
+        console.log("AAA", res);
+      });
+    },
+    loadmoreBank() {
+      this.pageData.startpage += 100;
+      this.pageData.endpage += 100;
+      post(service.queryBank, {
+        pagestart: this.pageData.startpage,
+        pageend: this.pageData.endpage
+        // likename: this.dialogForm.bank
+      }).then(res => {
+        this.bankList = [...this.bankList, ...res.data.bodys];
+      });
+    },
+    clearPageData() {
+      this.pageData.startpage = 0;
+      this.pageData.endpage = 100;
+    },
+    // 所在地区
+    queryBankLocation() {
+      post(service.queryStand, {
+        // pagestart: this.pageData1.startpage,
+        // pageend: this.pageData1.endpage
+        pagestart: 0,
+        pageend: 400
+      }).then(res => {
+        this.bankAddressList = res.data.bodys;
+      });
+    },
+    loadmoreBankLocation() {
+      this.pageData1.startpage += 100;
+      this.pageData1.endpage += 100;
+      post(service.queryStand, {
+        pagestart: this.pageData1.startpage,
+        pageend: this.pageData1.endpage
+      }).then(res => {
+        this.bankAddressList = [...this.bankAddressList, ...res.data.bodys];
+      });
+    },
+    // 支行
+    getBanchBank() {
+      this.dialogForm.bankBranch = "";
+      post(service.queryTbanklocations, {
+        bodys: {
+          // pagestart: this.pageData2.startpage,
+          // pageend: this.pageData2.endpage,
+          bankid: this.dialogForm.bank,
+          standardareasid: this.dialogForm.bankAddress
+          //
+        }
+      }).then(res => {
+        this.bankbranchList = res.data.bodys;
+      });
+    },
+    // 分页
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currpage - 1) * 10;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+/deep/.el-dialog__footer {
+  text-align: left;
+}
+/deep/.el-table__body {
+  width: auto !important;
+}
+
+.dialog {
+  /deep/.el-form-item__content {
+    margin-left: 100px;
+  }
+  // /deep/.el-select .el-input {
+  //   width: 220px !important;
+  //   // margin-left:100px
+  // }
+  // /deep/.el-input {
+  //   width: 220px !important;
+  //   // margin-left:100px
+  // }
+  // /deep/.el-select .el-input {
+  //   width: 220px !important;
+  //   // margin-left:100px
+  // }
+}
+
+/deep/ .el-input {
+  width: 260px !important;
+}
+/deep/.accumulator .el-select {
+  width: 260px !important;
+}
+/deep/.el-select .el-input {
+  width: 260px !important;
+}
+/deep/ .el-range-editor.el-input__inner {
+  width: 260px !important;
+}
+.formData {
+  margin-top: 30px;
+}
+.twice {
+  max-height: 90px;
+  margin-left: 30px;
+}
+/deep/.el-collapse-item__arrow {
+  display: none;
+}
+/deep/.el-collapse-item__header {
+  background-color: #0673ff;
+  height: 30px;
+  line-height: 30px;
+  border-radius: 10px 10px 0 0;
+  padding: 0 15px;
+  overflow: hidden;
+  color: #fff;
+  font-size: 16px;
+  font-family: Source Han Sans CN;
+}
+/deep/.el-collapse-item__content {
+  padding-bottom: 0;
+}
+.footBtnAll {
+  background: #fff;
+  //   margin-right: 30px;
+  padding: 0px 0px 20px 30px;
+  text-align: left;
+}
+.accumulator {
+  margin: 20px;
+
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+  }
+  .work_queue {
+    position: relative;
+    margin-top: 21px;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      font-size: 16px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  /deep/ .block .el-input {
+    width: auto !important;
+  }
+  .block {
+    background-color: #fff;
+    padding: 20px 0;
+    box-sizing: border-box;
+  }
+  .img_style {
+    width: 27px;
+    height: 22px;
+  }
+}
+</style>

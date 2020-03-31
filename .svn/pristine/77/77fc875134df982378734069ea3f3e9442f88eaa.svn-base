@@ -1,0 +1,96 @@
+ {
+   "customerList": [{
+       "rptNo": "11111",
+       "mngCom": "8888",
+       "rptorPhone": "222",
+       "accidentSite": "666",
+       "rptMode": "1"
+     },
+     {
+       "rptNo": "22222",
+       "mngCom": "2",
+       "rptorPhone": "12345678",
+       "accidentSite": "12345678",
+       "rptMode": "2"
+     },
+     {
+       "rptNo": "33333",
+       "mngCom": "3",
+       "rptorPhone": "12345678",
+       "accidentSite": "12345678",
+       "rptMode": "3"
+     },
+      {
+       "rptNo": "44444",
+       "mngCom": "4",
+       "rptorPhone": "12345678",
+       "accidentSite": "12345678",
+       "rptMode": "4"
+     },
+     {
+      "rptNo": "11111",
+      "mngCom": "5",
+      "rptorPhone": "222",
+      "accidentSite": "666",
+      "rptMode": "5"
+    },
+    {
+      "rptNo": "22222",
+      "mngCom": "6",
+      "rptorPhone": "12345678",
+      "accidentSite": "12345678",
+      "rptMode": "6"
+    },
+    {
+      "rptNo": "33333",
+      "mngCom": "7",
+      "rptorPhone": "12345678",
+      "accidentSite": "12345678",
+      "rptMode": "7"
+    },
+     {
+      "rptNo": "44444",
+      "mngCom": "8",
+      "rptorPhone": "12345678",
+      "accidentSite": "12345678",
+      "rptMode": "8"
+    },
+    {
+      "rptNo": "11111",
+      "mngCom": "9",
+      "rptorPhone": "222",
+      "accidentSite": "666",
+      "rptMode": "9"
+    },
+    {
+      "rptNo": "22222",
+      "mngCom": "10",
+      "rptorPhone": "12345678",
+      "accidentSite": "12345678",
+      "rptMode": "10"
+    },
+    {
+      "rptNo": "33333",
+      "mngCom": "11",
+      "rptorPhone": "12345678",
+      "accidentSite": "12345678",
+      "rptMode": "11"
+    },
+     {
+      "rptNo": "44444",
+      "mngCom": "12",
+      "rptorPhone": "12345678",
+      "accidentSite": "12345678",
+      "rptMode": "12"
+    },
+    {
+      "rptNo": "44444",
+      "mngCom": "13",
+      "rptorPhone": "12345678",
+      "accidentSite": "12345678",
+      "rptMode": "13"
+    }
+   ],
+   "totalnum":13
+
+ }

@@ -1,0 +1,965 @@
+import {
+  service,
+  post
+} from "./request";
+// import Vue from 'vue'
+// import {
+//   Message
+// } from 'element-ui';
+// Vue.component(Message.name, Message)
+import Vue from 'vue';
+import {
+  Message
+} from 'element-ui';
+
+Vue.prototype.$message = Message;
+export const textSet = (text) => {
+  // arr.map((value)=>{
+  //     if(value === '-'){
+  //         // return parseFloat(value)
+  //     } else if(value.indexOf(',')!==-1){
+  //         return parseFloat(value.replace(/,/g, ""))
+  //     } else {
+  //         return parseFloat(value)
+  //     }
+
+  //   }) // [1,2,3]
+  var a = ''
+  if (text === 'amountPay') {
+    a = 'TOP5产品赔付金额'
+  } else if (text === 'amountPay1') {
+    a = "各险种赔付件数及占比"
+  } else if (text === 'amountPay2') {
+    a = "各险种赔付金额及占比"
+  }
+  return a
+}
+/**
+ * 出险人证件类型
+ */
+export const IDType = () => {
+  var RiskTakerLists = [{
+    value: '1',
+    text: '18位身份证'
+  },
+  {
+    value: '2',
+    text: '中国护照'
+  },
+  {
+    value: '3',
+    text: '军官证'
+  }, {
+    value: '4',
+    text: '异常身份证 儿童'
+  }, {
+    value: '5',
+    text: '异常身份证 儿童1'
+  }, {
+    value: '6',
+    text: '其它证件'
+  }, {
+    value: '7',
+    text: '警官证'
+  }, {
+    value: '8',
+    text: '外国护照'
+  }, {
+    value: '9',
+    text: '港澳通行证'
+  }, {
+    value: '10',
+    text: '外国人永久居留证'
+  }, {
+    value: '11',
+    text: '港澳台居民居住证'
+  }
+  ]
+  return RiskTakerLists
+}
+
+export const checkInfor = (data) => {
+  var message = ''
+  if (!data.examIdea) {
+    message = '审批意见不能为空'
+    return message
+  };
+  if (data.examConclusion !== '1' && data.examConclusion !== '0') {
+    message = '审批结论不能为空'
+    return message
+  };
+  if (data.examConclusion === '0' && !data.examNoPassReason) {
+    message = '回退原因不能为空'
+    return message
+  };
+  if (data.examConclusion === '0' && !data.examNoPassDesc) {
+    message = '回退原因说明不能为空'
+    return message
+  };
+
+}
+export const getCodeArr = (data) => {
+  // debugger
+  //   post(service.getCodeList, {
+  //     // 证件类型，性别，出险类型
+  //        "codetype": data
+  //   }).then(res => {
+  //     if (res.data.header.code === "200") {
+  //         return res.data.bodys
+  //     }
+  //   });
+  post(service.getCodeList, {
+    // 证件类型，性别，出险类型
+    "codetype": data
+  }).then(res => {
+    if (res.data.header.code === "200") {
+      return res.data.bodys
+    }
+  });
+}
+
+
+export const getCodeType = (type) => {
+  var codeObj = JSON.parse(localStorage.getItem('getcodeList'))
+  for (var key in codeObj) {
+    if (type == key) {
+      return codeObj[type]
+    }
+  }
+}
+
+// 获取费用项名称
+
+// 判断保项计算是否修改
+export const checkChange = (data1, data2) => {
+  // debugger
+  var newArrey = []
+  if (data1.length != 0 && data1.length != 0) {
+    for (var i = 0; i < data1.length; i++) {
+      // for(var j = 0;j<data2.length;j++) {
+      //   if(data1[i].realpay != data2[j].realpay) {
+      //     newArrey.push({
+      //       polno: data1[i].polno,
+      //       riskcode:data1[i].riskcode,
+      //       getdutycode:data1[i].getdutycode,
+      //       realpay:data1[i].realpay
+      //     })
+      //   }
+
+      // }
+      // return newArrey
+      if (data1[i].realpay != data2[i].realpay) {
+        newArrey.push({
+          polno: data1[i].polno,
+          riskcode: data1[i].riskcode,
+          getdutycode: data1[i].getdutycode,
+          realpay: data1[i].realpay,
+          givetype: data1[i].givetype
+        })
+      }
+      if (data1[i].givetype != data2[i].givetype) {
+        newArrey.push({
+          polno: data1[i].polno,
+          riskcode: data1[i].riskcode,
+          getdutycode: data1[i].getdutycode,
+          realpay: data1[i].realpay,
+          givetype: data1[i].givetype
+        })
+      }
+      // if ((data1[i].realpay != data2[i].realpay)&&(data1[i].givetype != data2[i].givetype)) {
+      //   newArrey.push({
+      //     polno: data1[i].polno,
+      //     riskcode: data1[i].riskcode,
+      //     getdutycode: data1[i].getdutycode,
+      //     realpay: data1[i].realpay,
+      //     givetype: data1[i].givetype
+      //   })
+      // }
+    }
+    return newArrey
+  } else {
+    return newArrey
+  }
+}
+
+// 获取名称返回code
+export const nameTocode = (name, codeList) => {
+  for (var i = 0; i < codeList.length; i++) {
+    if (codeList[i].codename == name) {
+      return codeList[i].code
+    }
+  }
+
+}
+export const nameTocode1 = (name, codeList) => {
+  for (var i = 0; i < codeList.length; i++) {
+    if (codeList[i].codename == name) {
+      return codeList[i].comcode
+    }
+  }
+
+}
+export const abc = (name, codeList) => {
+  for (var i = 0; i < codeList.length; i++) {
+    if (codeList[i].criticalname == name) {
+      return codeList[i].bigsource
+    }
+  }
+}
+export const abcd = (name, codeList) => {
+  for (var i = 0; i < codeList.length; i++) {
+    if (codeList[i].criticalname == name) {
+      return codeList[i].smallsource
+    }
+  }
+}
+export const abcde = (name, codeList) => {
+  for (var i = 0; i < codeList.length; i++) {
+    if (codeList[i].criticalname == name) {
+      return codeList[i].criticalcode
+    }
+  }
+}
+export const abc1 = (name, codeList) => {
+  for (var i = 0; i < codeList.length; i++) {
+    if (codeList[i].fracturename == name) {
+      return codeList[i].fracturecode
+    }
+  }
+}
+export const abc2 = (name, codeList) => {
+  for (var i = 0; i < codeList.length; i++) {
+    if (codeList[i].fracturedetailname == name) {
+      return codeList[i].fracturedetailcode
+    }
+  }
+}
+// 判断不能小于当前
+export const checkDate = (date1, date2) => {
+  if (type == '1') {
+    if (date1 > date2) {
+      return false
+    }
+  }
+
+
+}
+
+// 判断同一立案下，是否有同一个编号
+export const checkdeff = (arr1, val, type) => {
+  // debugger
+  if (type == '1') {
+    // var ary = new Array("111","22","33","111");
+
+    var s = arr1.join(",") + ",";
+    var count = 0;
+    for (var i = 0; i < arr1.length; i++) {
+
+      // if (s.replace(arr1[i] + ",", "").indexOf("," + arr1[i] + ",") > -1) {
+      //   return false
+      // }
+      // return true
+      if (val == arr1[i]) {
+        count++;
+        if (count > 1) {
+          return false
+        }
+      }
+    }
+    return true
+
+  } else if (type == '2') {
+    // var a= ['1','2']
+    if (arr1.length == 0) {
+      return true
+    } else {
+      for (var i = 0; i < arr1.length; i++) {
+        if (val == arr1[i]) {
+          return false
+        }
+      }
+      return true
+    }
+  }
+}
+
+// 计算两个时间之间天数
+
+export const sumDays = (sDate1, sDate2) => {
+  var dateSpan,
+    iDays;
+  sDate1 = Date.parse(sDate1);
+  sDate2 = Date.parse(sDate2);
+  dateSpan = sDate2 - sDate1;
+  // dateSpan = Math.abs(dateSpan);
+  iDays = Math.floor(dateSpan / (24 * 3600 * 1000));
+  return iDays
+}
+
+// 两个数之间的相乘
+export const accMul = (arg1, arg2) => {
+  var m = 0,
+    s1 = arg1.toString(),
+    s2 = arg2.toString();
+  try {
+    m += s1.split(".")[1].length
+  } catch (e) { }
+  try {
+    m += s2.split(".")[1].length
+  } catch (e) { }
+  return Number(s1.replace(".", "")) * Number(s2.replace(".", "")) / Math.pow(10, m)
+}
+// 只能输入两位小数
+export const numTwo = (obj) => {
+  obj.value = obj.value.replace(/[^\d.]/g, ""); //清除"数字"和"."以外的字符
+  obj.value = obj.value.replace(/^\./g, ""); //验证第一个字符是数字
+  obj.value = obj.value.replace(/\.{2,}/g, "."); //只保留第一个, 清除多余的
+  obj.value = obj.value.replace(".", "$#$").replace(/\./g, "").replace("$#$", ".");
+  obj.value = obj.value.replace(/^(\-)*(\d+)\.(\d\d\d\d\d\d\d\d).*$/, '$1$2.$3'); //控制可输入的小数
+}
+
+
+
+// 北京单证的校验
+export const checkBj = (obj, type) => {
+  if (obj.length > 0) {
+    for (var i = 0; i < obj.length; i++) {
+      var message = ''
+      if (!obj[i].billno) {
+        message = '收据编号不能为空!'
+        return message
+      }
+      if (type == "C" || type == "E" || type == "F" || type == "G" || type == "H" || type == "I" || type == "J" || type == "K") {
+        if (!obj[i].hospitalname) {
+          message = '医院名称不能为空!'
+          return message
+        }
+      }
+
+      if (type == "E" || type == "G" || type == "H" || type == "K") {
+        if (!obj[i].hospstartdate) {
+          message = '入院日期不能为空'
+          return message
+        }
+
+        if (!obj[i].hospenddate) {
+          message = '出院日期不能为空'
+          return message
+        }
+
+        if (!obj[i].realhospdate) {
+          message = '住院天数不能为空'
+          return message
+        }
+        // if(!obj[i].imhospdate&&!obj[i].realhospdate) {
+        //   message = '病房天数不能为空'
+        //   return message
+        // }
+      }
+      if (type == 'G' || type == 'H' || type == 'K') {
+        if ((!obj[i].billmoney) && obj[i].billmoney != 0) {
+          message = '住院金额不能为空！'
+          return message
+        }
+      }
+      if (type == "H") {
+        if (!obj[i].ruralmedicalinsurance) {
+          message = '新农合报销金额不能为空！'
+          return message
+        }
+      }
+      if (type == "I") {
+        // if ((!obj[i].specialfeemount)&&(obj[i].specialfeemount!=0)) {
+        //   message = '门诊特殊病金额不能为空！'
+        //   return message
+        // }注释
+        if (!obj[i].ownepense) {
+          message = '个人自费金额不能为空！'
+          return message
+        }
+        if (!obj[i].selfaccountpaymoney) {
+          message = '个人账户金额不能为空！'
+          return message
+        }
+      }
+      if (type == 'C' || type == 'D' || type == 'F' || type == 'I' || type == 'J') {
+        if (!obj[i].clinicdate) {
+          message = '门诊日期不能为空'
+          return message
+        }
+        // if((new Date() - new Date().getTime()) / 1000 < 0) {
+        //   message = '就诊时间不能大于当前日期'
+        //   return message
+        //  }
+      }
+      // if (type == 'C' || type == 'D') {
+      //   if (!obj[i].feemount) {
+      //     message = '门诊金额不能为空！'
+      //     return message
+      //   }
+      // }注释
+      if (type == 'C' || type == 'E' || type == 'I') {
+        if (!obj[i].individualpaya) {
+          message = '自付一不能为空！'
+          return message
+        }
+      }
+      if (type == 'E') {
+        if (!obj[i].selfpay) {
+          message = '个人支付金额不能为空！'
+          return message
+        }
+      }
+      if (type == 'C' || type == 'E' || type == 'I') {
+        if (!obj[i].individualpayb) {
+          message = '自付二不能为空！'
+          return message
+        }
+      }
+      if (type == 'D') {
+        if (!obj[i].selfliabilitiesa) {
+          message = '自负一小计不能为空！'
+          return message
+        }
+      }
+      if (type == 'D') {
+        if (!obj[i].selfliabilitiesb) {
+          message = '自负二小计不能为空！'
+          return message
+        }
+      }
+      if (type == 'C' || type == 'D' || type == 'I') {
+        if (!obj[i].ownepense) {
+          message = '自费不能为空！'
+          return message
+        }
+      }
+      if (type == 'D') {
+        if (!obj[i].hospitalmutualitypayment) {
+          message = '大额互助资金（住院）支付不能为空！'
+          return message
+        }
+      }
+      if (type == 'D') {
+        if (!obj[i].ordinaltionfund) {
+          message = '统筹基金本次支付不能为空！'
+          return message
+        }
+      }
+      // if (type == 'F' || type == 'J') {
+      //   if ((!obj[i].receiptfee)&&(obj[i].receiptfee!==0)) {
+      //     message = '费用总金额不能为空'
+      //     return message
+      //   }
+      // }注释
+
+      // if (!obj[i].selfamnt && obj[i].selfamnt != 0) {
+      //   message = '自费金额不能为空'
+      //   return message
+      // }
+      // if(!obj[i].socifee) {
+      //   message = '统筹/附加金额不能为空'
+      //   return message
+      // }
+      if (!obj[i].sociflag) {
+        message = '社保标志不能为空'
+        return message
+      }
+      // if(!obj[i].otherfee) {
+      //   message = '其他补偿不能为空'
+      //   return message
+      // }
+      // if (!obj[i].refusemoney.toString()) {
+      //   message = '扣费明细不能为空'
+      //   return message
+      // }
+      // if (!obj[i].indemnity) {
+      //   message = '收据赔付金额不能为空'
+      //   return message
+      // }
+      if (type == 'C' || type == 'F' || type == 'G' || type == 'H' || type == 'I' || type == 'J' || type == 'K') {
+        if (!obj[i].operation) {
+          message = '是否手术不能为空'
+          return message
+        }
+      }
+
+
+    }
+  }
+
+
+}
+
+// 医疗单证门诊的校验
+
+export const checkMfor = (obj, type) => {
+  if (obj.length > 0) {
+    for (var i = 0; i < obj.length; i++) {
+      var message = ''
+      if (!obj[i].mainfeeno) {
+        message = '收据编号不能为空'
+        return message
+      }
+      if (!obj[i].hospitalcode) {
+        message = '医院名称不能为空'
+        return message
+      }
+      if (type == "2") {
+        if (!obj[i].hospstartdate) {
+          message = '入院日期不能为空'
+          return message
+        }
+
+
+        if (!obj[i].hospenddate) {
+          message = '出院院日期不能为空'
+          return message
+        }
+        // if(!obj[i].imhospdate&&!obj[i].realhospdate) {
+        //   message = '病房天数不能为空'
+        //   return message
+        // }
+      }
+      if (type == '1') {
+        if (!obj[i].feedate) {
+          message = '就诊时间不能为空'
+          return message
+        }
+        // if((new Date() - new Date().getTime()) / 1000 < 0) {
+        //   message = '就诊时间不能大于当前日期'
+        //   return message
+        //  }
+      }
+
+      if (!obj[i].billmoney) {
+        message = '费用总金额不能为空'
+        return message
+      }
+      if (!obj[i].selfamnt && obj[i].selfamnt != 0) {
+        message = '自费金额不能为空'
+        return message
+      }
+      // if(!obj[i].socifee) {
+      //   message = '统筹/附加金额不能为空'
+      //   return message
+      // }
+      if (!obj[i].sociflag) {
+        message = '社保标志不能为空'
+        return message
+      }
+      // if(!obj[i].otherfee) {
+      //   message = '其他补偿不能为空'
+      //   return message
+      // }
+      if (!obj[i].refusemoney.toString()) {
+        message = '扣费明细不能为空'
+        return message
+      }
+      if (!obj[i].indemnity) {
+        message = '收据赔付金额不能为空'
+        return message
+      }
+      if (!obj[i].operation) {
+        message = '是否手术不能为空'
+        return message
+      }
+
+    }
+  }
+
+
+}
+
+
+//点击明细的时候校验
+export const checkLfor3 = (obj, type) => {
+
+  var message = ''
+  if (!obj.mainfeeno) {
+    message = '收据编号不能为空'
+    return message
+  }
+  if (!obj.hospitalcode) {
+    message = '医院名称不能为空'
+    return message
+  }
+  if (type == "2") {
+    if (!obj.hospstartdate) {
+      message = '入院日期不能为空'
+      return message
+    }
+    if (!obj.hospenddate) {
+      message = '出院日期不能为空'
+      return message
+    }
+    // if(!obj.realhospdate&&!obj.imhospdate) {
+    //   message = '病房天数不能为空'
+    //   return message
+    // }
+  }
+  if (type == '1') {
+    if (!obj.feedate) {
+      message = '就诊时间不能为空'
+      return message
+    }
+  }
+  if (!obj.selfamnt && obj.selfamnt != 0) {
+    message = '自费金额不能为空'
+    return message
+  }
+  if (!obj.socifee) {
+    message = '统筹/附加金额不能为空'
+    return message
+  }
+  if (!obj.sociflag) {
+    message = '社保标志不能为空'
+    return message
+  }
+  if (!obj.otherfee) {
+    message = '其他补偿不能为空'
+    return message
+  }
+
+  if (!obj.indemnity) {
+    message = '收据赔付金额不能为空'
+    return message
+  }
+  if (!obj.operation) {
+    message = '是否手术不能为空'
+    return message
+  }
+
+}
+
+// 费用明细
+
+export const checkLfor1 = (obj) => {
+  if (obj.length > 0) {
+    for (var i = 0; i < obj.length; i++) {
+      var message = ''
+      // if (!obj[i].feeitemname) {
+      //   message = '费用项名称不能为空'
+      //   return message
+      // }
+      // if (!obj[i].feeitemdetil) {
+      //   message = '费用名称详细不能为空'
+      //   return message
+      // }
+
+      // if(!obj[i].fee) {
+      //   message = '单价不能为空'
+      //   return message
+      // }
+      // if(!obj[i].number) {
+      //   message = '数量不能为空'
+      //   return message
+      // }
+      if (!obj[i].price) {
+        message = '费用金额不能为空'
+        return message
+      }
+
+
+      // if(!obj[i].specifications) {
+      //   message = '规格与单位不能为空'
+      //   return message
+      // }
+      // if(!obj[i].healthcaretype) {
+      //   message = '医保类别不能为空'
+      //   return message
+      // }
+    }
+  }
+
+}
+// 扣费明细
+
+export const checkLfor2 = (obj) => {
+  if (obj.length > 0) {
+    for (var i = 0; i < obj.length; i++) {
+      var message = ''
+      if (!obj[i].deducttypes) {
+        message = '扣费类型不能为空'
+        return message
+      }
+      if (!obj[i].deductnames) {
+        message = '扣费名称不能为空'
+        return message
+      }
+      if (!obj[i].deductfee) {
+        message = '扣费金额不能为空'
+        return message
+      }
+
+      if (!obj[i].deductreasontypes) {
+        message = '扣费原因类型不能为空'
+        return message
+      }
+
+
+    }
+  }
+
+}
+// 北京-扣费明细
+
+export const checkLfor22 = (obj) => {
+  if (obj.length > 0) {
+    for (var i = 0; i < obj.length; i++) {
+      var message = ''
+      if (!obj[i].deducttype) {
+        message = '扣费类型不能为空'
+        return message
+      }
+      if (!obj[i].deductname) {
+        message = '扣费名称不能为空'
+        return message
+      }
+      if (!obj[i].deductfee) {
+        message = '扣费金额不能为空'
+        return message
+      }
+
+      if (!obj[i].deductreasontype) {
+        message = '扣费原因类型不能为空'
+        return message
+      }
+
+
+    }
+  }
+
+}
+// 诊断代码
+export const checkLfor4 = (obj) => {
+  if (obj.length > 0) {
+    for (var i = 0; i < obj.length; i++) {
+      var message = ''
+      if (!obj[i].diagnosticcode) {
+        message = '诊断代码不能为空！'
+        return message
+      }
+      if (!obj[i].dinictype) {
+        message = '诊断类型不能为空!'
+        return message
+      }
+    }
+  }
+}
+// 手术代码
+export const checkLfor5 = (obj) => {
+  if (obj.length > 0) {
+    for (var i = 0; i < obj.length; i++) {
+      var message = ''
+      if (!obj[i].operationname) {
+        message = '手术代码不能为空！'
+        return message
+      }
+      if (!obj[i].dinictype) {
+        message = '诊断类型不能为空!'
+        return message
+      }
+    }
+  }
+}
+
+// 校验审核提交
+
+export const checkAudit = (obj, key) => {
+  var message = ''
+  if (obj.approveinfo) {
+    if (!obj.approveinfo.accidenttype) {
+      message = '出险类别不能为空'
+      return message
+    }
+    if (obj.approveinfo.reasoncode.length == 0) {
+      message = '理赔类型不能为空'
+      return message
+    }
+    if (!obj.approveinfo.accidentdate) {
+      message = '出险日期不能为空'
+      return message
+    }
+    if ((Date.now() - new Date(obj.approveinfo.accidentdate).getTime()) / 1000 < 0 || (Date.now() - new Date(obj.approveinfo.accidentdate).getTime()) / 1000 == 0) {
+      message = '出险日期不能大于当前系统日期'
+      return message
+
+    }
+    if (obj.approveinfo.accidenttype == '02' && !obj.approveinfo.accreason) {
+
+      message = '事故原因不能为空'
+      return message
+    }
+    if (obj.approveinfo.accidenttype == '02' && !obj.approveinfo.accdegree) {
+      message = '事故受伤程度不能为空'
+      return message
+    }
+    // if (obj.approveinfo.accidenttype == '02' && !obj.approveinfo.accidentcourse) {
+    //   message = '出险结果不能为空'
+    //   return message
+    // }
+    // debugger
+
+    debugger
+    if (obj.approveinfo.accidenttype == '02' && !obj.approveinfo.accprovince) {
+      message = '出险地点省不能为空'
+      return message
+    }
+    if (obj.approveinfo.accidenttype == '02' && !obj.approveinfo.acccity) {
+      message = '出险地点市不能为空'
+      return message
+    }
+    if (obj.approveinfo.accidenttype == '02' && !obj.approveinfo.acccounty) {
+      message = '出险地点区不能为空'
+      return message
+    }
+    if (obj.approveinfo.accidenttype == '02' && !obj.approveinfo.accaddress) {
+      message = '详细地址不能为空'
+      return message
+    }
+    if (obj.approveinfo.accidenttype == '02' && !obj.approveinfo.accidentsite) {
+      message = '事故地点发生性质不能为空'
+      return message
+    }
+    if (obj.approveinfo.accidenttype == '01' && !obj.approveinfo.hospitalname) {
+      message = '就诊医院不能为空'
+      return message
+    }
+    // if (!obj.approveinfo.inhospitaldate) {
+    //   message = '入院日期不能为空'
+    //   return message
+    // }
+    // if ((new Date(obj.approveinfo.accidentdate).getTime() - new Date(obj.approveinfo.inhospitaldate).getTime()) / 1000 < 0 || (new Date(obj.approveinfo.accidentdate).getTime() - new Date(obj.approveinfo.inhospitaldate).getTime()) / 1000 < 0) {
+    //   message = '入院日期不能大于出险日期'
+    //   return message
+    // }
+    // if (!obj.approveinfo.outhospitaldate) {
+    //   message = '出院日期不能为空'
+    //   return message
+    // }
+    // if ((new Date(obj.approveinfo.outhospitaldate).getTime() - new Date(obj.approveinfo.inhospitaldate).getTime()) / 1000 < 0) {
+    //   message = '出院日期不能小于入院日期'
+    //   return message
+    // }
+    // if ((Date.now() - new Date(obj.approveinfo.outhospitaldate).getTime()) / 1000 < 0) {
+    //   message = '出院日期不能大于当前日期'
+    //   return message
+    // }
+    if (obj.approveinfo.reasoncode.indexOf('102') != -1 && !obj.approveinfo.dianosedate) {
+      message = '确诊日期不能为空'
+      return message
+    }
+    if (obj.approveinfo.dianosedate) {
+      if ((Date.now() - new Date(obj.approveinfo.dianosedate).getTime()) / 1000 < 0) {
+        message = '确诊日期不能大于当前系统日期'
+        return message
+      }
+    }
+    if (obj.approveinfo.dianosedate && obj.approveinfo.accidentdate) {
+      if ((new Date(obj.approveinfo.dianosedate).getTime() - new Date(obj.approveinfo.accidentdate).getTime()) / 1000 < 0) {
+        message = '确诊日期不能小于出险日期'
+        return message
+      }
+    }
+    if (obj.approveinfo.reasoncode.indexOf('100') != -1 && !obj.approveinfo.deathdate) {
+      message = '身故日期不能为空'
+      return message
+    }
+    if (obj.approveinfo.deathdate && obj.approveinfo.accidentdate) {
+      if ((new Date(obj.approveinfo.deathdate).getTime() - new Date(obj.approveinfo.inhospitaldate).getTime()) / 1000 < 0) {
+        message = '身故日期不能小于出险日期'
+        return message
+      }
+    }
+    // if (obj.approveinfo.deathdate && obj.approveinfo.outhospitaldate) {
+    //   if ((new Date(obj.approveinfo.deathdate).getTime() - new Date(obj.approveinfo.outhospitaldate).getTime()) / 1000 > 0) {
+    //     message = '身故日期不能小于出院日期'
+    //     return message
+    //   }
+    // }
+    if (obj.approveinfo.deathdate) {
+      if ((new Date() - new Date(obj.approveinfo.dianosedate).getTime()) / 1000 < 0) {
+        message = '身故日期不能大于当前系统日期'
+        return message
+      }
+    }
+
+
+    // if (obj.approveinfo.accidenttype == '01' && !obj.approveinfo.dieasetype) {
+    //   message = '疾病分类不能为空'
+    //   return message
+    // }
+    // if (obj.approveinfo.accidenttype == '01' && !obj.approveinfo.dianobasis) {
+    //   message = '诊断依据不能为空'
+    //   return message
+    // }
+
+    // if (obj.approveinfo.deathdate && obj.approveinfo.inhospitaldate) {
+    //   if ((new Date(obj.approveinfo.dianosedate).getTime() - new Date(obj.approveinfo.inhospitaldate).getTime()) / 1000 < 0) {
+    //     message = '入院日期不能大于确诊日期'
+    //     return message
+    //   }
+    // }
+    if (obj.approveinfo.reasoncode.indexOf('104') != -1 && !obj.approveinfo.exempt) {
+      message = '豁免原因不能为空'
+      return message
+    }
+    if (!obj.approveinfo.disabledrpt) {
+      message = '伤残鉴定报告不能为空'
+      return message
+    }
+    if (!obj.approveinfo.occuprpt) {
+      message = '工伤报告不能为空'
+      return message
+    }
+  }
+  if (!obj.auditidea) {
+    message = '审核意见不能为空'
+    return message
+  }
+  if (!obj.auditconclusion) {
+    message = '审核结论不能为空'
+    return message
+  }
+
+
+  if (key == 4) {
+    //拒赔
+    if (!obj.auditnopassreason) {
+      message = '拒赔原因不能为空'
+      return message
+    }
+    if (!obj.auditnopassdesc) {
+      message = '原因说明不能为空'
+      return message
+    }
+
+  }
+  if (key == 5) {
+    // 撤件
+    if (!obj.auditnopassreason) {
+      message = '撤件原因不能为空'
+      return message
+    }
+    if (!obj.auditnopassdesc) {
+      message = '原因说明不能为空'
+      return message
+    }
+  }
+  if (key == 6) {
+    // 回退原因】
+    if (!obj.llauditbackreason) {
+      message = '回退原因不能为空'
+      return message
+    }
+    if (!obj.backdesc) {
+      message = '回退原因说明不能为空'
+      return message
+    }
+  }
+
+
+
+}
+

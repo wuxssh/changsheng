@@ -1,0 +1,609 @@
+<template>
+  <div class="expenseName">
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          费用名称查询
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form
+          ref="listForm"
+          :model="listForm"
+          v-model="labelPosition"
+          label-width="34%"
+          class="demo-ruleForm"
+        >
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="费用名称" prop="feename">
+                  <el-input v-model="listForm.feename" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row style="text-align:right;padding-right:140px;">
+            <el-button type="primary" round @click="initList">查 询</el-button>
+            <el-button type="primary" round @click="resetForm('listForm')">重 填</el-button>
+            <el-upload
+              class="import-btn"
+              action=""
+              :http-request="beforeUpload"
+              accept=".xlsx,.xls"
+              :show-file-list="false"
+              style="width:0;display:inline-block;margin-left:10px;"
+            >
+              <el-button type="primary" round>批量导入</el-button>
+            </el-upload>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+    <div class="work_queue">
+      <span>费用名称列表</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        :data="tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)"
+        style="width: 100%"
+        highlight-current-row
+        @row-click="toDetails"
+      >
+        <el-table-column label="序号" type="index" :index="indexMethod" align="center" width="70"></el-table-column>
+        <el-table-column prop="feename" label="费用名称" align="center"></el-table-column>
+        <el-table-column prop="feedetail" label="费用名称明细" align="center"></el-table-column>
+        <el-table-column prop="medicaltype" label="医保类别" align="center"></el-table-column>
+        <el-table-column prop="itemspec" label="规格与单位" align="center"></el-table-column>
+        <el-table-column prop="itemprice" label="单价" align="center"></el-table-column>
+      </el-table>
+      <div class="block">
+        <el-pagination
+          @size-change="currentPage1"
+          @current-change="currentChange"
+          :current-page.sync="currentPage1"
+          :page-size="10"
+          background
+          layout="prev, pager, next, jumper"
+          :total="tableData.length"
+        ></el-pagination>
+      </div>
+    </div>
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="2">
+        <template slot="title">
+          费用名称管理
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form
+          ref="listForm2"
+          :model="listForm2"
+          v-model="labelPosition"
+          label-width="34%"
+          :rules="rules"
+        >
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="费用名称" prop="feename">
+                  <el-input v-model="listForm2.feename" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="费用名称明细" prop="feedetail">
+                  <el-input v-model="listForm2.feedetail" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content" style="margin-right:20px">
+                <el-form-item label="医保类别" prop="medicaltype">
+                  <el-select v-model="listForm2.medicaltype" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in stateList"
+                      :key="item.value"
+                      :label="item.name"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="规格与单位" prop="itemspec">
+                  <el-input v-model="listForm2.itemspec" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="单价" prop="itemprice">
+                  <el-input v-model="listForm2.itemprice" type="text" maxlength="13" min="0"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row style="text-align:right;padding-right:30px;">
+            <el-button type="primary" round @click="add()">增 加</el-button>
+            <el-button type="primary" round @click="update()" :disabled="updata">修 改</el-button>
+            <el-button type="primary" round @click="deleteOne" :disabled="updata">删 除</el-button>
+            <el-button type="primary" round @click="empty('listForm2')">重 置</el-button>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+// import { getCodeArr } from "../../utils/service";
+export default {
+  name: "expenseName",
+  data() {
+    var isMoney = (rule, value, callback) => {
+      if (!value) {
+        return new Error("请输入年收入");
+      } else {
+        var reg = /^\d+$|^\d*\.\d+$/g;
+        if (!reg.test(value)) {
+          callback(new Error("只能填写数字！"));
+          return;
+        } else {
+          if (
+            ("" + value).substr(0, 1) === "." ||
+            ("" + value).substr(-1, 1) === "."
+          ) {
+            callback(new Error("只能填写数字！"));
+            return;
+          } else {
+            var amtreg = /^(\d+)(.\d{0,2})?$/;
+            if (!amtreg.test(value)) {
+              callback(new Error("最多支持两位小数！"));
+              return;
+            } else {
+              callback();
+            }
+          }
+        }
+      }
+    };
+    return {
+      updata: true,
+      listForm: {
+        feename: "",
+      },
+      upusercodeList: [],
+      listForm2: {
+        feename:"",
+        feenamecode:"",
+        feedetail:"",
+        feedetailcode:"",
+        medicaltype:"",
+        itemspec:"",
+        itemprice:"",
+        flag:"",
+      },
+      stateList: [
+        {
+          value: '甲类',
+          name: "甲类"
+        },
+        {
+          value: '乙类',
+          name: "乙类"
+        },
+        {
+          value: '丙类',
+          name: "丙类"
+        }
+      ],
+      rules: {
+        feename: [
+          {
+            required: true,
+            message: "请输入费用名称",
+            trigger: ["blur", "change"]
+          }
+        ],
+        itemprice: [
+          { validator: isMoney, trigger: "blur" }
+        ]
+      },
+      
+      listForm4:[],
+      manageAgency: [],
+      roleList: [],
+      agencyList: [],
+      activeName: ["1", "2"],
+      labelPosition: "right",
+      currentPage: 1,
+      currentPage1: 1,
+      tableData: [],
+      pagesize: 10,
+      currpage: 1,
+      total: 0,
+      currentRow: "",
+      resetModStr: "",
+      listFormUp: {},
+      feeData:[],
+      ynflag:""
+    };
+  },
+  inject: ["reload"],
+  created() {
+   
+  },
+  mounted() {},
+  methods: {
+    // 费用名称列表
+    initList() {
+      this.currentPage = 1;
+      this.currentPage1 = 1;
+      this.total = 0;
+      this.tableData = [];
+      this.$forceUpdate();
+      post(service.feenamelist, {
+        bodys: {feename:this.listForm.feename}
+      })
+        .then(result => {
+          if (result.data.headers.code === "200") {
+            this.tableData = result.data.bodys;
+            this.total = result.data.bodys.total;
+          }
+        })
+        .catch(error => {
+        });
+    },
+
+    resetForm(formName) {
+      this.$refs[formName].resetFields();
+    },
+    //批量导入
+    beforeUpload(f){
+      let param = new FormData();
+      param.append("excelfile", f.file); //通过append向form对象添加数据
+      // param.append("operator",localStorage.getItem("userCode"));
+      //添加请求头
+      let config = {
+        "content-type": "multipart/form-data"
+      };
+      // var fileNames = f.target.files;
+      
+      this.$axios.post(
+        service.bulkimport,
+        param,
+        config
+      )
+      .then(res => {
+        if(res.headers.success == true){
+          this.$message({
+            message: res.headers.message,
+            type: "success"
+          });
+          this.initList()
+        }else if(res.headers.success == false){
+          this.$message({
+            message: res.headers.message,
+            type: "error"
+          });
+        }
+      });
+    },
+
+    toDetails(row) {
+      this.updata = false;
+      this.feeData = row;
+      this.resetModStr = row.usercode;
+      sessionStorage.setItem("row", JSON.stringify(row));
+      this.listForm4 = this.feeData;
+      post(service.querylisttomenu, {
+        bodys:this.listForm4
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.listForm2 = res.data.bodys[0];
+          this.listForm2.itemprice = res.data.bodys[0].itemprice
+        }
+      });
+    },
+
+    add() {
+      if(this.listForm2.feename == ''){
+        this.$message.error('费用名称不能为空！');
+        return;
+      }
+      if(this.listForm2.itemprice != "" && this.listForm2.itemprice != null) {
+        var reg = /^\d+$|^\d*\.\d+$/g;
+        if (!reg.test(this.listForm2.itemprice)) {
+          // this.$message.error("只能填写数字！");
+          this.listForm2.itemprice = null;
+          return false;
+        } else {
+          if (
+            ("" + this.listForm2.itemprice).substr(0, 1) === "." ||
+            ("" + this.listForm2.itemprice).substr(-1, 1) === "."
+          ) {
+            // this.$message.error("只能填写数字！");
+            this.listForm2.itemprice = null;
+            return false;
+          } else {
+            var amtreg = /^(\d+)(.\d{0,2})?$/;
+            if (!amtreg.test(this.listForm2.itemprice)) {
+              // this.$message.error("最多支持两位小数！");
+              this.listForm2.itemprice = null;
+              return false;
+            }
+          }
+        }
+      }
+      post(service.feedetailinsert, {
+          bodys: {
+            feename: this.listForm2.feename,
+            feenamecode: this.listForm2.feenamecode,
+            feedetail: this.listForm2.feedetail,
+            feedetailcode: this.listForm2.feedetailcode,
+            medicaltype: this.listForm2.medicaltype,
+            itemspec: this.listForm2.itemspec,
+            itemprice: this.listForm2.itemprice
+          }
+      }).then(res => {
+        if (res.data.headers.code === "200" && res.data.headers.success) {
+        this.$message.success(res.data.headers.message);
+        this.reload();
+        } else {
+        this.$message.error(res.data.headers.message);
+        }
+      });
+    },
+    //修改
+    update() {
+      
+      if(this.listForm2.feename == ''){
+        this.$message.error('费用名称不能为空！');
+        return;
+      }
+      if(this.listForm2.itemprice != "" && this.listForm2.itemprice != null) {
+        var reg = /^\d+$|^\d*\.\d+$/g;
+        if (!reg.test(this.listForm2.itemprice)) {
+          // this.$message.error("只能填写数字！");
+          this.listForm2.itemprice = null;
+          return false;
+        } else {
+          if (
+            ("" + this.listForm2.itemprice).substr(0, 1) === "." ||
+            ("" + this.listForm2.itemprice).substr(-1, 1) === "."
+          ) {
+            // this.$message.error("只能填写数字！");
+            this.listForm2.itemprice = null;
+            return false;
+          } else {
+            var amtreg = /^(\d+)(.\d{0,2})?$/;
+            if (!amtreg.test(this.listForm2.itemprice)) {
+              // this.$message.error("最多支持两位小数！");
+              this.listForm2.itemprice = null;
+              return false;
+            }
+          }
+        }
+      }
+      post(service.feedetailupdate, {
+        bodys: {
+          feename: this.listForm2.feename,
+          feenamecode: this.listForm2.feenamecode,
+          feedetail: this.listForm2.feedetail,
+          feedetailcode: this.listForm2.feedetailcode,
+          medicaltype: this.listForm2.medicaltype,
+          itemspec: this.listForm2.itemspec,
+          itemprice: this.listForm2.itemprice
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200" && res.data.headers.success) {
+          this.$message.success(res.data.headers.message);
+          this.reload();
+        } else {
+          this.$message.error(res.data.headers.message);
+        }
+      });
+      
+    },
+    empty(formName) {
+      if (!this.updata) {
+        this.listForm2 = JSON.parse(sessionStorage.getItem("row"));
+      } else {
+        this.$refs[formName].resetFields();
+      }
+    },
+    deleteOne() {
+      if(this.listForm2.flag == '1'){
+        this.$confirm('是否同时删除该费用名称下的费用名称明细信息？', '提示', {
+          distinguishCancelAndClose: true,
+          confirmButtonText: '是',
+          cancelButtonText: '否',
+          type: 'warning',
+          center: true
+        }).then(() => {
+          // this.$message({
+          //   type: 'info',
+          //   message: '删除2!'
+          // });
+          this.ynflag = 1
+          this.delete();
+        }).catch(action => {
+          if(action == 'cancel'){
+            // this.$message({
+            //   type: 'info',
+            //   message: '删除1!'
+            // });
+            this.ynflag = 0;
+            this.delete();
+          }else{}
+        });
+      }else{
+        this.delete();
+      }
+      
+    },
+    delete(){
+      post(service.feenamedelete, {
+        bodys: {
+          ynflag:this.ynflag,
+          feenamecode: this.listForm2.feenamecode,
+          feedetailcode:this.listForm2.feedetailcode
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200" && res.data.headers.success) {
+          this.$message.success(res.data.headers.message);
+          this.reload();
+        } else {
+          this.$message.error(res.data.headers.message);
+        }
+        
+      });
+    },
+    currentChange: function(page) {
+      this.currentPage = page;
+      // this.tableList();
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currentPage - 1) * 10;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.expenseName {
+  margin: 20px;
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 20px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+  }
+  .work_queue {
+    position: relative;
+    margin-top: 21px;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .work_table {
+    margin-bottom: 21px;
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 20px;
+    box-sizing: border-box;
+  }
+  .img_style {
+    width: 27px;
+    height: 22px;
+  }
+}
+</style>
+<style lang="less">
+.expenseName {
+  .el-row {
+    // padding-top: 20px;
+    &:first-child {
+      padding-top: 20px;
+    }
+    &:last-child {
+      padding-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+}
+.expenseName {
+  .el-input {
+    width: 85% !important;
+  }
+  .date_style {
+    .el-input {
+      width: 46% !important;
+    }
+  }
+
+  .el-select {
+    width: 85% !important;
+    .el-input {
+      width: 100% !important;
+    }
+  }
+  .el-collapse-item__arrow {
+    display: none;
+  }
+  .el-collapse-item__header {
+    background-color: #0673ff;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 10px 10px 0 0;
+    padding: 0 15px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+  }
+  .el-collapse-item__content {
+    padding-bottom: 17px;
+  }
+  .el-table--striped .el-table__body tr.el-table__row--striped.current-row td,
+  .el-table__body tr.current-row > td,
+  .el-table__body tr.hover-row.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped > td,
+  .el-table__body tr.hover-row > td {
+    background-color: #409eff;
+  }
+}
+</style>

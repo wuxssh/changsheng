@@ -1,0 +1,311 @@
+<template>
+  <div class="modifyPsd">
+    <img src="../../assets/images/login/logo_psd@.png" alt class="modify_logo" />
+    <div class="modifyContent">
+      <div class="modifyFrom">
+        <p class="title">
+          <img src="../../assets/images/login/title@1x.png" alt />
+        </p>
+        <p class="title_psd">密码修改</p>
+        <el-form ref="modifyForm" :model="modifyForm" status-icon :rules="rules">
+          <el-form-item prop="password">
+            <el-input v-model="modifyForm.password" placeholder="新密码" maxlength="100" show-password></el-input>
+          </el-form-item>
+          <div class="percentageBox">
+            <el-progress
+              :percentage="percentage"
+              :stroke-width="12"
+              :format="format"
+              :color="customColors"
+            ></el-progress>
+          </div>
+          <el-form-item prop="checkPsd">
+            <el-input
+              v-model="modifyForm.checkPsd"
+              placeholder="再次输入密码"
+              maxlength="100"
+              show-password
+            ></el-input>
+          </el-form-item>
+          <el-form-item>
+            <div>
+              <img
+                src="../../assets/images/login/confirm.png"
+                alt
+                style="width:100%"
+                @click="updatePsd('modifyForm')"
+              />
+            </div>
+            <p style="text-align:center;">- 版权所有 (C) 长生人寿保险有限公司 沪ICP备07019985号 -</p>
+          </el-form-item>
+        </el-form>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+export default {
+  data() {
+    var validatePass = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("请输入密码!"));
+      } else {
+        if (this.modifyForm.checkPsd !== "") {
+          this.$refs.modifyForm.validateField("checkPsd");
+        }
+        callback();
+      }
+    };
+    var validatePass2 = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("请再次输入密码"));
+      } else if (value !== this.modifyForm.password) {
+        callback(new Error("两次输入密码不一致!"));
+      } else {
+        callback();
+      }
+    };
+    return {
+      percentage: 0,
+      customColors: [
+        { color: "#f56c6c", percentage: 25 },
+        { color: "#f56c6c", percentage: 50 },
+        { color: "#e6a23c", percentage: 75 },
+        { color: "#1989fa", percentage: 100 },
+        { color: "#5cb87a", percentage: 100 }
+      ],
+      rules: {
+        password: [{ validator: validatePass, trigger: "blur" }],
+        checkPsd: [{ validator: validatePass2, trigger: "blur" }]
+      },
+      modifyForm: {
+        usercode: "",
+        password: "",
+        checkPsd: ""
+      }
+    };
+  },
+  watch: {
+    /*
+     * 密码强度等级说明，包括：小写字母、大写字母、数字、特殊字符
+     * 1—密码包含其中之一
+     * 2—密码包含其中之二
+     * 3—密码包含其中之三
+     * 4—密码包含其中之四
+     */
+    "modifyForm.password": function() {
+      const checkArr = [
+        {
+          value: /\d/
+        },
+        {
+          value: /[a-z]/
+        },
+        {
+          value: /[A-Z]/
+        },
+        {
+          // value: /[~!@#$%^&*]/,
+          value: /[`~!@#$%^&*()_\-+=<>?:"{}|,.\/;'\\[\]·~！@#￥%……&*（）——\-+={}|《》？：“”【】、；‘’，。、 ]/
+        }
+      ];
+      let count = 0;
+      checkArr.forEach(item => {
+        if (item.value.test(this.modifyForm.password)) {
+          count++;
+        }
+      });
+      switch (count) {
+        case 4:
+          this.percentage = 100;
+          break;
+        case 3:
+          this.percentage = 75;
+          break;
+        case 2:
+          this.percentage = 50;
+          break;
+        case 1:
+          this.percentage = 25;
+          break;
+        default:
+          this.percentage = 0;
+          break;
+      }
+    }
+  },
+  methods: {
+    format(percentage) {
+      if (percentage === 25) {
+        return percentage === 25 ? "简单" : `${percentage}%`;
+      }
+      if (percentage === 50) {
+        return percentage === 50 ? "一般" : `${percentage}%`;
+      }
+      if (percentage === 75) {
+        return percentage === 75 ? "很强" : `${percentage}%`;
+      }
+      if (percentage === 100) {
+        return percentage === 100 ? "非常强" : `${percentage}%`;
+      }
+    },
+    updatePsd(formName) {
+      if (this.modifyForm.password.match(/[\u4E00-\u9FA5]/i)) {
+        this.$message.error("密码不能包含中文!");
+        return;
+      }
+      if (this.modifyForm.password.length < 8) {
+        this.$message.error("密码长度必须大于等于8位!");
+        return;
+      }
+      if (this.percentage <= 25) {
+        this.$message.error("密码至少有字母、数字或符号两种组合");
+        return;
+      }
+      this.$refs[formName].validate(valid => {
+        if (!valid) {
+          return false;
+        } else {
+          post(service.updatePsd, {
+            bodys: {
+              usercode: this.$route.query.usercode?this.$route.query.usercode:localStorage.getItem("userCode"),
+              password: this.modifyForm.password
+            }
+          }).then(res => {
+            if (res.data.header.code === "200") {
+              this.$message.success(res.data.header.message);
+              this.$router.push({ name: "Login" });
+            } else if (res.data.header.code === "204") {
+              this.$message.error(res.data.header.message);
+            }
+          });
+        }
+      });
+    },
+    generateUUID() {
+      var d = new Date().getTime();
+      var uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+        /[xy]/g,
+        function(c) {
+          var r = (d + Math.random() * 16) % 16 | 0;
+          d = Math.floor(d / 16);
+          return (c == "x" ? r : (r & 0x3) | 0x8).toString(16);
+        }
+      );
+      return uuid;
+    },
+
+    //显示日期在页面上  yyyy-MM-dd
+    getDate() {
+      var date = new Date();
+      //年
+      var year = date.getFullYear();
+      //月
+      var month = date.getMonth() + 1;
+      //日
+      var day = date.getDate();
+      //时
+      var hh = date.getHours();
+      //分
+      var mm = date.getMinutes();
+      //秒
+      var ss = date.getSeconds();
+      var curDate = year;
+      if (month > 9) {
+        curDate = curDate + "-" + month;
+      } else {
+        curDate = curDate + "-0" + month;
+      }
+      if (day > 9) {
+        curDate = curDate + "-" + day;
+      } else {
+        curDate = curDate + "-0" + day;
+      }
+      return curDate;
+    },
+    getTime() {
+      var date = new Date();
+      var hh = date.getHours();
+      //分
+      var mm = date.getMinutes();
+      //秒
+      var ss = date.getSeconds();
+      var curTime = hh;
+      if (hh > 9) {
+        curTime = curTime;
+      } else {
+        curTime = "0";
+      }
+      if (mm > 9) {
+        curTime = curTime + ":" + mm;
+      } else {
+        curTime = curTime + ":0" + mm;
+      }
+      if (ss > 9) {
+        curTime = curTime + ":" + ss;
+      } else {
+        curTime = curTime + ":0" + ss;
+      }
+      // var time=hh+":"+mm+":"+ss;
+      return curTime;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+/deep/ .el-progress-bar {
+  width: 97% !important;
+}
+.percentageBox {
+  margin-bottom: 20px;
+}
+.modifyPsd {
+  width: 100%;
+  height: 100%;
+  background-image: url("../../assets/images/login/modify_bgc.png");
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  .modify_logo {
+    padding-top: 34px;
+    padding-left: 54px;
+  }
+  .modifyContent {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 0 33px;
+    box-sizing: border-box;
+    .modifyFrom {
+      width: 500px;
+
+      //   height: 200px;
+      .title {
+        margin: 0;
+        text-align: center;
+        border-bottom: 1px solid #e4eaff;
+        img {
+          margin-top: 26px;
+        }
+      }
+      .title_psd {
+        text-align: center;
+        font-size: 22px;
+        font-family: Source Han Sans CN;
+        font-weight: 400;
+        color: rgba(0, 27, 111, 1);
+        opacity: 1;
+      }
+    }
+  }
+}
+</style>
+<style>
+.modifyPsd .el-input--suffix .el-input__inner{
+  padding-right: 60px;
+}
+</style>

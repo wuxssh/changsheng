@@ -1,0 +1,479 @@
+<template>
+  <div class="goback">
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          回退信息
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form class="formData" :label-position="labelPosition" label-width="140px" :model="form">
+          <el-row class="twice">
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="理赔号">
+                  <el-input v-model="form.clmno" disabled></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="原理赔结论">
+                  <el-input v-model="form.givetype" disabled></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <span class="redStar">&nbsp*&nbsp</span>
+                <el-form-item label="回退原因">
+                  <el-select v-model="form.backreason" placeholder="请选择" clearable>
+                    <el-option
+                      v-for="item in gobackreason"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row class="twice">
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="回退申请日期">
+                  <el-input v-model="form.applydate" disabled></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="原赔付金额">
+                  <el-input v-model="form.realpay" disabled></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <span class="redStar">&nbsp*&nbsp</span>
+                <el-form-item label="拟申请回退后的理赔结论">
+                  <el-select v-model="form.newgivetype" placeholder="请选择" clearable>
+                    <el-option
+                      v-for="item in deadvaliflagList"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <div>
+              <div class="textareaTitle" style="padding-top:0">
+                <span class="redStar" style="margin-top:4px;">&nbsp*&nbsp</span>回退原因详细说明
+              </div>
+              <el-input
+                class="textareaCenter"
+                type="textarea"
+                placeholder="请填写回退原因详细说明"
+                :rows="6"
+                maxlength="700"
+                resize="none"
+                show-word-limit
+                v-model="form.backdesc"
+              ></el-input>
+            </div>
+          </el-row>
+          <el-row>
+            <div>
+              <div class="textareaTitle">
+                <span class="redStar" style="margin-top:4px;">&nbsp&nbsp&nbsp&nbsp</span>备注
+              </div>
+              <el-input
+                class="textareaCenter"
+                type="textarea"
+                placeholder="请填写回退备注"
+                :rows="6"
+                maxlength="700"
+                resize="none"
+                show-word-limit
+                v-model="form.remark"
+              ></el-input>
+            </div>
+          </el-row>
+        </el-form>
+        <div class="footBtnAll">
+          <el-button class="elButton" type="primary"  size="small" round @click="toSubmit">保存</el-button>
+          <el-button class="elButton" type="primary"  size="small" round @click="confirmCaseBack">完成</el-button>
+          <input
+            type="file"
+            name="file"
+            multiple="multiple"
+            id="filesnames"
+            class="oldFiless"
+            accept=".png, .jpeg, .pdf, .msg, .rar, .zip, .jpg, .tif"
+            :disabled="!this.backno"
+            @change="imgUpload" 
+          />
+          <label for="filesnames" class="newFiless"  :class="{isbackno:this.isbackno}">资料上传</label>
+          <el-button
+            class="elButton"
+            type="primary"
+            style="margin-left:10px;"
+            round
+            size="small"
+            @click="goback"
+          >返回</el-button>
+        </div>
+      </el-collapse-item>
+    </el-collapse>      
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+export default {
+  data() {
+    return {
+      labelPosition: "left",
+      activeName: "1",
+      stateCode: 0,
+      // -----------------------
+      isShow: "",
+      form: {
+        clmno: "",
+        givetype: "",
+        realpay: "",
+        applydate: "",
+
+        calcode: "",
+        rgtnoend: "",
+        gobackdate: "",
+        backreason: "", // 回退原因
+        newgivetype: "", // 拟申请回退后的理赔结论
+        backdesc: "", // 回退详细说明
+        remark: ""
+      },
+      gobackreason: [
+        {
+          id: "01",
+          name: "系统操作错误"
+        },
+        {
+          id: "02",
+          name: "专业技术错误"
+        },
+        {
+          id: "03",
+          name: "法律诉讼结论"
+        },
+        {
+          id: "04",
+          name: "新关键证据"
+        },
+        {
+          id: "05",
+          name: "民事申诉调解"
+        }
+      ],
+      deadvaliflagList: [
+        {
+          id: "0",
+          name: "正常赔付"
+        },
+        {
+          id: "1",
+          name: "通融赔付"
+        },
+        {
+          id: "2",
+          name: "协议赔付"
+        },
+        {
+          id: "3",
+          name: "部分赔付"
+        },
+        {
+          id: "4",
+          name: "拒赔"
+        },
+        {
+          id: "5",
+          name: "撤件"
+        }
+      ],
+      //------------------------
+      tableDatass: [],
+      tableData: [],
+      pagesize: 10,
+      currpage: 1,
+      backno: "",
+      isbackno:true
+    };
+  },
+  created() {
+    this.initCaseBack();
+  },
+  methods: {
+    // 页面初始化
+    initCaseBack() {
+      post(service.initCaseBack, {
+        bodys: {
+          clmno: this.$route.query.clmno
+        }
+      }).then(res => {
+        this.tableDatass = res.data.bodys;
+        this.form = this.tableDatass
+        if (this.tableDatass.backno) {
+          this.backno = this.tableDatass.backno;
+           this.isbackno = false
+        } else {
+          this.backno = "";      
+        }
+        this.isShow = this.tableDatass.showtempfee;
+      });
+    },
+    // 保存
+    toSubmit() {
+      if (!this.form.backreason) {
+        this.$message.error("回退原因不能为空！");
+        return;
+      }
+      if (!this.form.newgivetype) {
+        this.$message.error("拟申请回退后的理赔结论不能为空！");
+        return;
+      }
+      if (!this.form.backdesc) {
+        this.$message.error("回退原因详细说明不能为空！");
+        return;
+      }
+      post(service.saveCaseBack, {
+        bodys: {
+          clmno: this.form.clmno,
+          backreason: this.form.backreason,
+          newgivetype: this.form.newgivetype,
+          backdesc: this.form.backdesc,
+          remark: this.form.remark,
+          operator: localStorage.getItem("userCode"),
+          managecom: localStorage.getItem("comCode")
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.$message.success("操作成功！");
+          this.initCaseBack();
+        }
+      });    
+    },
+    // 完成
+    confirmCaseBack() {
+      post(service.confirmCaseBack, {
+        bodys: {
+          clmno: this.form.clmno,
+          operator: localStorage.getItem("userCode"),
+          managecom: localStorage.getItem("comCode")
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.$message.success("操作成功！");
+        } else {
+          this.$message.error(res.data.headers.message);
+        }
+      });
+    },
+    goback() {
+      this.$router.go(-1);
+    },
+    // 资料上传
+    // 文件上传
+    dataURLtoFile11(dataurl, filename) {
+      //将base64转换为文件流
+      var arr = dataurl.split(","),
+        mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]),
+        n = bstr.length,
+        u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new File([u8arr], filename, { type: mime });
+    },
+    // 待回销上传
+    imgUpload(event) {
+      let config = {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      };
+      for (let keys = 0; keys < event.target.files.length; keys++) {
+        console.log("AAAAAAAAA", event.target.files[keys]);
+        let img1 = event.target.files[keys];
+        // let img1 = event.target.files[0];
+        let reader = new FileReader();
+        reader.readAsDataURL(img1); //将文件已url的形式读入页面
+        let that = this;
+        reader.onload = function(e) {
+          console.log("e", e.target.result);
+          let blob = that.dataURLtoFile11(reader.result, img1.name);
+          var files = new FormData();
+          files.set("files", blob);
+          var imageinfos = {
+            rgtno: that.form.rgtno,
+            otherno: that.backno,
+            uploadtype: "03",
+            imagetype: blob.type,
+            userCode: localStorage.getItem("userCode"),
+            operator: localStorage.getItem("userCode"),
+            typemax: "LP2",
+            typemin: "LPHTTZS"
+          };
+          files.append("imageinfo", JSON.stringify(imageinfos));
+          that.$axios
+            .post("/filedeal/file/imageinfo/image/upload", files, config)
+            .then(res => {
+              if (res.resultcode === "200") {
+                that.stateCode += 1;
+                if (that.stateCode === event.target.files.length) {
+                  that.$message.success("操作成功！");
+                  event.target.value = "";
+                  that.stateCode = 0;
+                }
+              } else {
+                that.$message.error(res.resultdesc);
+              }
+            });
+        };
+      }
+    },
+    // 分页
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currpage - 1) * 10;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.newFiless{
+  padding: 5px 13px;
+}
+.isbackno {
+  background-color: #a0cfff;
+  border-color: #a0cfff;
+  color: #fff;
+}
+/deep/ .el-input,
+.el-select {
+  width: 210px!important
+}
+.formData {
+  margin-top: 30px;
+}
+.twice{
+    margin-left: 30px;
+}
+.textareaTitle {
+  padding: 10px 16px 10px;
+  font-size: 14px;
+  margin: 0;
+}
+.textareaCenter {
+  margin: 0 auto;
+  text-align: center;
+  width: 96%;
+  display: block;
+}
+/deep/.el-collapse-item__arrow {
+  display: none;
+}
+/deep/.el-collapse-item__header {
+  background-color: #0673ff;
+  height: 30px;
+  line-height: 30px;
+  border-radius: 10px 10px 0 0;
+  padding: 0 15px;
+  overflow: hidden;
+  color: #fff;
+  font-size: 16px;
+  font-family: Source Han Sans CN;
+}
+/deep/.el-collapse-item__content {
+  padding-bottom: 0;
+}
+.footBtnAll {
+  background: #fff;
+  //   margin-right: 30px;
+  padding: 20px 30px 20px 30px;
+  text-align: left;
+}
+.goback {
+  margin: 20px;
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+  }
+  .work_queue {
+    position: relative;
+    margin-top: 21px;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      font-size: 16px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  /deep/ .block .el-input {
+    width: auto;
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 20px;
+    box-sizing: border-box;
+    margin-bottom: 30px;
+  }
+  .img_style {
+    width: 27px;
+    height: 22px;
+  }
+}
+</style>

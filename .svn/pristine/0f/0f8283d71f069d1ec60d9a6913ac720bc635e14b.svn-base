@@ -1,0 +1,499 @@
+<template>
+  <div class="diseaseManage">
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          信息查询
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form
+          ref="listForm"
+          :model="listForm"
+          v-model="labelPosition"
+          label-width="34%"
+          class="demo-ruleForm"
+        >
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="疾病代码" prop="code">
+                  <el-input v-model="listForm.code" maxlength="100" @keyup.enter.native="initList('listForm2')"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content" style="margin-left:30px;">
+                <el-form-item label="疾病名称" prop="codename">
+                  <el-input v-model="listForm.codename" maxlength="100"  @keyup.enter.native="initList('listForm2')"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            
+          </el-row>
+
+          <el-row style="text-align:right;padding-right:30px;">
+            <el-button type="primary" round @click="initList('listForm2')">查 询</el-button>
+            <!-- <el-button type="primary" round @click="resetForm('listForm')">重 填</el-button> -->
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+
+    <!-- <img src="../../assets/images/report/inquire@1x.png" alt style="margin:30px 0;" /> -->
+
+    <div class="work_queue">
+      <!-- <img src="../../assets/images/report/tab_btn@1x.png" alt=""> -->
+      <span>列表信息</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        :data="tableData"
+        style="width: 100%"
+        highlight-current-row
+        @row-click="toDetails"
+      >
+        <el-table-column label="序号" type="index" :index="indexMethod" align="center" width="80"></el-table-column>
+        <el-table-column prop="code" label="疾病代码" align="center"></el-table-column>
+        <el-table-column prop="codename" label="疾病名称" align="center"></el-table-column>
+        <el-table-column label="操作" align="center">
+          <template slot-scope="scope">
+            <el-button size="mini" @click="deleteOne(scope.row,scope.$index)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="block">
+        <el-pagination
+          @size-change="currentPage1"
+          @current-change="currentChange"
+          :current-page.sync="currentPage1"
+          :page-size="10"
+          background
+          layout="prev, pager, next, jumper"
+          :total="total"
+        ></el-pagination>
+      </div>
+    </div>
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="2">
+        <template slot="title">
+          疾病信息
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form
+          ref="listForm2"
+          :model="listForm2"
+          v-model="labelPosition"
+          :rules="rules"
+        >
+          <el-row >
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="疾病代码" prop="code" label-width="130px">
+                  <el-input v-model="listForm2.code" maxlength="100" clearable :disabled="change"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="疾病名称" prop="codename" label-width="130px">
+                  <el-input v-model="listForm2.codename" maxlength="100" clearable></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            
+          </el-row>
+          
+          <el-row style="text-align:right;padding-right:30px;">
+            <el-button type="primary" round @click="add('listForm2')" :disabled="change">增 加</el-button>
+            <el-button type="primary" round @click="update('listForm2')" :disabled="updata">修 改</el-button>
+            <!-- <el-button type="primary" round @click="deleteOne" :disabled="updata">删除</el-button> -->
+            <el-button type="primary" round @click="empty('listForm2')">重 置</el-button>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+// import { getCodeArr } from "../../utils/service";
+export default {
+  name: "diseaseManage",
+  data() {
+    return {
+      change:false,
+      updata: true,
+      listForm: {
+        code: "",
+        codename: "",
+        startnum:"0",
+        ndnum:"10"
+      },
+      upusercodeList: [],
+      listForm2: {
+        code: "",
+        codename: "",
+      },
+      rules:{
+        code: [
+          {
+            required: true,
+            message: "请输入疾病代码",
+            trigger: ["blur", "change"]
+          }
+        ],
+        codename: [
+          {
+            required: true,
+            message: "请输入疾病名称",
+            trigger: ["blur", "change"]
+          }
+        ],
+        
+      },
+      activeName: ["1", "2"],
+      labelPosition: "right",
+      currentPage: 1,
+      currentPage1: 1,
+      tableData: [],
+      pagesize: 10,
+      currpage: 1,
+      total: 0,
+      currentRow: "",
+      resetModStr: "",
+      resetPer:"",
+      useflag:""
+    };
+  },
+  inject: ["reload"],
+  created() {
+    
+  },
+  mounted() {
+   
+  },
+  methods: {
+    // 对公账户列表
+    initList(formName) {
+      this.currentPage = 1;
+      this.currentPage1 = 1;
+      this.$forceUpdate();
+      post(service.diagquery, {
+        bodys: this.listForm
+      })
+      .then(result => {
+        if (result.data.headers.code === "200") {
+          this.tableData = result.data.bodys.diaglist;
+          this.total = result.data.bodys.diagnum;
+           this.$refs[formName].resetFields();
+        }
+      })
+      .catch(error => {
+      });
+    },
+
+    resetForm(formName) {
+      this.$refs[formName].resetFields();
+    },
+
+    toDetails(row) {
+      console.log(row)
+      this.updata = false;
+      this.change = true;
+      this.resetModStr = row.code;
+      this.resetPer = row.codename;
+      this.useflag = row.useflag;
+      sessionStorage.setItem("row", JSON.stringify(row));
+      // this.listForm2 = row;
+      post(service.listtomenu, {
+        bodys: {
+          code: this.resetModStr,
+          // codename: this.resetPer
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.listForm2 = res.data.bodys;
+          
+        }
+      });
+    },
+
+    add(formName) {
+      if (this.listForm2.code == '') {
+        this.$message.error("请填写疾病代码！");
+        return;
+      }
+      if (this.listForm2.codename == '') {
+        this.$message.error("请填写疾病名称！");
+        return;
+      }
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          post(service.insertDiag, {
+            bodys: {
+              code:this.listForm2.code,
+              codename:this.listForm2.codename,
+            }
+          }).then(res => {
+            if (res.data.headers.code === "200" && res.data.headers.success) {
+              this.$message.success(res.data.headers.message);
+              this.reload();
+            } else {
+              this.$message.error(res.data.headers.message);
+            }
+          });
+        } else {
+          return false;
+        }
+      });
+    },
+    update(formName) {
+      if (this.listForm2.code == '') {
+        this.$message.error("请填写疾病代码！");
+        return;
+      }
+      if (this.listForm2.codename == '') {
+        this.$message.error("请填写疾病名称！");
+        return;
+      }
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          post(service.updatediag, {
+            bodys: {
+              code:this.listForm2.code,
+              codename:this.listForm2.codename,
+            }
+          }).then(res => {
+            if (res.data.headers.code === "200" && res.data.headers.success) {
+              this.$message.success(res.data.headers.message);
+               this.reload();
+            } else {
+              this.$message.error(res.data.headers.message);
+            }
+          });
+        } else {
+          return false;
+        }
+      });
+    },
+    empty(formName) {
+      if (!this.updata) {
+        this.listForm2 = JSON.parse(sessionStorage.getItem("row"));
+      } else {
+        this.$refs[formName].resetFields();
+      }
+    },
+    deleteOne(row,index) {
+      // console.log(this.useflag)
+      console.log(row.useflag)
+      if(row.useflag == '1'){
+        this.$confirm('该疾病代码与赔案已关联，是否确认删除？', '提示', {
+          confirmButtonText: '是',
+          cancelButtonText: '否',
+          type: 'warning',
+          center: true
+        }).then(() => {
+          // this.$message({
+          //   type: 'success',
+          //   message: '删除成功!'
+          // });
+          this.delete(row);
+        }).catch(() => {
+          // this.$message({
+          //   type: 'info',
+          //   message: '已取消删除'
+          // });
+        });
+      }else{
+        this.delete(row);
+      }
+      
+    },
+    delete(row){
+      post(service.deletediag, {
+        bodys: {
+          code: row.code,
+          codename: row.codename
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200" && res.data.headers.success) {
+          this.$message.success(res.data.headers.message);
+          // this.tableData.splice(index, 1);
+          this.reload();
+        } else {
+          this.$message.error(res.data.headers.message);
+        }
+      });
+    },
+   
+    currentChange: function(page) {
+      this.currentPage = page;
+      // this.tableList();
+      post(service.diagquery, {
+        bodys: {
+          code: this.listForm.code, 
+          codename: this.listForm.codename,
+          startnum:this.currentPage,
+          ndnum:"10"
+        }
+      })
+      .then(result => {
+        if (result.data.headers.code === "200") {
+          this.tableData = result.data.bodys.diaglist;
+          this.total = result.data.bodys.diagnum;
+        }
+      })
+      .catch(error => {
+      });
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currentPage - 1) * 10;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.diseaseManage {
+  margin: 20px;
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 20px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .bank {
+    display: flex;
+    .bank_style {
+      .el-form-item__content {
+        margin-left: 8px !important;
+      }
+    }
+    .el-select {
+      width: 180px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+  }
+  .work_queue {
+    position: relative;
+    margin-top: 21px;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .work_table {
+    margin-bottom: 21px;
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 20px;
+    box-sizing: border-box;
+  }
+  .img_style {
+    width: 27px;
+    height: 22px;
+  }
+}
+</style>
+<style lang="less">
+.diseaseManage {
+  .el-row {
+    // padding-top: 20px;
+    &:first-child {
+      padding-top: 20px;
+    }
+    &:last-child {
+      padding-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+}
+.diseaseManage {
+  .el-input {
+    width: 85% !important;
+  }
+  .date_style {
+    .el-input {
+      width: 46% !important;
+    }
+  }
+
+  .el-select {
+    width: 85% !important;
+    .el-input {
+      width: 100% !important;
+    }
+  }
+  .el-collapse-item__arrow {
+    display: none;
+  }
+  .el-collapse-item__header {
+    background-color: #0673ff;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 10px 10px 0 0;
+    padding: 0 15px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+  }
+  .el-collapse-item__content {
+    padding-bottom: 17px;
+  }
+  .el-table--striped .el-table__body tr.el-table__row--striped.current-row td,
+  .el-table__body tr.current-row > td,
+  .el-table__body tr.hover-row.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped > td,
+  .el-table__body tr.hover-row > td {
+    background-color: #409eff;
+  }
+}
+</style>

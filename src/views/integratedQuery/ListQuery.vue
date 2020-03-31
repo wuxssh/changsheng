@@ -1,0 +1,493 @@
+<template>
+  <div class="listQuery">
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          查询（至少需要一个条件，其中选择赔案状态必须输入立案日期区间）
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form ref="listForm" :model="listForm" v-model="labelPosition" label-width="34%">
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="理赔号">
+                  <el-input v-model="listForm.clmNo" maxlength="13" @keyup.enter.native="initTable"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="赔案状态">
+                  <el-select v-model="listForm.clmState" clearable placeholder="请选择">
+                    <el-option
+                      v-for="item in clmStateList"
+                      :key="item.value"
+                      :label="item.name"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="出险日期" class="date_style">
+                  <el-date-picker
+                    v-model="listForm.accDateStart"
+                    type="date"
+                    placeholder="选择日期"
+                    value-format="yyyy-MM-dd"
+                  ></el-date-picker>&nbsp;-
+                  <el-date-picker
+                    v-model="listForm.accDateEnd"
+                    type="date"
+                    placeholder="选择日期"
+                    value-format="yyyy-MM-dd"
+                  ></el-date-picker>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="立案机构">
+                  <el-select v-model="listForm.filingAgency" clearable placeholder="请选择" :disabled="agency">
+                    <el-option
+                      v-for="item in agencyList"
+                      :key="item.filingAgency"
+                      :label="item.agencyName"
+                      :value="item.filingAgency"
+                    >                 
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="出险人证件号码">
+                  <el-input v-model="listForm.idCardNo" maxlength="100" @keyup.enter.native="initTable"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="结案日期" class="date_style">
+                  <el-date-picker
+                    v-model="listForm.endCaseDateStart"
+                    type="date"
+                    placeholder="选择日期"
+                    value-format="yyyy-MM-dd"
+                  ></el-date-picker>&nbsp;-
+                  <el-date-picker
+                    v-model="listForm.endCaseDateEnd"
+                    type="date"
+                    placeholder="选择日期"
+                    value-format="yyyy-MM-dd"
+                  ></el-date-picker>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="立案日期" class="date_style">
+                  <el-date-picker
+                    v-model="listForm.rgtDateStart"
+                    type="date"
+                    placeholder="选择日期"
+                    value-format="yyyy-MM-dd"
+                  ></el-date-picker>&nbsp;-
+                  <el-date-picker
+                    v-model="listForm.rgtDateEnd"
+                    type="date"
+                    placeholder="选择日期"
+                    value-format="yyyy-MM-dd"
+                  ></el-date-picker>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="保单号">
+                  <el-input v-model="listForm.policyNo" maxlength="10" @keyup.enter.native="initTable"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            
+          </el-row>
+          <el-row style="text-align:right;padding-right:30px;">
+            <el-button type="primary" round @click="initList">查 询</el-button>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+
+    <div class="work_queue">
+      <span>赔案列表</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        :data="tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)"
+        style="width: 100%"
+        highlight-current-row
+        @row-dblclick="toDetails"
+      >
+        <el-table-column label="序号" type="index" :index="indexMethod" align="center" width="55px"></el-table-column>
+        <el-table-column prop="clmNo" label="理赔号" align="center"></el-table-column>
+        <el-table-column prop="clmState" label="状态" align="center">
+          <template slot-scope="scope">
+            <span>{{codeToname(scope.row.clmState)}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="name" label="出险人姓名" align="center"></el-table-column>
+      </el-table>
+      <div class="block">
+        <el-pagination
+          @size-change="currentPage1"
+          @current-change="currentChange"
+          :current-page.sync="currentPage1"
+          :page-size="10"
+          background
+          layout="prev, pager, next, jumper"
+          :total="total"
+        ></el-pagination>
+      </div>
+    </div>
+    <!-- 备注框 -->
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+// import { getCodeArr } from "../../utils/service";
+export default {
+  name: "ListQuery",
+  data() {
+    return {
+      comGrade:'',
+      agency:true,
+      listForm: {
+        clmNo: "",
+        clmState: "",
+        accDateStart: "",
+        accDateEnd: "",
+        filingAgency: "",
+        idCardNo: "",
+        endCaseDateStart: "",
+        endCaseDateEnd: "",
+        rgtDateStart: "",
+        rgtDateEnd: "",
+        policyNo: "",
+        comCode:localStorage.getItem('comCode'),
+        usercode:localStorage.getItem('userCode')   
+      },
+      clmStateList: [
+        {
+          value: "120",
+          name: "报案"
+        },
+        {
+          value: "20",
+          name: "立案"
+        },
+        {
+          value: "30",
+          name: "审核"
+        },
+        {
+          value: "40",
+          name: "审批"
+        },
+        {
+          value: "50",
+          name: "结案"
+        },
+        {
+          value: "130",
+          name: "撤销"
+        },
+        {
+          value: "110",
+          name: "不予立案"
+        },
+        {
+          value: "10",
+          name: "撤件"
+        }
+      ],
+      agencyList: [],
+      comGrade:"",
+      activeName: "1",
+      labelPosition: "right",
+      currentPage: 1,
+      currentPage1: 1,
+      tableData: [],
+      pagesize: 10,
+      currpage: 1,
+      total: 0,
+      currentRow: ""
+    };
+  },
+  inject: ["reload"],
+  created() {
+    this.getCodeList();
+  },
+  mounted() {
+  },
+  methods: {
+    // gobanck() {
+    //   this.$router.go(-1);
+    // },
+    getCodeList: function() {
+      post(service.mngComQuery, {
+        bodys: {
+          comCode: localStorage.getItem("comCode")
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.agencyList = res.data.bodys;
+          // this.comGrade=this.agencyList[i].comGrade
+          if(this.agencyList.length>0){
+            this.agency=false
+          }else{
+            this.agency=true
+          }
+        }
+      });
+    },
+
+    codeToname: function(obj) {
+      var a = null;
+      this.clmStateList.forEach(element => {
+        if (element.value == obj) {
+          a = element.name;
+        }
+      });
+      return a;
+    },
+    // 赔案信息
+    initList() {
+      if (
+        this.listForm.clmNo ||
+        this.listForm.clmState ||
+        this.listForm.accDateStart ||
+        this.listForm.accDateEnd ||
+        this.listForm.filingAgency ||
+        this.listForm.idCardNo ||
+        this.listForm.endCaseDateStart ||
+        this.listForm.endCaseDateEnd ||
+        this.listForm.rgtDateStart ||
+        this.listForm.rgtDateEnd ||
+        this.listForm.policyNo
+      ) {
+        if (this.listForm.clmState) {
+          if (!this.listForm.rgtDateStart || !this.listForm.rgtDateEnd) {
+            this.$message.error("请输入立案日期");
+            return false;
+          }
+        }
+        if(this.listForm.accDateStart&&this.listForm.accDateEnd){
+          if(this.listForm.accDateStart>this.listForm.accDateEnd){
+            this.$message.error('出险开始日期不能大于出险结束日期！')
+            return false;
+          }
+        }
+         if(this.listForm.endCaseDateStart&&this.listForm.endCaseDateEnd){
+          if(this.listForm.endCaseDateStart>this.listForm.endCaseDateEnd){
+            this.$message.error('结案开始日期不能大于结案结束日期！')
+            return false;
+          }
+        }
+         if(this.listForm.rgtDateStart&&this.listForm.rgtDateEnd){
+          if(this.listForm.rgtDateStart>this.listForm.rgtDateEnd){
+            this.$message.error('立案开始日期不能大于立案结束日期！')
+            return false;
+          }
+        }
+        this.currentPage = 1;
+        this.currentPage1 = 1;
+        this.total = 0;
+        this.tableData = [];
+        this.$forceUpdate();
+        post(service.queryClaimsInfo, {
+          bodys: this.listForm,
+       
+          
+        })
+          .then(result => {
+            if (result.data.headers.code === "200") {
+              this.tableData = result.data.bodys.rows;
+              this.total = result.data.bodys.total;
+            }
+          })
+          .catch(error => {
+            console.log("请求失败");
+          });
+      } else {
+        this.$message.error("请输入查询条件");
+        return false;
+      }
+    },
+ 
+    toDetails(row) {
+      this.currentRow = row.customerNo;
+      this.rgtNo=row.clmNo;
+        this.$router.push({
+          name: "IntegratDetails",
+          query: { customerno: this.currentRow,rgtno:this.rgtNo }
+        });
+    },
+    
+    tableList() {
+      this.displayData = [];
+      for (
+        var j = this.total * (this.currentPage - 1);
+        j < this.total * this.currentPage;
+        j++
+      ) {
+        if (this.tableData[j]) {
+          this.displayData.push(this.tableData[j]);
+        }
+      }
+      // console.log(this.displayData);
+    },
+    currentChange: function(page) {
+      this.currentPage = page;
+      // this.tableList();
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currentPage - 1) * 10;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.listQuery {
+  margin: 10px;
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 20px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+  }
+  .work_queue {
+    position: relative;
+    margin-top: 21px;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 20px;
+    box-sizing: border-box;
+  }
+  .img_style {
+    width: 27px;
+    height: 22px;
+  }
+}
+</style>
+<style lang="less">
+.listQuery {
+  .el-row {
+    // padding-top: 20px;
+    &:first-child {
+      padding-top: 20px;
+    }
+    &:last-child {
+      padding-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+}
+.listQuery {
+    .el-input {
+      width: 85% !important;
+    }
+  .date_style {
+    .el-input {
+      width: 46% !important;
+    }
+  }
+
+  .el-select {
+    width: 85% !important;
+    .el-input {
+      width: 100% !important;
+    }
+  }
+  .el-collapse-item__arrow {
+    display: none;
+  }
+  .el-collapse-item__header {
+    background-color: #0673ff;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 10px 10px 0 0;
+    padding: 0 15px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+  }
+  .el-collapse-item__content {
+    padding-bottom: 17px;
+  }
+  .el-table--striped .el-table__body tr.el-table__row--striped.current-row td,
+  .el-table__body tr.current-row > td,
+  .el-table__body tr.hover-row.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped > td,
+  .el-table__body tr.hover-row > td {
+    background-color: #409eff;
+  }
+}
+</style>
