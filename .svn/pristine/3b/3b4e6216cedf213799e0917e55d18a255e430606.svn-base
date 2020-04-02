@@ -1,0 +1,834 @@
+import Vue from 'vue'
+import Router from 'vue-router'
+import Login from '@/views/login/Login'
+import ModifyPsd from '@/views/login/ModifyPsd'
+
+import Home from '@/views/home/Home'
+import WorkBench from '@/views/home/WorkBench'
+import ReportRegistration from '@/views/report/ReportRegistration'
+import ReportDetails from '@/views/report/ReportDetails'
+
+import InvestigationIndex from '@/views/investigationManagement/InvestigationIndex'
+import CustomerIdentifi from '@/views/customerManage/CustomerIdentifi'
+import ExpenseName from '@/views/customerManage/ExpenseName'
+import PublicAccount from '@/views/customerManage/PublicAccount'
+import GreenConfig from '@/views/configManage/GreenConfig'
+import HospitalConfig from '@/views/configManage/HospitalConfig'
+import DiseaseManage from '@/views/customerManage/DiseaseManage'
+import ActuarialForm from '@/views/reportForm/ActuarialForm'
+import ServiceForm from '@/views/reportForm/ServiceForm'
+import ServiceDetailForm from '@/views/reportForm/ServiceDetailForm'
+import ClaimMonthForm from '@/views/reportForm/ClaimMonthForm'
+import ProductPayForm from '@/views/reportForm/ProductPayForm'
+import ClaimVisitForm from '@/views/reportForm/ClaimVisitForm'
+import IndexDatabaseForm from '@/views/reportForm/IndexDatabaseForm'
+import StatisticsKPIForm from '@/views/reportForm/StatisticsKPIForm'
+import CheckKPIForm from '@/views/reportForm/CheckKPIForm'
+import TotalForm from '@/views/reportForm/TotalForm'
+import InvestigationResale from '@/views/investigationManagement/InvestigationResale'
+import InvestigationReview from '@/views/investigationManagement/InvestigationReview'
+import TaskList from '@/views/filing/TaskList'
+import RiskList from '@/views/filing/RiskList'
+import AddFiling from '@/views/filing/AddFiling'
+import MarketerSelection from '@/views/filing/MarketerSelection'
+import RollbackMes from '@/views/filing/RollbackMes'
+import GeneralMedical from '@/views/filing/GeneralMedical'
+import BeijingBill from '@/views/filing/BeijingBill'
+import InitiatingPhoto from '@/views/filing/InitiatingPhoto'
+import InitiateSurvey from '@/views/filing/InitiateSurvey'
+
+import WorkPool from '@/views/auditManage/WorkPool'
+import ReviewInformation from '@/views/auditManage/ReviewInformation'
+import Secondary from '@/views/auditManage/Secondary'
+import SameAccident from '@/views/auditManage/SameAccident'
+import ExemptionProcess from '@/views/auditManage/ExemptionProcess'
+import ContractProcess from '@/views/auditManage/ContractProcess'
+
+import EAList from '@/views/examination-approval/EAList'
+import EAListDetails1 from '@/views/examination-approval/EAListDetails1'
+import presentDetail from '@/views/examination-approval/presentDetail'
+// 照会查询
+import examineSearch from '@/views/examination-approval/examineSearch'
+// 调查查询
+// 医疗单证
+
+import medicalDocuments from '@/views/examination-approval/medicalDocuments'
+import bjDocuments from '@/views/examination-approval/bjDocuments'
+
+
+// 照会
+import diplomaticnoteManger from '@/views/diplomaticnote/diplomaticnoteManger'
+import diplomaticnoteDetail from '@/views/diplomaticnote/diplomaticnoteDetail'
+// 照会三种状态
+import secondSearch from '@/views/examination-approval/secondSearch'
+// 二核查询
+// 二核工作池
+import secondCore from "@/views/secondCore/secondCore"
+// 二核详情  待审批 待回复 待处理
+import secondDetail from "@/views/secondCore/secondDetail"
+import secondReply from "@/views/secondCore/secondReply"
+import secondDeal from "@/views/secondCore/secondDeal"
+
+import ListQuery from "@/views/integratedQuery/ListQuery"
+import IntegratDetails from "@/views/integratedQuery/IntegratDetails"
+
+import UserManage from "@/views/systemManagement/UserManage"
+import MenuManage from "@/views/systemManagement/MenuManage"
+import MenuConfig from "@/views/systemManagement/MenuConfig"
+// import WorkflowManage from "@/views/systemManagement/WorkflowManage"
+
+import RolePermissions from "@/views/systemManagement/RolePermissions"
+
+import Task from "@/views/taskRedistribution/Task"
+import FindUser from "@/views/taskRedistribution/FindUser"
+
+Vue.use(Router)
+
+const router = new Router({
+  routes: [
+    // 登陆页
+    {
+      path: '/',
+      name: 'Login',
+      component: Login
+    },
+    // 修改密码
+    {
+      path: '/modifyPsd',
+      name: 'ModifyPsd',
+      component: ModifyPsd
+    },
+    // 首页
+    {
+      path: '/home',
+      name: 'Home',
+      component: Home
+    },
+    // 工作台
+    {
+      path: '/workBench',
+      name: 'WorkBench',
+      component: WorkBench
+    },
+    // 空白页
+    {
+      path: '/blank',
+      name: 'blank',
+      component: () => import("@/views/login/blank.vue"),
+    },
+
+    // 报案登记
+    {
+      path: '/reportRegistration',
+      name: 'ReportRegistration',
+      component: ReportRegistration,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "报案登记",
+      }
+    },
+    // 报案登记查询
+    {
+      path: '/reportDetails/:dataOfTable',
+      name: 'ReportDetails',
+      component: ReportDetails,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "报案登记",
+      }
+    },
+    // 立案登记列表
+    {
+      path: '/taskList',
+      name: 'TaskList',
+      component: TaskList,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "立案登记",
+      }
+    },
+    // 新增立案-查询出险人客户列表
+    {
+      path: '/riskList',
+      name: 'RiskList',
+      component: RiskList,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "立案登记",
+      }
+    },
+    // 新增立案
+    {
+      path: '/addFiling',
+      name: 'AddFiling',
+      component: AddFiling,
+      meta: {
+        // keepAlive:true,
+        firstTitle: "理赔系统",
+        secondTitle: "立案登记",
+      },
+    },
+    // 普通医疗账单
+    {
+      path: '/generalMedical/:dataOfTable',
+      name: 'GeneralMedical',
+      component: GeneralMedical,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "立案登记",
+      }
+    },
+    // 北京健康险账单
+    {
+      path: '/beijingBill/:dataOfTable',
+      name: 'BeijingBill',
+      component: BeijingBill,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "立案登记",
+      }
+    },
+    // 营销员选择
+    {
+      path: '/marketerSelection',
+      name: 'MarketerSelection',
+      component: MarketerSelection,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "立案登记",
+      }
+    },
+    // 回退信息
+    {
+      path: '/rollbackMes/:dataOfTable',
+      name: 'RollbackMes',
+      component: RollbackMes
+    },
+
+
+    // 审核-个人工作池
+    {
+      path: '/workPool',
+      name: 'WorkPool',
+      component: WorkPool,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "审核管理",
+      }
+    },
+    // 审核-审核信息
+    {
+      path: '/reviewInformation/:dataOfTable',
+      name: 'ReviewInformation',
+      component: ReviewInformation,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "审核管理",
+      }
+    },
+    // 审核-发起二次核保
+    {
+      path: '/secondary',
+      name: 'Secondary',
+      component: Secondary,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "二次核保",
+      }
+    },
+    // 审核-同一事故认定
+    {
+      path: '/sameAccident/:dataOfTable',
+      name: 'SameAccident',
+      component: SameAccident,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "审核管理",
+      }
+    },
+    // 审核-豁免处理
+    {
+      path: '/exemptionProcess',
+      name: 'ExemptionProcess',
+      component: ExemptionProcess,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "审核管理",
+      }
+    },
+    // 审核-合同处理
+    {
+      path: '/contractProcess',
+      name: 'ContractProcess',
+      component: ContractProcess,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "审核管理",
+      }
+    },
+    // 综合查询  合同处理查询
+    {
+      path: '/queryContractProcess/:dataOfTable',
+      name: 'queryContractProcess',
+      component: () => import("@/views/auditManage/queryContractProcess.vue"),
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "综合查询",
+      }
+    },
+    {
+      path: '/eAList',
+      name: 'EAList',
+      component: EAList,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "审批管理",
+      }
+    },
+    {
+      path: '/eAListDetails1/:dataOfTable',
+      name: 'EAListDetails1',
+      component: EAListDetails1,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "审批管理",
+      }
+    },
+    {
+      path: '/presentDetail/:dataOfTable',
+      name: 'presentDetail',
+      component: presentDetail,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "审批管理",
+      }
+    },
+    // 照会查询
+    {
+      path: '/examineSearch/:dataOfTable',
+      name: 'examineSearch',
+      component: examineSearch,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "审批管理",
+      }
+    },
+    //调查查询 
+    {
+      path: '/secondSearch/:dataOfTable',
+      name: 'secondSearch',
+      component: secondSearch,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "二次核保",
+      }
+    },
+    // 医疗账单查询
+    {
+      path: '/medicalDocuments/:dataOfTable',
+      name: 'medicalDocuments',
+      component: medicalDocuments,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "医疗单证",
+      }
+    },
+    {
+      path: '/bjDocuments/:dataOfTable',
+      name: 'bjDocuments',
+      component: bjDocuments,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "医疗单证",
+      }
+    },
+    // 医疗单证
+    // 
+    // {
+    //   path: '/taskReassignment',
+    //   name: 'TaskReassignment',
+    //   component: TaskReassignment,
+    //   meta: {
+    //     firstTitle: "理赔系统",
+    //     secondTitle: "审批管理",
+    //   }
+    // },
+    // {
+    //   path: '/lnvManagement',
+    //   name: 'InvManagement',
+    //   component: InvManagement,
+    //   meta: {
+    //     firstTitle: "理赔系统",
+    //     secondTitle: "审批管理",
+    //   }
+    // },
+
+    //客户标识管理
+    {
+      path: '/customerIdentifi',
+      name: 'CustomerIdentifi',
+      component: CustomerIdentifi,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "系统管理",
+      }
+    },
+    //费用名称管理
+    {
+      path: '/expenseName',
+      name: 'ExpenseName',
+      component: ExpenseName,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "系统管理",
+      }
+    },
+    {
+      path: '/publicAccount',
+      name: 'PublicAccount',
+      component: PublicAccount,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "系统管理"
+      }
+    },
+    //绿色通道配置
+    {
+      path: '/greenConfig',
+      name: 'GreenConfig',
+      component: GreenConfig,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "配置管理",
+      }
+    },
+    //医院配置
+    {
+      path: '/hospitalConfig',
+      name: 'HospitalConfig',
+      component: HospitalConfig,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "配置管理",
+      }
+    },
+    //疾病管理
+    {
+      path: '/diseaseManage',
+      name: 'DiseaseManage',
+      component: DiseaseManage,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "系统管理",
+      }
+    },
+    //报表
+    //精算报表
+    {
+      path: '/actuarialForm',
+      name: 'ActuarialForm',
+      component: ActuarialForm,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "报表管理",
+      }
+    },
+    //理赔综合服务报表
+    {
+      path: '/serviceForm',
+      name: 'ServiceForm',
+      component: ServiceForm,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "报表管理",
+      }
+    },
+    //理赔综合服务报表(明细)
+    {
+      path: '/serviceDetailForm',
+      name: 'ServiceDetailForm',
+      component: ServiceDetailForm,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "报表管理",
+      }
+    },
+    //个险理赔月报表
+    {
+      path: '/claimMonthForm',
+      name: 'ClaimMonthForm',
+      component: ClaimMonthForm,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "报表管理",
+      }
+    },
+    //个险产品赔付率
+    {
+      path: '/productPayForm',
+      name: 'ProductPayForm',
+      component: ProductPayForm,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "报表管理",
+      }
+    },
+    //理赔回访
+    {
+      path: '/claimVisitForm',
+      name: 'ClaimVisitForm',
+      component: ClaimVisitForm,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "报表管理",
+      }
+    },
+    //公司KPI考核（营销服务部统计）
+    {
+      path: '/statisticsKPIForm',
+      name: 'StatisticsKPIForm',
+      component: StatisticsKPIForm,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "报表管理",
+      }
+    },
+    //公司KPI考核
+    {
+      path: '/checkKPIForm',
+      name: 'CheckKPIForm',
+      component: CheckKPIForm,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "报表管理",
+      }
+    },
+    //总表
+    {
+      path: '/totalForm',
+      name: 'TotalForm',
+      component: TotalForm,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "报表管理",
+      }
+    },
+    //指标库
+    {
+      path: '/indexDatabaseForm',
+      name: 'IndexDatabaseForm',
+      component: IndexDatabaseForm,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "报表管理",
+      }
+    },
+    // 发起照会
+    {
+      path: '/initiatingPhoto',
+      name: 'InitiatingPhoto',
+      component: InitiatingPhoto,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "照会管理",
+      }
+    },
+    // 照会列表
+    {
+      path: '/diplomaticnoteManger',
+      name: 'diplomaticnoteManger',
+      component: diplomaticnoteManger,
+      meta: {
+        // keepAlive: true,
+        firstTitle: "理赔系统",
+        secondTitle: "照会管理",
+      }
+    },
+    {
+      path: '/diplomaticnoteDetail/:dataOfTable',
+      name: 'diplomaticnoteDetail',
+      component: diplomaticnoteDetail,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "照会管理",
+      }
+    },
+    // 照会详情
+    // 发起调查
+    {
+      path: '/initiateSurvey',
+      name: 'InitiateSurvey',
+      component: InitiateSurvey,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "调查管理",
+      }
+    },
+    // 调查工作池
+    {
+      path: '/investigationIndex',
+      name: 'InvestigationIndex',
+      component: InvestigationIndex,
+      meta: {
+        // keepAlive: true,
+        firstTitle: "理赔系统",
+        secondTitle: "调查管理",
+      }
+    },
+    {
+      path: '/investigationResale/:dataOfTable',
+      name: 'InvestigationResale',
+      component: InvestigationResale,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "调查管理",
+      }
+
+    },
+    {
+      path: '/investigationReview/:dataOfTable',
+      name: 'InvestigationReview',
+      component: InvestigationReview,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "调查管理",
+      }
+    },
+    // 二核工作池
+    {
+      path: '/secondCore',
+      name: 'secondCore',
+      component: secondCore,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "二次核保",
+      }
+    },
+    {
+      path: '/secondDetail/:dataOfTable',
+      name: 'secondDetail',
+      component: secondDetail,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "二次核保",
+      }
+    },
+    {
+      path: '/secondReply/:dataOfTable',
+      name: 'secondReply',
+      component: secondReply,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "二次核保",
+      }
+    },
+    {
+      path: '/secondDeal/:dataOfTable',
+      name: 'secondDeal',
+      component: secondDeal,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "二次核保",
+      }
+    },
+    // 综合查询-列表
+    {
+      path: '/listQuery',
+      name: 'ListQuery',
+      component: ListQuery,
+      meta: {
+        keepAlive:true,
+        firstTitle: "理赔系统",
+        secondTitle: "综合管理",
+      }
+    },
+    // 综合查询-详情
+    {
+      path: '/integratDetails',
+      name: 'IntegratDetails',
+      component: IntegratDetails,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "综合管理",
+      }
+    },
+    // 系统管理-用户管理
+    {
+      path: '/userManage',
+      name: 'UserManage',
+      component: UserManage,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "系统管理",
+      }
+    },
+    // 系统管理-菜单管理
+    {
+      path: '/menuManage',
+      name: 'MenuManage',
+      component: MenuManage,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "系统管理",
+      }
+    },
+    // 系统管理-菜单配置
+    {
+      path: '/menuConfig',
+      name: 'MenuConfig',
+      component: MenuConfig,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "系统管理",
+      }
+    },
+    // 系统管理-工作流管理
+    {
+      path: '/workflowManage',
+      name: 'WorkflowManage',
+      // component: WorkflowManage
+      component: () => import("@/views/systemManagement/WorkflowManage"),
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "系统管理",
+      }
+    },
+    // 配置管理-角色权限
+    {
+      path: '/rolePermissions',
+      name: 'RolePermissions',
+      component: RolePermissions,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "系统管理",
+      }
+
+    },
+    // 影像查询
+    {
+      path: '/initImg',
+      name: 'initImg',
+      component: () => import("@/views/filing/initImg.vue"),
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "影像查询",
+      }
+    },
+    // 回退管理
+    {
+      path: '/goback',
+      name: 'goback',
+      component: () => import("@/views/goback/goback.vue"),
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "回退管理",
+      }
+    },
+    // 回退管理详情
+    {
+      // path: '/gobackDetail/:dataOfTable',
+      path: '/gobackDetail',
+      name: 'gobackDetail',
+      component: () => import("@/views/goback/gobackDetail.vue"),
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "回退管理",
+      }
+    },
+    // 产品配置
+    {
+      path: '/productConfig',
+      name: 'productConfig',
+      component: () => import("@/views/configManage/productConfig.vue"),
+      meta: {
+        keepAlive:true,
+        firstTitle: "理赔系统",
+        secondTitle: "配置管理",
+      }
+    },
+    {
+      path: '/accumulatorDetail',
+      name: 'accumulatorDetail',
+      component: () => import("@/views/configManage/accumulatorDetail.vue"),
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "配置管理",
+      }
+    },
+    // 理赔支付
+    {
+      path: '/pay',
+      name: 'pay',
+      component: () => import("@/views/pay/pay.vue"),
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "理赔支付管理",
+      }
+    },
+    // 累加器配置
+    {
+      path: '/accumulator',
+      name: 'accumulator',
+      component: () => import("@/views/configManage/accumulator.vue"),
+      meta: {
+        keepAlive:true,
+        firstTitle: "理赔系统",
+        secondTitle: "配置管理",
+      }
+    },
+    {
+      path: '/dutyConfig',
+      name: 'dutyConfig',
+      component: () => import("@/views/configManage/dutyConfig.vue"),
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "配置管理",
+      }
+    },
+    // 二核查询
+    {
+      path: '/pending',
+      name: 'pending',
+      component: () => import("@/views/pending/index.vue"),
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "保单挂起",
+      }
+    },
+    // 任务重新分配-任务重新分配
+    {
+      path: '/task',
+      name: 'Task',
+      component: Task,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "任务重新分配",
+      }
+    },
+    // 任务重新分配-查询理赔用户
+    {
+      path: '/findUser',
+      name: 'FindUser',
+      component: FindUser,
+      meta: {
+        firstTitle: "理赔系统",
+        secondTitle: "任务重新分配",
+      }
+    },
+  ]
+});
+
+router.beforeEach((to, from, next) => {
+  if (to.path === '/') {
+    next();
+  } else {
+    let token = localStorage.getItem('token');
+    if (token === 'null' || token === '') {
+      next('/');
+    } else {
+      next();
+    }
+  }
+})
+
+export default router;

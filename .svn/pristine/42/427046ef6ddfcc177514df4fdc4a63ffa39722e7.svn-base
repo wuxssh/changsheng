@@ -1,0 +1,1340 @@
+<template>
+  <div class="accumulator">
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          产品信息查询
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form :label-position="labelPosition" :model="forms" label-width="120px">
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem firstcolItem">
+                <el-form-item label="产品险种代码">
+                  <el-input v-model="forms.riskCode" disabled></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem firstcolItem">
+                <el-form-item label="责任编码">
+                  <el-input v-model="forms.dutycode" @keyup.enter.native="getData('form')"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem firstcolItem">
+                <el-button type="primary" round @click="getData('form')">查询</el-button>
+              </div>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+    <div>
+      <div class="work_queue">
+        <span>已有给付责任</span>
+        <div class="box"></div>
+      </div>
+      <div class="work_table">
+        <el-table
+          :data="tableData.slice((currpage - 1) * pagesize, currpage * pagesize)"
+          style="width: 100%"
+          @row-click="getrowdata"
+          highlight-current-row
+        >
+          <el-table-column label="序号" type="index" width="60" :index="indexMethod" align="center"></el-table-column>
+          <el-table-column prop="dutycode" label="责任编码" align="center"></el-table-column>
+          <el-table-column prop="getdutykindname" label="给付责任类型" align="center"></el-table-column>
+          <el-table-column prop="getdutycode" label="给付代码" align="center"></el-table-column>
+          <el-table-column prop="getdutyname" label="给付名称" align="center"></el-table-column>
+          <el-table-column prop="inpflagname" label="账单录入标志" align="center"></el-table-column>
+          <el-table-column prop="stattypename" label="统计类别" align="center"></el-table-column>
+          <el-table-column prop="calcode" label="算法编码" align="center"></el-table-column>
+          <el-table-column prop="obsperiod" label="等待期" align="center"></el-table-column>
+          <!-- <el-table-column prop="deadvaliflagname" width="200" label="被保人死亡后有效标记" align="center"></el-table-column> -->
+          <el-table-column label="操作" align="center" width="200">
+            <template slot-scope="scope">
+              <el-button size="mini" type="primary" @click="lookLJQ(scope.row,scope.$index)">累加器配置</el-button>
+              <el-button
+                size="mini"
+                type="danger"
+                @click="deleteProductAttribute(scope.row,scope.$index)"
+              >删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <div class="block">
+          <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            background
+            layout="prev, pager, next, jumper"
+            :total="tableData.length"
+          ></el-pagination>
+        </div>
+      </div>
+    </div>
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="2">
+        <template slot="title">
+          给付责任配置
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form
+          :label-position="labelPosition"
+          label-width="120px"
+          :model="form"
+          :rules="formrules"
+          ref="form"
+        >
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="责任编码" prop="dutycode">
+                  <el-select
+                    v-model="form.dutycode"
+                    @change="getDutyCode(form.dutycode)"
+                    placeholder="请选择"
+                  >
+                    <el-option
+                      v-for="item in dutycodeLists"
+                      :key="item.dutycode"
+                      :label="item.duty_name"
+                      :value="item.dutycode"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="给付责任代码" prop="getdutycode">
+                  <el-input v-model="form.getdutycode" disabled></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="给付责任名称" prop="getdutyname">
+                  <el-input v-model="form.getdutyname"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="给付责任类型" prop="getdutykind">
+                  <el-select v-model="form.getdutykind" placeholder="请选择">
+                    <el-option
+                      v-for="item in getdutykindList"
+                      :key="item.code"
+                      :label="item.codename"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="账单录入标记" prop="inpflag">
+                  <el-select v-model="form.inpflag" placeholder="请选择">
+                    <el-option
+                      v-for="item in inpflagList"
+                      :key="item.code"
+                      :label="item.codename"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="统计类别" prop="stattype">
+                  <el-select v-model="form.stattype" placeholder="请选择">
+                    <el-option
+                      v-for="item in stattypeList"
+                      :key="item.code"
+                      :label="item.codename"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="给付后动作" prop="afterget">
+                  <el-select v-model="form.afterget" placeholder="请选择">
+                    <el-option
+                      v-for="item in aftergetList"
+                      :key="item.code"
+                      :label="item.codename"
+                      :value="item.code"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="等待期" prop="obsperiod">
+                  <el-input v-model.number="form.obsperiod"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="被保人死亡后有效标记" prop="deadvaliflag">
+                  <el-select v-model="form.deadvaliflag" placeholder="请选择">
+                    <el-option
+                      v-for="item in deadvaliflagList"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="是否认定" prop="recognized">
+                  <el-select
+                    @change="aa(form.recognized)"
+                    v-model="form.recognized"
+                    placeholder="请选择"
+                  >
+                    <el-option
+                      v-for="item in recognizedList"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem" v-if="form.stattype == 'YL'">
+                <el-form-item v-show="form.stattype == 'YL'" label="有社保赔付比例" prop="ssclaimrate">
+                  <!-- <el-input-number
+                    v-model="form.ssclaimrate"
+                    @blur="tips(form.ssclaimrate)"
+                    :controls="false"
+                    :precision="2"
+                    :step="0.1"
+                    :min="0"
+                  ></el-input-number>-->
+                  <el-input v-model="form.ssclaimrate" maxlength="4"></el-input>
+                </el-form-item>
+              </div>
+              <div class="colItem" v-show="form.stattype != 'YL'">
+                <el-form-item label="有社保赔付比例">
+                  <!-- <el-input-number
+                    v-model="form.ssclaimrate"
+                    @blur="tips(form.ssclaimrate)"
+                    :controls="false"
+                    :precision="2"
+                    :step="0.1"
+                    :min="0"
+                  ></el-input-number>-->
+                  <el-input v-model="form.ssclaimrate" maxlength="4"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem" v-if="form.stattype == 'YL'">
+                <el-form-item v-show="form.stattype == 'YL'" label="无社保赔付比例" prop="claimrate">
+                  <!-- <el-input-number
+                    v-model="form.claimrate"
+                    @blur="tips1(form.claimrate)"
+                    :controls="false"
+                    :precision="2"
+                    :step="0.1"
+                    :min="0"
+                    :max="1"
+                  ></el-input-number>-->
+                  <el-input v-model="form.claimrate" maxlength="4"></el-input>
+                </el-form-item>
+              </div>
+              <div class="colItem" v-show="form.stattype != 'YL'">
+                <el-form-item label="无社保赔付比例">
+                  <el-input v-model="form.claimrate" maxlength="4"></el-input>
+                  <!-- <el-input-number
+                    v-model="form.claimrate"
+                    @blur="tips1(form.claimrate)"
+                    :controls="false"
+                    :precision="2"
+                    :step="0.1"
+                    :min="0"
+                    :max="1"
+                  ></el-input-number>-->
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="算法编码" prop="calcode">
+                  <el-input
+                    v-model="form.calcode"
+                    :disabled="form.stattype == 'YL'"
+                    @blur="selectLmcalmode"
+                  ></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="赔付限额" prop="maxget">
+                  <el-input v-model="form.maxget" :disabled="form.stattype == 'YL'"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="赔付次数限额" prop="needrecompute">
+                  <el-input v-model="form.needrecompute" :disabled="form.stattype == 'YL'"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem" v-if="form.stattype == 'YL'">
+                <el-form-item v-show="form.stattype == 'YL'" label="医疗账单类型" prop="clmFeeTypekeyss">
+                  <el-select
+                    v-model="form.clmFeeTypekeyss"
+                    multiple
+                    collapse-tags
+                    placeholder="请选择"
+                  >
+                    <el-option
+                      v-for="item in medicinefeetypeList"
+                      :key="item.code"
+                      :label="item.codename"
+                      :value="item.code + item.codename"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+              <div class="colItem" v-show="form.stattype != 'YL'">
+                <el-form-item label="医疗账单类型">
+                  <el-select
+                    @change="aaq(form.clmFeeTypekeyss)"
+                    v-model="form.clmFeeTypekeyss"
+                    multiple
+                    collapse-tags
+                    placeholder="请选择"
+                  >
+                    <el-option
+                      v-for="item in medicinefeetypeList"
+                      :key="item.code"
+                      :label="item.codename"
+                      :value="item.code + item.codename"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem">
+                <el-form-item label="等待期是否理赔" prop="casepoltype">
+                  <el-select v-model="form.casepoltype" placeholder="请选择">
+                    <el-option
+                      v-for="item in casepoltypeList"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="16">
+              <div class="colItem">
+                <el-form-item label="算法" prop="calsql">
+                  <el-input
+                    :disabled="this.sql == true || form.stattype == 'YL'"
+                    type="textarea"
+                    resize="none"
+                    v-model="form.calsql"
+                    :rows="6"
+                    maxlength="700"
+                  ></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+        </el-form>
+        <div class="footBtnAll">
+          <el-button class="elButton" type="primary" @click="clear1('form')">重置</el-button>
+          <el-button class="elButton" type="primary" @click="toAdd('form')">新增</el-button>
+          <el-button class="elButton" type="primary" @click="update1('form')">修改</el-button>
+        </div>
+      </el-collapse-item>
+    </el-collapse>
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="2">
+        <template slot="title">
+          未拥有给付责任查询
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form :label-position="labelPosition" label-width="120px" :model="form3" ref="form3">
+          <el-row>
+            <el-col :span="8">
+              <div class="colItem firstcolItem">
+                <el-form-item label="给付责任编码">
+                  <el-input v-model="form3.getdutycode"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem firstcolItem">
+                <el-form-item label="给付责任名称">
+                  <el-input v-model="form3.getdutyname"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="colItem firstcolItem">
+                <el-button type="primary" round @click="getSecondData">查询</el-button>
+              </div>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+    <div>
+      <div class="work_queue">
+        <span>未拥有给付责任</span>
+        <div class="box"></div>
+      </div>
+      <div class="work_table">
+        <el-table
+          :data="productAttributenQueryUnList.slice((currpage1 - 1) * pagesize1, currpage1 * pagesize1)"
+          style="width: 100%"
+          highlight-current-row
+        >
+          <el-table-column label="序号" type="index" width="60" :index="indexMethod1" align="center"></el-table-column>
+          <el-table-column prop="dutycode" label="责任编码" align="center"></el-table-column>
+          <el-table-column prop="getdutycode" label="给付代码" align="center"></el-table-column>
+          <el-table-column prop="getdutyname" label="给付名称" align="center"></el-table-column>
+          <el-table-column prop="inpflagname" label="账单录入标志" align="center"></el-table-column>
+          <el-table-column prop="stattypename" label="统计类别" align="center"></el-table-column>
+          <el-table-column prop="calcode" label="算法编码" align="center"></el-table-column>
+          <el-table-column prop="obsperiod" label="等待期" align="center"></el-table-column>
+          <el-table-column label="操作" align="center">
+            <template slot-scope="scope">
+              <el-button
+                size="mini"
+                type="primary"
+                @click="addProductAttribute(scope.row,scope.$index)"
+              >添加</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <div class="block">
+          <el-pagination
+            @size-change="handleSizeChange1"
+            @current-change="handleCurrentChange1"
+            :page-size="pagesize1"
+            background
+            layout="prev, pager, next, jumper"
+            :total="productAttributenQueryUnList.length"
+          ></el-pagination>
+        </div>
+      </div>
+    </div>
+    <!-- <div style="background:#Fff;padding:10px 0;clear:both"></div> -->
+    <el-button type="primary" style="float:right;margin-right:30px;" @click="goback">返回</el-button>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+import { getCodeType } from "../../utils/service.js";
+export default {
+  name: "accumulator",
+  data() {
+    return {
+      labelPosition: "left",
+      activeName: ["1", "2", "3"],
+
+      forms: {
+        riskCode: "", // 产品险种代码
+        dutycode: "" // 责任编码
+      },
+      // -----------------------
+      form: {
+        dutycode: "",
+        getdutycode: "",
+        getdutyname: "",
+        getdutykind: "",
+        inpflag: "",
+        stattype: "",
+        afterget: "",
+        deadvaliflag: "",
+        calcode: "",
+        calsql: "",
+        type: "",
+        obsperiod: "",
+        maxget: "",
+        needrecompute: "",
+        recognized: "",
+        ssclaimrate: "",
+        claimrate: "",
+        casepoltype: "",
+        clmFeeTypekeyss: []
+      },
+      form3: {
+        getdutycode: "",
+        getdutyname: ""
+      },
+      formrules: {
+        dutycode: [
+          { required: true, message: "责任编码不能为空", trigger: "change" }
+        ],
+        getdutycode: [
+          {
+            required: true,
+            message: "给付责任编码不能为空",
+            trigger: ["change", "blur"]
+          }
+        ],
+        getdutyname: [
+          { required: true, message: "给付责任名称不能为空", trigger: "blur" }
+        ],
+        getdutykind: [
+          { required: true, message: "给付责任类型不能为空", trigger: "change" }
+        ],
+        inpflag: [
+          { required: true, message: "账单录入标记不能为空", trigger: "change" }
+        ],
+        afterget: [
+          { required: true, message: "给付后动作不能为空", trigger: "change" }
+        ],
+        obsperiod: [
+          { required: true, message: "等待期不能为空", trigger: "blur" }
+        ],
+        stattype: [
+          { required: true, message: "统计类别不能为空", trigger: "change" }
+        ],
+        deadvaliflag: [
+          {
+            required: true,
+            message: "被保人死亡后有效标记不能为空",
+            trigger: "change"
+          }
+        ],
+
+        recognized: [
+          { required: true, message: "是否认定不能为空", trigger: "change" }
+        ],
+        ssclaimrate: [
+          { required: true, message: "有社保赔付比例不能为空", trigger: "blur" }
+        ],
+        claimrate: [
+          { required: true, message: "无社保赔付比例不能为空", trigger: "blur" }
+        ],
+        clmFeeTypekeyss: [
+          { required: true, message: "医疗账单类型不能为空", trigger: "change" }
+        ],
+        casepoltype: [
+          {
+            required: true,
+            message: "等待期是否理赔不能为空",
+            trigger: "change"
+          }
+        ]
+        // type: [{ required: true, message: "算法类型", trigger: "change" }]
+      },
+      getdutykindList: [],
+      aftergetList: [],
+      inpflagList: [],
+      stattypeList: [],
+      medicinefeetypeList: [], // 医疗账单类型
+      clmFeeTypekeys: [], // 医疗账单类型
+      recognizedList: [
+        { id: "Y", name: "是" },
+        { id: "N", name: "否" }
+      ],
+      deadvaliflagList: [
+        { id: "Y", name: "有效" },
+        { id: "N", name: "无效" }
+      ],
+      casepoltypeList: [
+        { id: "Y", name: "是" },
+        { id: "N", name: "否" }
+      ],
+      lmcalmodetypeList: [
+        { id: "A", name: "计算责任给付(Amount)" },
+        { id: "P", name: "计算缴费(Premium)" },
+        { id: "C", name: "计算赔付(Claim)" },
+        { id: "G", name: "计算领取(Get)" },
+        { id: "X", name: "描述现金价值" },
+        { id: "Z", name: "单证描述" },
+        { id: "H", name: "为计算体检额度算法类型" },
+        { id: "M", name: "为查询投保单交费状态算法类型" },
+        { id: "S", name: "查询保单状态算法" },
+        { id: "T", name: "代理人佣金计算算法" },
+        { id: "U", name: "个险核保规则" },
+        { id: "V", name: "承保时CheckField中的描述" },
+        { id: "W", name: "佣金计算的编码" }
+      ],
+      //------------------------
+      formData: {
+        calculatorname: "",
+        ctrllevel: "",
+        type: "",
+        ctrlfactortype: "",
+        ctrlfactorunit: "",
+        calmode: "",
+        calcode: "",
+        validperiodunitname: "",
+        ctrlfactorvalue: "",
+        defaultvalue: "",
+        startdate: "",
+        enddate: "",
+        validperiod: "",
+        calorder: "",
+        calcode1: ""
+      },
+      formDatarules: {
+        calculatorname: [
+          { required: true, message: "请填写累加器名称", trigger: "blur" }
+        ],
+        calorder: [
+          { required: true, message: "请填写累加步骤", trigger: "blur" }
+        ],
+        ctrllevel: [
+          {
+            required: true,
+            message: "请选择累加器层级",
+            trigger: "change"
+          }
+        ],
+        type: [
+          {
+            required: true,
+            message: "请选择累加器类型",
+            trigger: "change"
+          }
+        ],
+        ctrlfactortype: [
+          {
+            required: true,
+            message: "请选择要素类型",
+            trigger: "change"
+          }
+        ],
+        ctrlfactorunit: [
+          {
+            required: true,
+            message: "请选择要素单位",
+            trigger: "change"
+          }
+        ],
+        ctrlfactorunit: [
+          {
+            required: true,
+            message: "请选择要素单位",
+            trigger: "change"
+          }
+        ]
+      },
+      ctrlevelList: [
+        { id: "1", name: "保障责任（给付责任）" },
+        { id: "2", name: "责任" },
+        { id: "3", name: "连生被保人" },
+        { id: "4", name: "产品" },
+        { id: "5", name: "被保人（多被保人-家庭单的情况）" },
+        { id: "6", name: "保单" },
+        { id: "7", name: "个人（个险系统累加器只包含以上7中层级）" },
+        { id: "8", name: "计划" },
+        { id: "9", name: "团单" }
+      ],
+      calculatortypeList: [
+        { id: "1", name: "限额" },
+        { id: "2", name: "免赔额" },
+        { id: "3", name: "计算(公式)" }
+      ],
+      ctrlfactortypeList: [
+        { id: "1", name: "金额" },
+        { id: "2", name: "天数" },
+        { id: "3", name: "次数" },
+        { id: "4", name: "天金额" },
+        { id: "5", name: "次金额" }
+      ],
+      ctrlfactorunitList: [
+        { id: "1", name: "金额（元）" },
+        { id: "2", name: "天" },
+        { id: "3", name: "次" },
+        { id: "4", name: "小时" }
+      ],
+      calmodeList: [
+        { id: "1", name: "取描述默认值" },
+        { id: "2", name: "实例化时取默认计算要素计算" },
+        { id: "3", name: "实例化时取约定计算要素计算" }
+      ],
+      validperiodunitList: [
+        { id: "Y", name: "年" },
+        { id: "S", name: "季" },
+        { id: "M", name: "月" },
+        { id: "W", name: "周" },
+        { id: "D", name: "天" }
+      ],
+      //------------------------
+      tableData: [],
+      tableData1: [],
+      pagesize1: 10,
+      currpage1: 1,
+      pagesize: 10,
+      currpage: 1,
+      calculatorcode: "", // 累加器编号
+      serialno: "", // 交易流水号
+      getdutycode: "",
+      getdutykind: "",
+      dutycode: "",
+      dutycodeList: [],
+      dutycodeLists: [],
+      productAttributenQueryUnList: [],
+      sql: false // 验证算法是否置灰
+    };
+  },
+  created() {
+    this.forms.riskCode = this.$route.query.riskcode;
+    this.selectLmDuty();
+  },
+  beforeRouteEnter(to, from, next) {
+    if (to.path == "/productConfig") {
+      to.meta.keepAlive = true;
+    } else {
+      to.meta.keepAlive = false;
+    }
+    next();
+  },
+  mounted() {
+    this.getdutykindList = getCodeType("getdutykind"); // 给付责任类型
+    this.inpflagList = getCodeType("inpflag"); // 账单录入标记
+    this.stattypeList = getCodeType("stattype"); // 统计类别
+    this.aftergetList = getCodeType("afterget"); // 给付后动作
+    this.medicinefeetypeList = getCodeType("medicinefeetype"); // 医疗账单类型
+  },
+
+  beforeRouteEnter(to, from, next) {
+    if (from.path == "/accumulatorDetail") {
+      to.meta.keepAlive = true;
+    } else {
+      to.meta.keepAlive = false;
+    }
+    next();
+  },
+  methods: {
+
+
+    goback() {
+      this.$router.push({ path: "/productConfig" });
+    },
+    // 系统输出算法
+    selectLmcalmode() {
+      post(service.selectLmcalmode, {
+        bodys: {
+          calcode: this.form.calcode
+        }
+      }).then(res => {
+        console.log("QQQ", res.data);
+        if (res.data.bodys.calsql) {
+          this.sql = true;
+          this.form.calsql = res.data.bodys.calsql;
+        } else {
+          this.sql = false;
+          this.form.calsql = "";
+        }
+      });
+    },
+    getDutyCode(item) {
+      this.dutycodeLists.forEach(el => {
+        if (el.dutycode === item) {
+          this.form.getdutycode = el.getdutycode;
+        }
+      });
+    },
+    selectLmDuty() {
+      post(service.selectLmDuty, {
+        bodys: {
+          kindcode: this.forms.riskCode
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.dutycodeLists = res.data.bodys.rows;
+          // this.dutycodeLists.forEach(item => {
+          //   this.dutycodeList.push({
+          //     id: item.dutycode,
+          //     name: item.duty_name,
+          //     name1: item.getdutycode
+          //   });
+          // });
+        }
+      });
+    },
+    // 已有责任给付列表
+    getData(formName) {
+      post(service.productAttributenQuery, {
+        bodys: {
+          kindcode: this.forms.riskCode,
+          dutycode: this.forms.dutycode
+        }
+      }).then(res => {
+        this.tableData = res.data.bodys.rows;
+        console.log("ZZX",sessionStorage.getItem("rowdatass"))
+        sessionStorage.removeItem("rowdatass");
+        console.log("ZZX",sessionStorage.getItem("rowdatass"))
+        // this.form.clmFeeTypekeyss = [];
+        // // this.$refs[formName].resetFields();
+        // this.form.ssclaimrate = "";
+        // this.form.claimrate = "";
+      });
+    },
+    aaq(key) {
+      console.log("zzx", key);
+      console.log("zzx", this.form.clmFeeTypekeyss);
+      console.log("ews",JSON.parse(JSON.stringify(this.form.clmFeeTypekeyss)))
+      console.log("ews",(JSON.stringify(this.form.clmFeeTypekeyss)))
+    },
+    aa(key) {
+      console.log("zzx", key);
+      console.log("zzx", this.form.clmFeeTypekeyss);
+    },
+    getrowdata(row) {
+      console.log(row);
+      console.log("zzx", this.form.clmFeeTypekeyss);
+      this.form.clmFeeTypekeyss = [];
+      // this.form.clmFeeTypekeyss = row.clmFeeTypekeyss;
+      this.form = row;
+      // let yiliao = row.clmFeeTypekeys
+      let yiliao = [];
+      row.clmFeeTypekeys.forEach(item => {
+        console.log(item.code + item.codename);
+        yiliao.push(item.code + item.codename);
+      });
+      this.form.clmFeeTypekeyss = JSON.parse(JSON.stringify(yiliao));
+      // this.form.clmFeeTypekeyss = JSON.parse(JSON.stringify(row.clmFeeTypekeys)).forEach((item)=>{
+      //   return item.code + item.codename
+      // });
+      sessionStorage.setItem("rowdatass", JSON.stringify(row));
+      this.form = JSON.parse(sessionStorage.getItem("rowdatass")) ;
+      console.log("zza", yiliao);
+      console.log("zzx", this.form.clmFeeTypekeyss);
+      console.log("ews",JSON.parse(JSON.stringify(row.clmFeeTypekeys)))
+      console.log("zzz", row.clmFeeTypekeys);
+
+      
+    },
+    // // 重置按钮
+    clear1(formName) {
+      // this.$refs[formName].resetFields();
+      this.form = JSON.parse(sessionStorage.getItem("rowdatass")) || {};
+      // this.form = {};
+      console.log("aaa",this.form)
+    },
+
+    // 新增按钮
+    toAdd(formName) {
+      this.$refs[formName].validate(valid => {
+        if (!valid) {
+          this.$message.error("请先填写必填项！");
+          return false;
+        } else {
+          if (this.form.claimrate > 1) {
+            this.$message.error("无社保比例最大只能录入1");
+            return;
+          }
+          if (this.form.ssclaimrate > 1) {
+            this.$message.error("有社保比例最大只能录入1");
+            return;
+          }
+          this.clmFeeTypekeys = [];
+          this.form.clmFeeTypekeyss.forEach(item => {
+            this.clmFeeTypekeys.push({
+              code: item.slice(0, 1),
+              codename: item.slice(1, item.length)
+            });
+          });
+          post(service.insertProductAttribute, {
+            bodys: {
+              riskcode: this.forms.riskCode,
+              kindcode: this.$route.query.kindcode,
+              dutycode: this.form.dutycode,
+              getdutycode: this.form.getdutycode,
+              getdutyname: this.form.getdutyname,
+              getdutykind: this.form.getdutykind,
+              inpflag: this.form.inpflag,
+              stattype: this.form.stattype,
+              afterget: this.form.afterget,
+              calcode: this.form.calcode || "",
+              obsperiod: this.form.obsperiod,
+              deadvaliflag: this.form.deadvaliflag,
+              calsql: this.form.calsql || "",
+              maxget: this.form.maxget || 0,
+              needrecompute: this.form.needrecompute || "",
+              recognized: this.form.recognized || "",
+              ssclaimrate: this.form.ssclaimrate || "",
+              claimrate: this.form.claimrate || "",
+              clmFeeTypekeys: this.clmFeeTypekeys || "",
+              casepoltype: this.form.casepoltype || ""
+              // inqrcodes: this.getArr1(this.form.inqrcode),
+            }
+          }).then(res => {
+            if (res.data.header.success === true) {
+              this.$message.success("操作成功！");
+              this.getData();
+              this.form.clmFeeTypekeyss = [];
+              this.$refs[formName].resetFields();
+              this.form.ssclaimrate = "";
+              this.form.claimrate = "";
+            } else {
+              this.$message.error(res.data.header.message);
+            }
+          });
+        }
+      });
+    },
+    // 修改按钮
+    update1(formName) {
+      this.$refs[formName].validate(valid => {
+        if (!valid) {
+          this.$message.error("请先填写必填项！");
+          return false;
+        } else {
+          if (this.form.claimrate > 1) {
+            this.$message.error("无社保比例最大只能录入1");
+            return;
+          }
+          if (this.form.ssclaimrate > 1) {
+            this.$message.error("有社保比例最大只能录入1");
+            return;
+          }
+          this.clmFeeTypekeys = [];
+          this.form.clmFeeTypekeyss.forEach(item => {
+            this.clmFeeTypekeys.push({
+              code: item.slice(0, 1),
+              codename: item.slice(1, item.length)
+            });
+          });
+          post(service.updateProductAttribute, {
+            bodys: {
+              riskcode: this.forms.riskCode,
+              kindcode: this.$route.query.kindcode,
+              dutycode: this.form.dutycode,
+              getdutycode: this.form.getdutycode,
+              getdutyname: this.form.getdutyname,
+              getdutykind: this.form.getdutykind,
+              inpflag: this.form.inpflag,
+              stattype: this.form.stattype,
+              afterget: this.form.afterget,
+              calcode: this.form.calcode || "",
+              obsperiod: this.form.obsperiod,
+              deadvaliflag: this.form.deadvaliflag,
+              calsql: this.form.calsql || "",
+              maxget: this.form.maxget || 0,
+              needrecompute: this.form.needrecompute || "",
+              recognized: this.form.recognized || "",
+              oldgetdutykind: this.form.getdutykind,
+              ssclaimrate: this.form.ssclaimrate || "",
+              claimrate: this.form.claimrate || "",
+              clmFeeTypekeys: this.clmFeeTypekeys || "",
+              casepoltype: this.form.casepoltype || ""
+            }
+          }).then(res => {
+            if (res.data.header.code === "200") {
+              this.$message.success("操作成功！");
+              this.getData();
+              this.form.clmFeeTypekeyss = [];
+              this.form = {};
+              this.$refs[formName].resetFields();
+              this.form.ssclaimrate = "";
+              this.form.claimrate = "";
+            } else {
+              this.$message.error(res.data.header.message);
+            }
+          });
+        }
+      });
+    },
+
+    // 查询未有产品责任
+    getSecondData() {
+      if (!this.form3.getdutycode && !this.form3.getdutyname) {
+        this.$message.error("给付责任编码与给付责任名称至少填写一项!");
+        return;
+      }
+      post(service.productAttributenQueryUn, {
+        bodys: {
+          kindcode: this.forms.riskCode,
+          getdutycode: this.form3.getdutycode,
+          getdutyname: this.form3.getdutyname
+        }
+      }).then(res => {
+        if (res.data.headers.success == true) {
+          this.productAttributenQueryUnList = res.data.bodys.rows;
+        }
+      });
+    },
+    addProductAttribute(row) {
+      post(service.addProductAttribute, {
+        bodys: {
+          kindcode: this.forms.riskCode,
+          dutycode: row.dutycode,
+          getdutycode: row.getdutycode,
+          getdutyname: row.getdutyname
+        }
+      }).then(res => {
+        if (res.data.header.success == true) {
+          this.$message.success("操作成功！");
+          this.getSecondData();
+          this.getData();
+        }
+      });
+    },
+    clearSecond(formName) {
+      this.$refs[formName].resetFields();
+      // this.$refs.singleTable.setCurrentRow();
+    },
+    // 新增累加器
+    toAddSecond(formName) {
+      this.$refs[formName].validate(valid => {
+        if (!valid) {
+          this.$message.error("请先填写必填项！");
+          return false;
+        } else {
+          post(service.insertCalculate, {
+            bodys: {
+              riskcode: this.$route.query.riskcode,
+              kindcode: this.$route.query.kindcode,
+              calculatorcode: "",
+              calculatorname: this.formData.calculatorname || "",
+              ctrllevel: this.formData.ctrllevel || "",
+              type: this.formData.type || "",
+              ctrlfactortype: this.formData.ctrlfactortype || "",
+              ctrlfactorvalue: this.formData.ctrlfactorvalue || "",
+              ctrlfactorunit: this.formData.ctrlfactorunit || "",
+              calmode: this.formData.calmode || "",
+              calcode: this.formData.calcode || "",
+              serialno: "",
+              defaultvalue: this.formData.defaultvalue || "",
+              // dutycode: this.$route.query.dutycode,
+              // getdutycode: this.$route.query.getdutycode,
+              dutycode: this.dutycode,
+              getdutycode: this.getdutycode,
+              getdutykind: this.getdutykind,
+              calorder: this.formData.calorder || "",
+              calcode1: this.formData.calcode1 || "",
+              startdate: this.formData.startdate || "",
+              enddate: this.formData.enddate || "",
+              validperiod: this.formData.validperiod || "",
+              validperiodunit: this.formData.validperiodunitname || ""
+            }
+          }).then(res => {
+            if (res.data.header.code === "200") {
+              this.$message.success("操作成功");
+              this.calculateQuery();
+            }
+          });
+        }
+      });
+    },
+    getcalculatorcode(row) {
+      this.calculatorcode = row.calculatorcode;
+      this.formData = row;
+    },
+    // 修改累加器
+    toUpdateSecond(formName) {
+      this.$refs[formName].validate(valid => {
+        if (!valid) {
+          this.$message.error("请先填写必填项！");
+          return false;
+        } else {
+          post(service.updateCalculate, {
+            bodys: {
+              riskcode: this.$route.query.riskcode,
+              kindcode: this.$route.query.kindcode,
+              calculatorcode: this.calculatorcode,
+              calculatorname: this.formData.calculatorname || "",
+              ctrllevel: this.formData.ctrllevel || "",
+              type: this.formData.type || "",
+              ctrlfactortype: this.formData.ctrlfactortype || "",
+              ctrlfactorvalue: this.formData.ctrlfactorvalue || "",
+              ctrlfactorunit: this.formData.ctrlfactorunit || "",
+              calmode: this.formData.calmode || "",
+              calcode: this.formData.calcode || "",
+              serialno: this.serialno,
+              defaultvalue: this.formData.defaultvalue || "",
+              // dutycode: this.$route.query.dutycode,
+              // getdutycode: this.$route.query.getdutycode,
+              dutycode: this.dutycode,
+              getdutycode: this.getdutycode,
+              getdutykind: this.getdutykind,
+              calorder: this.formData.calorder || "",
+              calcode1: this.formData.calcode1 || "",
+              startdate: this.formData.startdate || "",
+              enddate: this.formData.enddate || "",
+              validperiod: this.formData.validperiod || "",
+              validperiodunit: this.formData.validperiodunitname || ""
+            }
+          }).then(res => {
+            if (res.data.header.code === "200") {
+              this.$message.success("操作成功");
+              this.calculateQuery();
+            }
+          });
+        }
+      });
+    },
+    lookLJQ(row) {
+      row.kindcode = this.$route.query.kindcode;
+      row.riskcode = this.$route.query.riskcode;
+      this.$router.push({
+        name: "accumulatorDetail",
+        query: row
+      });
+    },
+    // 删除已有责任给付
+    deleteProductAttribute(row) {
+      post(service.deleteProductAttribute, {
+        bodys: {
+          kindcode: this.forms.riskCode,
+          dutycode: row.dutycode,
+          getdutycode: row.getdutycode
+        }
+      }).then(res => {
+        if (res.data.header.success === true) {
+          this.$message.success("操作成功");
+          this.getData();
+        } else {
+          this.$message.error(res.data.header.message);
+        }
+      });
+    },
+    // 删除已有累加器
+    deleteItem1(row) {
+      post(service.deleteCalculate, {
+        bodys: {
+          calculatorcode: row.calculatorcode
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.$message.success("操作成功");
+          this.calculateQuery();
+        }
+      });
+    },
+    // 已定义的累加器
+    calculateQuery() {
+      post(service.calculateQuery, {
+        bodys: {
+          riskcode: this.$route.query.riskcode,
+          getdutycode: this.getdutycode || "",
+          getdutykind: this.getdutykind
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.tableData1 = res.data.bodys.rows;
+        }
+      });
+    },
+    //
+    // 分页
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currpage - 1) * 10;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    },
+    handleSizeChange1(val) {
+      this.pagesize1 = val;
+    },
+    indexMethod1(index) {
+      return index + 1 + (this.currpage1 - 1) * 10;
+    },
+    handleCurrentChange1(val) {
+      this.currpage1 = val;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+/deep/ .el-form-item__label {
+  width: 180px !important;
+  padding: 0 !important;
+}
+/deep/ .el-form-item__content {
+  margin-left: 180px !important;
+}
+/deep/ .el-date-editor.el-input {
+  width: 100%;
+}
+/deep/.el-collapse-item__arrow {
+  display: none;
+}
+/deep/.el-collapse-item__header {
+  background-color: #0673ff;
+  height: 30px;
+  line-height: 30px;
+  border-radius: 10px 10px 0 0;
+  padding: 0 15px;
+  overflow: hidden;
+  color: #fff;
+  font-size: 16px;
+  font-family: Source Han Sans CN;
+}
+/deep/.el-collapse-item__content {
+  padding-bottom: 0;
+}
+.colItem {
+  padding: 0 30px;
+}
+.firstcolItem {
+  margin-top: 30px;
+}
+/deep/.el-form-item {
+  margin-bottom: 35px;
+}
+.footBtnAll {
+  margin-left: 40px;
+  padding-bottom: 30px;
+}
+.accumulator {
+  margin: 20px;
+
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+  }
+  .work_queue {
+    position: relative;
+    margin-top: 21px;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      font-size: 16px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 20px;
+    box-sizing: border-box;
+    margin-bottom: 30px;
+  }
+  .img_style {
+    width: 27px;
+    height: 22px;
+  }
+}
+</style>
+<style lang="less">
+.accumulator {
+  .el-row {
+    // padding-top: 20px;
+    &:first-child {
+      padding-top: 20px;
+    }
+    &:last-child {
+      padding-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+}
+.accumulator {
+  //   .el-input {
+  //     width: 80% !important;
+  //   }
+  .date_style {
+    .el-input {
+      width: 46% !important;
+    }
+  }
+
+  .el-select {
+    width: 100% !important;
+    .el-input {
+      width: 100% !important;
+    }
+  }
+
+  .el-table--striped .el-table__body tr.el-table__row--striped.current-row td,
+  .el-table__body tr.current-row > td,
+  .el-table__body tr.hover-row.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped.current-row > td,
+  .el-table__body tr.hover-row.el-table__row--striped > td,
+  .el-table__body tr.hover-row > td {
+    background-color: #409eff;
+  }
+}
+</style>

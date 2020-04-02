@@ -1,0 +1,24 @@
+'use strict'
+const merge = require('webpack-merge')
+const prodEnv = require('./prod.env')
+let params = process.argv[2]
+let baseUrl = ''
+switch (params) {
+  case 'sit':
+    baseUrl = '"http://172.18.100.187:7040/api"'
+    break
+  case 'uat':
+    baseUrl = '"http://172.18.100.64:7040/api"'
+    break
+  case 'prod':
+    baseUrl = '"http://192.168.100.238:7040/api"'
+    break
+  default:
+    baseUrl = '"http://172.18.100.187:7040/api"'
+}
+console.log('SSS',baseUrl)
+module.exports = merge(prodEnv, {
+  NODE_ENV: '"production"',
+
+  baseUrl: baseUrl
+})

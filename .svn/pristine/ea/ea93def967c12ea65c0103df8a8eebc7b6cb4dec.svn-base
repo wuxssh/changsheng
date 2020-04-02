@@ -1,0 +1,860 @@
+<template>
+  <div class="login">
+    <el-col :span="24">
+      <img :src="imgList[1].idView" class="anim_fade_image banner_img" />
+      <img :src="imgList[0].idView" class="banner_img" />
+    </el-col>
+    <div class="login_form">
+      <p class="title">
+        <img src="../../assets/images/login/title@1x.png" alt />
+      </p>
+      <div style="padding:0 20px;">
+        <el-tabs v-model="activeName" @tab-click="handleClick">
+          <el-tab-pane label="用户密码认证" name="first">
+            <el-form ref="loginForm" :model="loginForm" :rules="loginRules">
+              <el-form-item prop="usercode">
+                <el-input
+                  v-model="loginForm.usercode"
+                  prefix-icon="el-icon-user"
+                  placeholder="请输入用户ID"
+                  @keyup.enter.native="onLogin('loginForm')"
+                  maxlength="100"
+                ></el-input>
+              </el-form-item>
+              <el-form-item prop="password">
+                <el-input
+                  type="password"
+                  v-model="loginForm.password"
+                  maxlength="100"
+                  prefix-icon="el-icon-unlock"
+                  placeholder="请输入用户密码"
+                  @keyup.enter.native="onLogin('loginForm')"
+                ></el-input>
+              </el-form-item>
+              <el-form-item>
+                <div>
+                  <img
+                    src="../../assets/images/login/login_btnew@2x.png"
+                    alt
+                    style="width:100%"
+                    @click="onLogin('loginForm')"
+                  />
+                </div>
+                <p style="text-align:center;">- 版权所有 (C) 长生人寿保险有限公司 沪ICP备07019985号 -</p>
+              </el-form-item>
+            </el-form>
+          </el-tab-pane>
+          <el-tab-pane label="域账号认证" name="second">
+            <el-form ref="form1" :model="form1" :rules="form1Rules">
+              <el-form-item prop="domaincode">
+                <el-input
+                  v-model="form1.domaincode"
+                  prefix-icon="el-icon-user"
+                  maxlength="100"
+                  placeholder="请输入用户ID"
+                ></el-input>
+              </el-form-item>
+              <el-form-item prop="domainpwd">
+                <el-input
+                  type="password"
+                  v-model="form1.domainpwd"
+                  prefix-icon="el-icon-unlock"
+                  maxlength="100"
+                  placeholder="请输入用户密码"
+                ></el-input>
+              </el-form-item>
+              <el-form-item>
+                <img
+                  src="../../assets/images/login/login_btnew@2x.png"
+                  alt
+                  style="width:100%"
+                  @click="dLogin('form1')"
+                />
+
+                <p style="text-align:center;">- 版权所有 (C) 长生人寿保险有限公司 沪ICP备07019985号 -</p>
+              </el-form-item>
+            </el-form>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+import { generateUUID, getDate, getTime } from "../../utils/common";
+export default {
+  name: "login",
+  data() {
+    return {
+      menu: [],
+      loginRules: {
+        usercode: [
+          { required: true, message: "请输入用户名！", trigger: "blur" }
+        ],
+        password: [{ required: true, message: "请输入密码！", trigger: "blur" }]
+      },
+      form1Rules: {
+        domaincode: [
+          { required: true, message: "请输入用户名！", trigger: "blur" }
+        ],
+        domainpwd: [
+          { required: true, message: "请输入密码！", trigger: "blur" }
+        ]
+      },
+      activeName: "first",
+      loginForm: {
+        usercode: "",
+        password: ""
+      },
+      form1: {
+        domaincode: "",
+        domainpwd: ""
+      },
+      bannerHeight: "",
+      imgHeight: "",
+      imgList: [
+        { id: 0, idView: require("../../assets/images/login/login4.png") },
+        {
+          id: 1,
+          idView: require("../../assets/images/login/login5.png")
+        }
+      ]
+    };
+  },
+  mounted() {
+    this.imgLoad();
+    window.addEventListener(
+      "resize",
+      () => {
+        this.bannerHeight = window.innerHeight;
+        this.imgLoad();
+      },
+      false
+    );
+  },
+  methods: {
+    imgLoad() {
+      this.$nextTick(() => {
+        this.bannerHeight = window.innerHeight;
+      });
+    },
+    handleClick(tab, event) {
+      // console.log(tab, event);
+    },
+
+    onLogin(formName) {
+      this.$refs[formName].validate(valid => {
+        if (!valid) {
+          return false;
+        } else {
+          post(service.login, {
+            bodys: {
+              usercode: this.loginForm.usercode,
+              password: this.loginForm.password
+            }
+          })
+            .then(result => {
+              if (result.data.header.code === "200") {
+                if (result.data.bodys.logincode === "2") {
+                  this.$message({
+                    showClose: true,
+                    message: "用户名或密码错误！",
+                    type: "error"
+                  });
+                }
+                if (result.data.bodys.logincode === "3") {
+                  this.$message({
+                    showClose: true,
+                    message: "用户未激活，请联系系统管理员!",
+                    type: "warning"
+                  });
+                }
+                if (result.data.bodys.logincode === "4") {
+                  this.$router.push({
+                    name: "ModifyPsd",
+                    query: { usercode: this.loginForm.usercode }
+                  });
+                }
+                if (result.data.bodys.logincode === "5") {
+                  // this.$router.push({ name: "Home" });
+                  localStorage.setItem(
+                    "isDate",
+                    result.data.header.responseDate
+                  );
+                  localStorage.setItem(
+                    "token",
+                    result.data.bodys.Authorization
+                  );
+                  localStorage.setItem("comCode", result.data.bodys.comcode);
+                  localStorage.setItem("userCode", result.data.bodys.usercode);
+                  localStorage.setItem("userName", result.data.bodys.username);
+                  localStorage.setItem("comName", result.data.bodys.comname);
+                  localStorage.setItem(
+                    "setHoliday",
+                    result.data.bodys.workingstatus
+                  );
+                  // ------------判断是总部/北京分公司/其他------------
+                  // var reg1 = /^86$/;
+                  // var reg2 = /^8604/;
+                  // if (reg1.test(localStorage.getItem("comCode"))) {
+                  //   localStorage.setItem("ZB", "ZB");
+                  // } else if (reg2.test(localStorage.getItem("comCode"))) {
+                  //   localStorage.setItem("ZB", "BJ");
+                  // } else {
+                  //   localStorage.setItem("ZB", "QT");
+                  // }
+                  // ------------End------------
+                  // this.$store.commit('setHoliday', result.data.bodys.workingstatus);
+                  post(service.getCodeList, {
+                    // 证件类型，性别，出险类型
+                    codetype: [
+                      "llidtype",
+                      "customeridentification",
+                      "llsex",
+                      "accidenttype",
+                      "accdegree",
+                      "accreason",
+                      "bnfRelationToInsured",
+                      "accresult",
+                      "llclaimtype",
+                      "reportchnl",
+                      "accresult",
+                      "llclaimtype",
+                      "accnature",
+                      "dieasetype",
+                      "dianobasis",
+                      "llclaimconclusion",
+                      "llprotestreason",
+                      "reasonswithdrawal",
+                      "llbackreason",
+                      "noticestatus",
+                      "inqpoint",
+                      "operationcode",
+                      "diagcode",
+                      "deductionReason",
+                      "deductiontype",
+                      "bnfRelationToInsured",
+                      "transitiontype",
+                      "getdutykind",
+                      "inpflag",
+                      "stattype",
+                      "afterget",
+                      "ctrlevel",
+                      "calculatortype",
+                      "ctrlfactorunit",
+                      "calmode",
+                      "lmcalmodetype",
+                      "policycontdeal",
+                      "riskcontdeal",
+                      "medicinefeetype",
+                      "relatoinsure",
+                      "noreportreason"
+                    ]
+                  }).then(res => {
+                    if (res.data.header.code === "200") {
+                      localStorage.setItem(
+                        "getcodeList",
+                        JSON.stringify(res.data.bodys)
+                      );
+                    }
+                  });
+                  post(service.getDisability, {
+                    // 证件类型，性别，出险类型
+                  }).then(res => {
+                    if (res.data.header.code === "200") {
+                      localStorage.setItem(
+                        "disabilityList",
+                        JSON.stringify(res.data.bodys)
+                      );
+                    }
+                  });
+
+                  post(service.getWork, {
+                    // 获取职业
+                  }).then(res => {
+                    if (res.data.header.code === "200") {
+                      localStorage.setItem(
+                        "workcodeList",
+                        JSON.stringify(res.data.bodys)
+                      );
+
+                      // console.log(this.sexList + this.cardTypeList)
+                    }
+                  });
+                  post(service.zhengduanCode, {
+                    // 获取职业
+                  }).then(res => {
+                    if (res.data.header.code === "200") {
+                      localStorage.setItem(
+                        "zhengduanList",
+                        JSON.stringify(res.data.bodys)
+                      );
+                    }
+                  });
+                  // 标签权限
+                  post(service.perPower, {
+                    bodys: {
+                      operator: localStorage.getItem("userCode")
+                    }
+                  }).then(res => {
+                    localStorage.setItem(
+                      "reportflag",
+                      res.data.bodys.reportflag
+                    ); // 报案权限
+                    localStorage.setItem(
+                      "registerflag",
+                      res.data.bodys.registerflag
+                    ); // 立案权限
+                    localStorage.setItem(
+                      "notesignflag",
+                      res.data.bodys.notesignflag
+                    ); // 下发照会权限
+                    localStorage.setItem(
+                      "noteuwflag",
+                      res.data.bodys.noteuwflag
+                    ); // 照会审批权限
+                    localStorage.setItem(
+                      "startinqflag",
+                      res.data.bodys.startinqflag
+                    ); // 提起调查权限
+                    localStorage.setItem("inquwflag", res.data.bodys.inquwflag); // 调查审批权限
+                    localStorage.setItem(
+                      "taskassignflag",
+                      res.data.bodys.taskassignflag
+                    ); // 任务分配权限
+                    localStorage.setItem(
+                      "startsecondflag",
+                      res.data.bodys.startsecondflag
+                    ); // 提起二核权限
+                    localStorage.setItem(
+                      "seconduwflag",
+                      res.data.bodys.seconduwflag
+                    ); // 二核审批权限
+                    localStorage.setItem(
+                      "secondreplayflag",
+                      res.data.bodys.secondreplayflag
+                    ); // 二核回复权限
+                    localStorage.setItem("checkflag", res.data.bodys.checkflag); // 案件审核权限
+                    localStorage.setItem("uwflag", res.data.bodys.uwflag); // 案件审批权限
+                    localStorage.setItem(
+                      "exemptflag",
+                      res.data.bodys.exemptflag
+                    ); // 豁免处理权限
+                    localStorage.setItem(
+                      "homepageflag",
+                      res.data.bodys.homepageflag
+                    ); // 首页权限
+                  });
+                  // 菜单重定向
+                  post(service.memus, {
+                    bodys: {
+                      usercode: localStorage.getItem("userCode")
+                    }
+                  }).then(res => {
+                    this.menu = res.data.bodys;
+                    localStorage.setItem("menuData", JSON.stringify(this.menu));
+                    if (!res.data.bodys[0]) {
+                      this.$router.push({ name: "blank" });
+                    } else {
+                      switch (res.data.bodys[0].nodecode) {
+                        case "A": // 首页
+                          this.$router.push({ name: "Home" });
+                          break;
+                        case "B": // 报案
+                          break;
+                        case "C": // 立案
+                          this.$router.push({ name: "TaskList" });
+                          break;
+                        case "D": // 审核
+                          this.$router.push({ name: "WorkPool" });
+                          break;
+                        case "E": // 审批
+                          this.$router.push({ name: "EAList" });
+                          break;
+                        case "F": // 保单挂起修改
+                          this.$router.push({ name: "pending" });
+                          break;
+                        case "G": // 二次核保
+                          this.$router.push({ name: "secondCore" });
+                          break;
+                        case "H": // 照会管理
+                          this.$router.push({ name: "diplomaticnoteManger" });
+                          break;
+                        case "I": // 调查管理
+                          this.$router.push({ name: "InvestigationIndex" });
+                          break;
+                        case "J": // 回退管理
+                          this.$router.push({ name: "goback" });
+                          break;
+                        case "K": // 任务重新分配
+                          this.$router.push({ name: "Task" });
+                          break;
+                        case "L": // 理赔综合查询
+                          this.$router.push({ name: "ListQuery" });
+                          break;
+                        case "M": // 配置管理
+                          switch (this.menu[0].children[0].nodecode) {
+                            case "M1": // 累加器配置
+                              this.$router.push({ name: "accumulator" });
+                              break;
+                            case "M2": // 医院配置
+                              break;
+                            case "M3": // 权限配置
+                              this.$router.push({ name: "RolePermissions" });
+                              break;
+                            case "M4": // 绿色通道配置
+                              this.$router.push({ name: "GreenConfig" });
+                              break;
+                            case "M5": // 产品配置
+                              this.$router.push({ name: "productConfig" });
+                              break;
+                            default:
+                              break;
+                          }
+                          break;
+                        case "N": // 系统管理
+                          switch (this.menu[0].children[0].nodecode) {
+                            case "N1": // 用户管理
+                              this.$router.push({ name: "UserManage" });
+                              break;
+                            case "N2": // 菜单管理
+                              this.$router.push({ name: "MenuManage" });
+                              break;
+                            case "N3": // 客户标识管理
+                              this.$router.push({ name: "CustomerIdentifi" });
+                              break;
+                            case "N4": // 对公账户管理
+                              break;
+                            case "N5": // 费用名称管理
+                              this.$router.push({ name: "ExpenseName" });
+                              break;
+                            case "N6": // 工作流管理
+                              this.$router.push({ name: "WorkflowManage" });
+                              break;
+                            default:
+                              break;
+                          }
+                          break;
+                        case "O": // 理赔支付管理
+                          this.$router.push({ name: "pay" });
+                          break;
+                        case "P": // 报表管理
+                          switch (this.menu[0].children[0].nodecode) {
+                            case "P1": // 个险理赔精算报表
+                              break;
+                            case "P2": // 理赔综合服务报表
+                              break;
+                            case "P3": // 理赔综合服务报表（明细）
+                              break;
+                            case "P4": // 个险理赔月报表
+                              break;
+                            case "P5": // 个险产品赔付率
+                              break;
+                            case "P6": // 理赔回访
+                              break;
+                            case "P7": // 公司KPI考核_理赔报表（按营销服务部统计）
+                              break;
+                            case "P8": // 公司KPI考核_理赔报表
+                              break;
+                            case "P9": // 总表
+                              break;
+                            case "P10": // 指标库
+                              break;
+                            default:
+                              break;
+                          }
+                          break;
+                        default:
+                          this.$router.push({ name: "blank" });
+                          break;
+                      }
+                    }
+                  });
+                }
+                if (result.data.bodys.logincode === "6") {
+                  this.$router.push({
+                    name: "ModifyPsd",
+                    query: { usercode: this.loginForm.usercode }
+                  });
+                }
+              }
+            })
+            .catch(error => {
+              console.log("接口请求失败");
+            });
+        }
+      });
+    },
+    dLogin(formName) {
+      this.$refs[formName].validate(valid => {
+        if (!valid) {
+          return false;
+        } else {
+          post(service.domainLogin, {
+            bodys: {
+              domaincode: this.form1.domaincode,
+              domainpwd: this.form1.domainpwd
+            }
+          })
+            .then(result => {
+              if (
+                result.data.headers.code === "200" &&
+                result.data.headers.success
+              ) {
+                // this.$router.push({ name: "Home" });
+                localStorage.setItem(
+                  "isDate",
+                  result.data.headers.responseDate
+                );
+                localStorage.setItem("token", result.data.bodys.Authorization);
+                localStorage.setItem("comCode", result.data.bodys.comcode);
+                localStorage.setItem("userCode", result.data.bodys.usercode);
+                localStorage.setItem("userName", result.data.bodys.username);
+                localStorage.setItem("comName", result.data.bodys.comname);
+                localStorage.setItem(
+                  "setHoliday",
+                  result.data.bodys.workingstatus
+                );
+                // ------------判断是总部/北京分公司/其他------------
+                // var reg1 = /^86$/;
+                // var reg2 = /^8604/;
+                // if (reg1.test(localStorage.getItem("comCode"))) {
+                //   localStorage.setItem("ZB", "ZB");
+                // } else if (reg2.test(localStorage.getItem("comCode"))) {
+                //   localStorage.setItem("ZB", "BJ");
+                // } else {
+                //   localStorage.setItem("ZB", "QT");
+                // }
+                // ------------End------------
+                // this.$store.commit('setHoliday', result.data.bodys.workingstatus);
+                post(service.getCodeList, {
+                  // 证件类型，性别，出险类型
+                  codetype: [
+                    "llidtype",
+                    "customeridentification",
+                    "llsex",
+                    "accidenttype",
+                    "accdegree",
+                    "accreason",
+                    "bnfRelationToInsured",
+                    "accresult",
+                    "llclaimtype",
+                    "reportchnl",
+                    "accresult",
+                    "llclaimtype",
+                    "accnature",
+                    "dieasetype",
+                    "dianobasis",
+                    "llclaimconclusion",
+                    "llprotestreason",
+                    "reasonswithdrawal",
+                    "llbackreason",
+                    "noticestatus",
+                    "inqpoint",
+                    "operationcode",
+                    "diagcode",
+                    "deductionReason",
+                    "deductiontype",
+                    "bnfRelationToInsured",
+                    "transitiontype",
+                    "getdutykind",
+                    "inpflag",
+                    "stattype",
+                    "afterget",
+                    "ctrlevel",
+                    "calculatortype",
+                    "ctrlfactorunit",
+                    "calmode",
+                    "lmcalmodetype"
+                  ]
+                }).then(res => {
+                  if (res.data.header.code === "200") {
+                    localStorage.setItem(
+                      "getcodeList",
+                      JSON.stringify(res.data.bodys)
+                    );
+                  }
+                });
+
+                post(service.getDisability, {
+                  // 证件类型，性别，出险类型
+                }).then(res => {
+                  if (res.data.header.code === "200") {
+                    localStorage.setItem(
+                      "disabilityList",
+                      JSON.stringify(res.data.bodys)
+                    );
+                  }
+                });
+
+                post(service.getWork, {
+                  // 获取职业
+                }).then(res => {
+                  if (res.data.header.code === "200") {
+                    localStorage.setItem(
+                      "workcodeList",
+                      JSON.stringify(res.data.bodys)
+                    );
+
+                    // console.log(this.sexList + this.cardTypeList)
+                  }
+                });
+                post(service.zhengduanCode, {
+                  // 获取职业
+                }).then(res => {
+                  if (res.data.header.code === "200") {
+                    localStorage.setItem(
+                      "zhengduanList",
+                      JSON.stringify(res.data.bodys)
+                    );
+                  }
+                });
+                // 标签权限
+                post(service.perPower, {
+                  bodys: {
+                    operator: localStorage.getItem("userCode")
+                  }
+                }).then(res => {
+                  localStorage.setItem("reportflag", res.data.bodys.reportflag); // 报案权限
+                  localStorage.setItem(
+                    "registerflag",
+                    res.data.bodys.registerflag
+                  ); // 立案权限
+                  localStorage.setItem(
+                    "notesignflag",
+                    res.data.bodys.notesignflag
+                  ); // 下发照会权限
+                  localStorage.setItem("noteuwflag", res.data.bodys.noteuwflag); // 照会审批权限
+                  localStorage.setItem(
+                    "startinqflag",
+                    res.data.bodys.startinqflag
+                  ); // 提起调查权限
+                  localStorage.setItem("inquwflag", res.data.bodys.inquwflag); // 调查审批权限
+                  localStorage.setItem(
+                    "taskassignflag",
+                    res.data.bodys.taskassignflag
+                  ); // 任务分配权限
+                  localStorage.setItem(
+                    "startsecondflag",
+                    res.data.bodys.startsecondflag
+                  ); // 提起二核权限
+                  localStorage.setItem(
+                    "seconduwflag",
+                    res.data.bodys.seconduwflag
+                  ); // 二核审批权限
+                  localStorage.setItem(
+                    "secondreplayflag",
+                    res.data.bodys.secondreplayflag
+                  ); // 二核回复权限
+                  localStorage.setItem("checkflag", res.data.bodys.checkflag); // 案件审核权限
+                  localStorage.setItem("uwflag", res.data.bodys.uwflag); // 案件审批权限
+                  localStorage.setItem("exemptflag", res.data.bodys.exemptflag); // 豁免处理权限
+                  localStorage.setItem(
+                    "homepageflag",
+                    res.data.bodys.homepageflag
+                  ); // 首页权限
+                });
+                // 菜单重定向
+                post(service.memus, {
+                  bodys: {
+                    usercode: localStorage.getItem("userCode")
+                  }
+                }).then(res => {
+                  this.menu = res.data.bodys;
+                  localStorage.setItem("menuData", JSON.stringify(this.menu));
+                  if (!res.data.bodys[0]) {
+                    this.$router.push({ name: "blank" });
+                  } else {
+                    switch (res.data.bodys[0].nodecode) {
+                      case "A": // 首页
+                        this.$router.push({ name: "Home" });
+                        break;
+                      case "B": // 报案
+                        break;
+                      case "C": // 立案
+                        this.$router.push({ name: "TaskList" });
+                        break;
+                      case "D": // 审核
+                        this.$router.push({ name: "WorkPool" });
+                        break;
+                      case "E": // 审批
+                        this.$router.push({ name: "EAList" });
+                        break;
+                      case "F": // 保单挂起修改
+                        this.$router.push({ name: "pending" });
+                        break;
+                      case "G": // 二次核保
+                        this.$router.push({ name: "secondCore" });
+                        break;
+                      case "H": // 照会管理
+                        this.$router.push({ name: "diplomaticnoteManger" });
+                        break;
+                      case "I": // 调查管理
+                        this.$router.push({ name: "InvestigationIndex" });
+                        break;
+                      case "J": // 回退管理
+                        this.$router.push({ name: "goback" });
+                        break;
+                      case "K": // 任务重新分配
+                        this.$router.push({ name: "Task" });
+                        break;
+                      case "L": // 理赔综合查询
+                        this.$router.push({ name: "ListQuery" });
+                        break;
+                      case "M": // 配置管理
+                        switch (this.menu[0].children[0].nodecode) {
+                          case "M1": // 累加器配置
+                            this.$router.push({ name: "accumulator" });
+                            break;
+                          case "M2": // 医院配置
+                            break;
+                          case "M3": // 权限配置
+                            this.$router.push({ name: "RolePermissions" });
+                            break;
+                          case "M4": // 绿色通道配置
+                            this.$router.push({ name: "GreenConfig" });
+                            break;
+                          case "M5": // 产品配置
+                            this.$router.push({ name: "productConfig" });
+                            break;
+                          default:
+                            break;
+                        }
+                        break;
+                      case "N": // 系统管理
+                        switch (this.menu[0].children[0].nodecode) {
+                          case "N1": // 用户管理
+                            this.$router.push({ name: "UserManage" });
+                            break;
+                          case "N2": // 菜单管理
+                            this.$router.push({ name: "MenuManage" });
+                            break;
+                          case "N3": // 客户标识管理
+                            this.$router.push({ name: "CustomerIdentifi" });
+                            break;
+                          case "N4": // 对公账户管理
+                            break;
+                          case "N5": // 费用名称管理
+                            this.$router.push({ name: "ExpenseName" });
+                            break;
+                          case "N6": // 工作流管理
+                            this.$router.push({ name: "WorkflowManage" });
+                            break;
+                          default:
+                            break;
+                        }
+                        break;
+                      case "O": // 理赔支付管理
+                        this.$router.push({ name: "pay" });
+                        break;
+                      case "P": // 报表管理
+                        switch (this.menu[0].children[0].nodecode) {
+                          case "P1": // 个险理赔精算报表
+                            break;
+                          case "P2": // 理赔综合服务报表
+                            break;
+                          case "P3": // 理赔综合服务报表（明细）
+                            break;
+                          case "P4": // 个险理赔月报表
+                            break;
+                          case "P5": // 个险产品赔付率
+                            break;
+                          case "P6": // 理赔回访
+                            break;
+                          case "P7": // 公司KPI考核_理赔报表（按营销服务部统计）
+                            break;
+                          case "P8": // 公司KPI考核_理赔报表
+                            break;
+                          case "P9": // 总表
+                            break;
+                          case "P10": // 指标库
+                            break;
+                          default:
+                            break;
+                        }
+                        break;
+                      default:
+                        this.$router.push({ name: "blank" });
+                        break;
+                    }
+                  }
+                });
+              } else {
+                this.$message.error(result.data.headers.message);
+              }
+            })
+            .catch(error => {
+              console.log("接口请求失败");
+            });
+        }
+      });
+    }
+  }
+};
+</script>
+<style>
+.anim_fade_image {
+  position: absolute;
+  -webkit-transition: opacity 1s ease-in-out;
+  -moz-transition: opacity 1s ease-in-out;
+  -o-transition: opacity 1s ease-in-out;
+  transition: opacity 1s ease-in-out;
+}
+
+.anim_fade_image:hover,
+.anim_fade_image_hover {
+  opacity: 0;
+  filter: alpha(opacity=0);
+}
+</style>
+<style lang="less" scoped>
+.login {
+  width: 100%;
+  height: 100%;
+
+  .banner_img {
+    width: 100%;
+    height: 100%;
+  }
+
+  .login_form {
+    width: 522px;
+    height: 428px;
+    // opacity: 0.6;
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: 0px 10px 10px 0px rgba(204, 204, 204, 0.16);
+    position: absolute;
+    top: 20%;
+    right: 15%;
+    z-index: 999;
+
+    .title {
+      height: 85px;
+      margin: 0;
+      text-align: center;
+      border-bottom: 1px solid #003eff;
+
+      img {
+        margin-top: 26px;
+      }
+    }
+  }
+}
+</style>
+<style lang="less">
+.login {
+  .el-tabs__nav-wrap::after {
+    background-color: #003eff;
+  }
+
+  .el-input__inner {
+    border: 1px solid #003eff;
+  }
+
+  .el-input__inner:hover {
+    border-color: #003eff;
+  }
+}
+</style>

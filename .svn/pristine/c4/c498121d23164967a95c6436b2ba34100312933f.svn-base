@@ -1,0 +1,407 @@
+<template>
+  <div class="reportRegistration">
+    <!-- <div class="header">
+      报案查询
+      <i class="el-icon-caret-bottom"></i>
+    </div>-->
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          报案查询
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form ref="form" :model="form" v-model="labelPosition" label-width="35%">
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="报案号">
+                  <el-input v-model="form.rptno" maxlength="10"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="出险人姓名">
+                  <el-input v-model="form.insuredname" maxlength="20"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="报案渠道">
+                  <el-select v-model="form.reportchannel" placeholder="请选择" clearable>
+                    <el-option
+                      v-for="item in value"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="保单号">
+                  <el-input v-model="form.contno" maxlength="10"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="出险人证件号码">
+                  <el-input v-model="form.insuredidno" maxlength="100"></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="查询区间">
+                  <el-select v-model="form.querytype" placeholder="请选择" clearable>
+                    <el-option
+                      v-for="item in value1"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+    <div class="grid-content" style="text-align:right;margin-right:30px;margin-top:10px;">
+      <el-button type="primary" round style="text-align:right;" @click="query()">查询</el-button>
+    </div>
+    <div class="work_queue">
+      <span>工作队列</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        :data="tableData.slice((currpage - 1) * pagesize, currpage * pagesize)"
+        style="width: 100%"
+        @row-dblclick="toReportDetails"
+      >
+        <el-table-column label="序号" type="index" :index="indexMethod"></el-table-column>
+        <el-table-column prop="rptno" label="报案号" align="center"></el-table-column>
+        <el-table-column prop="customername" label="出险人姓名" align="center"></el-table-column>
+        <el-table-column prop="idno" label="出险人证件号码" align="center"></el-table-column>
+        <el-table-column prop="customerlogo" label="客户标识" align="center">
+          <template slot-scope="scope">
+            <img
+              v-for="(item,index) in scope.row.customerlogo"
+              :key="index"
+              :src="item.url"
+              :title="item.title"
+              class="head_pic"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column prop="rptdate" label="报案日期" align="center"></el-table-column>
+        <el-table-column prop="sexname" label="性别" align="center"></el-table-column>
+        <el-table-column prop="outtype" label="出险类型" align="center"></el-table-column>
+        <el-table-column prop="accidentdate" label="出险日期" align="center"></el-table-column>
+        <el-table-column prop="reportchnl" label="案件渠道" align="center"></el-table-column>
+        <el-table-column prop="assistant" label="理赔辅助咨询" align="center">
+          <template slot-scope="scope">
+            <el-tooltip placement="top" v-if="scope.row.assistant == '是'">
+              <div slot="content">
+                {{scope.row.reportname}}
+                <br />
+                {{scope.row.reportmobile}}
+              </div>
+              <span>{{scope.row.assistant}}</span>
+            </el-tooltip>
+            <span v-else>{{scope.row.assistant}}</span>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div style="margin-top:10px;">
+        <el-pagination
+          background
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :page-size="pagesize"
+          layout="prev, pager, next,jumper"
+          :total="tableData.length"
+        ></el-pagination>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import { post, service } from "../../utils/request.js";
+export default {
+  name: "ReportRegistration",
+  data() {
+    return {
+      form: {
+        // name: "",
+        // region: "",
+        // date1: "",
+        // date2: "",
+        // delivery: false,
+        // type: [],
+        // resource: "",
+        // desc: "",
+        rptno: "",
+        contno: "",
+        insuredname: "",
+        insuredidno: "",
+        querytype: "3",
+        reportchannel: ""
+      },
+      value: [
+        {
+          id: "00",
+          name: "全部"
+        },
+        {
+          id: "01",
+          name: "微信"
+        },
+        {
+          id: "02",
+          name: "柜面"
+        },
+        {
+          id: "03",
+          name: "电话中心"
+        }
+      ],
+      value1: [
+        {
+          id: "0",
+          name: "全部"
+        },
+        {
+          id: "1",
+          name: "一周"
+        },
+        {
+          id: "2",
+          name: "一个月"
+        },
+        {
+          id: "3",
+          name: "三个月"
+        },
+        {
+          id: "4",
+          name: "六个月"
+        },
+        {
+          id: "5",
+          name: "一年"
+        },
+        {
+          id: "6",
+          name: "一年以上"
+        }
+      ],
+      currpage: 1,
+      pagesize: 10,
+      activeName: "1",
+      labelPosition: "right",
+      currentPage1: 5,
+      currentPage2: 5,
+      currentPage3: 5,
+      currentPage4: 4,
+      tableData: []
+    };
+  },
+  created() {
+    this.query();
+  },
+  methods: {
+    query() {
+      post(service.reportList, {
+        bodys: {
+          rptno: this.form.rptno,
+          contno: this.form.contno,
+          insuredname: this.form.insuredname,
+          insuredidno: this.form.insuredidno,
+          querytype: this.form.querytype,
+          reportchannel: this.form.reportchannel
+        }
+      }).then(res => {
+        this.tableData = res.data.bodys;
+        this.tableData.forEach(item => {
+          if (item.outtype == "01") {
+            item.outtype = "疾病";
+          } else if (item.outtype == "02") {
+            item.outtype = "意外";
+          }
+          if (item.reportchnl == "01") {
+            item.reportchnl = "微信";
+          } else if (item.reportchnl == "02") {
+            item.reportchnl = "柜面";
+          } else if (item.reportchnl == "03") {
+            item.reportchnl = "电话中心";
+          }
+          if (item.assistant == "0") {
+            item.assistant = "否";
+          } else if (item.assistant == "1") {
+            item.assistant = "是";
+          }else if (item.assistant == '2'){
+            item.assistant = '已回复'
+          }
+
+          if (item.customerlogo) {
+            item.customerlogo = item.customerlogo.split(",");
+            if (item.customerlogo.indexOf("5") != -1) {
+              item.customerlogo.push({
+                url: require("../../assets/images/eapproval/vip.png"),
+                title: "vip"
+              });
+            }
+            if (item.customerlogo.indexOf("1") != -1) {
+              item.customerlogo.push({
+                url: require("../../assets/images/eapproval/black.png"),
+                title: "黑名单"
+              });
+            }
+            if (item.customerlogo.indexOf("2") != -1) {
+              item.customerlogo.push({
+                url: require("../../assets/images/eapproval/grey.png"),
+                title: "灰名单"
+              });
+            }
+
+            if (item.customerlogo.indexOf("3") != -1) {
+              item.customerlogo.push({
+                url: require("../../assets/images/eapproval/money.png"),
+                title: "反洗钱"
+              });
+            }
+            if (item.customerlogo.indexOf("4") != -1) {
+              item.customerlogo.push({
+                url: require("../../assets/images/eapproval/fraud.png"),
+                title: "反欺诈"
+              });
+            }
+          }
+        });
+      });
+    },
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currpage - 1) * 10;
+    },
+    toReportDetails(row) {
+      this.$router.push({
+        name: "ReportDetails",
+        params: { dataOfTable: JSON.stringify(row) }
+      });
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.reportRegistration {
+  margin: 20px;
+  .header {
+    background-color: #0673ff;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 10px 10px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+  }
+  .work_queue {
+    position: relative;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 27px;
+    box-sizing: border-box;
+  }
+}
+</style>
+<style lang="less">
+.el-row {
+  padding-top: 20px;
+  &:last-child {
+    padding-top: 0;
+    margin-bottom: 0;
+  }
+}
+
+.grid-content {
+  border-radius: 4px;
+  min-height: 36px;
+}
+.row-bg {
+  padding: 10px 0;
+  background-color: #f9fafc;
+}
+.reportRegistration {
+  .el-input {
+    width: 80% !important;
+  }
+  .el-select {
+    .el-input {
+      width: 100% !important;
+    }
+  }
+  .el-collapse-item__arrow {
+    display: none;
+  }
+  .el-collapse-item__header {
+    background-color: #0673ff;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 10px 10px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+  }
+}
+</style>

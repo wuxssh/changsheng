@@ -1,0 +1,337 @@
+<template>
+  <div class="taskList">
+    <el-row :gutter="20">
+      <el-col :span="7">
+        <div class="grid-content">
+          <img
+            src="../../assets/images/home/year@1x.png"
+            alt
+            style="display:inline-block;vertical-align: middle;"
+          />
+          <span class="text">剩余未分配件数</span>
+          <span class="year_text">{{restNum}}</span>
+        </div>
+      </el-col>
+    </el-row>
+    <div class="work_queue">
+      <span>个人工作队列</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        :data="tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)"
+        style="width: 100%"
+        @row-dblclick="toReportDetails"
+      >
+        <el-table-column label="序号" type="index" align="center" width="65" :index="indexMethod"></el-table-column>
+        <el-table-column prop="rgtno" label="理赔号" align="center" sortable width="150"></el-table-column>
+        <el-table-column prop="customerno" label="客户号" align="center" width="130" sortable></el-table-column>
+        <el-table-column prop="customername" label="客户姓名" align="center" width="150"></el-table-column>
+        <el-table-column prop="idtype" label="证件类型" align="center" width="120">
+          <template slot-scope="scope">
+            <span>{{scope.row.idtype|cardType}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="idno" label="证件号码" align="center" width="200" sortable></el-table-column>
+        <el-table-column prop="vipflag" label="客户标识" align="center" width="120">
+          <template slot-scope="scope">      
+            <img
+              v-for="(item,index) in scope.row.vipflag"
+              :key="index"
+              :src="item.url"
+              :title="item.title"
+              class="head_pic"
+            />
+          </template>
+    
+        </el-table-column>
+        <el-table-column prop="accidenttype" label="出险类型" align="center" width="120">
+          <template slot-scope="scope">
+            <span>{{scope.row.accidenttype}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="accidentdate" label="出险日期" align="center" sortable width="120"></el-table-column>
+        <!-- <el-table-column prop="rgtstate" label="出险日期" sortable min-width="150">sssss</el-table-column> -->
+        <el-table-column prop="rgtstate" label="案件状态" sortable width="120"></el-table-column>
+      </el-table>
+      <div style="margin-top:10px;">
+        <el-pagination
+          background
+          @size-change="currentPage1"
+          @current-change="currentChange(currentPage1)"
+          :current-page.sync="currentPage1"
+          :page-size="10"
+          layout="prev, pager, next, jumper"
+          :total="total"
+        ></el-pagination>
+      </div>
+    </div>
+    <div style="text-align:right;margin-top:10px;">
+      <el-button type="primary" round @click="applyTask" :disabled="restNum == 0">申领任务</el-button>
+      <el-button type="primary" round @click="toAddFiling" :disabled="disAdd()">新增立案</el-button>
+    </div>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+import { getCodeArr } from "../../utils/service.js";
+import { generateUUID, getDate, getTime } from "../../utils/common.js";
+export default {
+  data() {
+    return {
+      vipFlag: false,
+      restNum: null,
+      pagesize: 10,
+      currpage: 1,
+      cardTypeList: [],
+      total: 0,
+      tableData: [
+        {
+          rgtno: "",
+          customerno: "",
+          customername: "",
+          idtype: "",
+          idno: "",
+          vipflag: "",
+          accidenttype: "",
+          accidentdate: "",
+          countnum: ""
+        }
+      ],
+      lastTask: "",
+      currentPage: 1,
+      currentPage1: 1
+    };
+  },
+  mounted() {
+    this.$nextTick(() => {
+      this.initData();
+      this.initCount();
+    });
+  },
+  filters: {},
+  methods: {
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    },
+
+
+    currentChange: function(page) {
+      this.currentPage = page;
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currentPage1 - 1) * 10;
+    },
+
+    toReportDetails(row) {
+      var rgtNo = row.rgtno;
+      var customerNo = row.customerno;
+      this.$router.push({
+        name: "AddFiling",
+        query: { rgtno: rgtNo, customerno: customerNo }
+      });
+      if (sessionStorage.getItem("rgtnumber")) {
+        sessionStorage.removeItem("rgtnumber");
+      }
+    },
+    disAdd() {
+      if (localStorage.getItem("registerflag") == "0") {
+        return true;
+      }
+    },
+    toAddFiling() {
+      sessionStorage.removeItem("ObjForm");
+      this.$router.push({
+        name: "AddFiling"
+      });
+      if (sessionStorage.getItem("rgtnumber")) {
+        sessionStorage.removeItem("rgtnumber");
+      }
+    },
+    // 个人工作队列
+    initData() {
+      post(service.registerpool, {
+        bodys: {
+          usercode: localStorage.getItem("userCode"),
+          comcode: localStorage.getItem("comCode")
+        }
+      }).then(result => {
+        if (result.data.headers.code === "200") {
+          this.tableData = result.data.bodys.rows;
+          this.total = result.data.bodys.total;
+
+          this.tableData.forEach(item => {
+            if (item.vipflag) {
+              item.vipflag = item.vipflag.split(",");
+                 if (item.vipflag.indexOf("5") != -1) {
+                item.vipflag.push({
+                  url: require("../../assets/images/eapproval/vip.png"),
+                  title:"vip"
+                });
+              }
+                 if (item.vipflag.indexOf("1") != -1) {
+                item.vipflag.push({
+                  url: require("../../assets/images/eapproval/black.png"),
+                  title:"黑名单"
+                });
+              }
+              if (item.vipflag.indexOf("2") != -1) {
+                item.vipflag.push({
+                  url: require("../../assets/images/eapproval/grey.png"),
+                  title:"灰名单"
+                });
+              }
+           
+              if (item.vipflag.indexOf("3") != -1) {
+                item.vipflag.push({
+                  url: require("../../assets/images/eapproval/money.png"),
+                  title:"反洗钱"
+                });
+              }
+              if (item.vipflag.indexOf("4") != -1) {
+                item.vipflag.push({
+                  url: require("../../assets/images/eapproval/fraud.png"),
+                  title:"反欺诈"
+                });
+              }
+           
+            }
+          });
+        }
+      });
+    },
+    initCount() {
+      post(service.querypoolcount, {
+        bodys: {
+          activityid: "0000005015",
+          usercode: localStorage.getItem("userCode")
+        }
+      }).then(result => {
+        if (result.data.headers.code === "200") {
+          this.restNum = result.data.bodys.rows[0];
+        }
+      });
+    },
+
+    applyTask() {
+      // if (this.personalData.length >= 10) {
+      //   this.$message("个人任务池案件数已达到上限!");
+      // } else if (10 - this.personalData.length === "0") {
+      //   this.$message("目前无可申领的案件!");
+      // } else if (this.lastTask === "0") {
+      //   this.$message("目前无可申领的案件!");
+      // } else {
+      post(service.applyTask, {
+        bodys: {
+          usercode: localStorage.getItem("userCode")
+          // restnum: 10 - this.personalData.length
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.$message.success(res.data.headers.message);
+          this.initCount();
+          this.initData();
+        } else {
+          this.$message.error(res.data.headers.message);
+        }
+      });
+      // }
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.taskList {
+  padding: 10px;
+
+  .el-row {
+    // margin-top: 10px;
+    margin-bottom: 10px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .el-col {
+    border-radius: 4px;
+  }
+
+  .grid-content {
+    padding: 0 20px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    height: 100px;
+    background-color: #fff;
+    line-height: 100px;
+  }
+
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+
+  .text {
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+    font-weight: 400;
+    margin-left: 10px;
+    color: rgba(102, 102, 102, 1);
+    opacity: 1;
+  }
+
+  .year_text {
+    font-size: 60px;
+    font-family: DIN Alternate;
+    font-weight: bold;
+    color: rgba(246, 78, 111, 1);
+    text-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16);
+    opacity: 1;
+    float: right;
+  }
+
+  .work_queue {
+    position: relative;
+
+    //   img{
+    //      position: relative;
+    //   }
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 27px;
+    box-sizing: border-box;
+  }
+  .img_style {
+    width: 27px;
+    height: 22px;
+  }
+}
+</style>

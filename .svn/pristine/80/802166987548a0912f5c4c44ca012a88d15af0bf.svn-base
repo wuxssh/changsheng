@@ -1,0 +1,496 @@
+<template>
+  <div class="secondary">
+    <div class="work_queue">
+      <!-- <img src="../../assets/images/report/tab_btn@1x.png" alt=""> -->
+      <span>保单信息查询</span>
+      <div class="box"></div>
+    </div>
+    <el-table
+      :data="tableData.slice((currpage - 1) * pagesize, currpage * pagesize)"
+      tooltip-effect="dark"
+      style="width: 100%"
+      highlight-current-row
+      @row-click="ToGetCotno"
+    >
+      <el-table-column label="序号" type="index" width="60" align="center" :index="indexMethod"></el-table-column>
+      <el-table-column prop="contno" label="保单号" align="center"></el-table-column>
+      <el-table-column prop="appntname" label="投保人姓名" align="center"></el-table-column>
+      <el-table-column prop="insuredname" label="被保人姓名" align="center"></el-table-column>
+      <el-table-column prop="cvalidate" label="生效日期" align="center"></el-table-column>
+      <el-table-column prop="enddate" label="保单到期日" align="center"></el-table-column>
+    </el-table>
+    <div style="margin:10px 0;">
+      <el-pagination
+        background
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :page-size="pagesize"
+        layout="prev, pager, next,jumper"
+        :total="tableData.length"
+      ></el-pagination>
+    </div>
+    <el-form>
+      <div style="background-color:#fff;padding:20px 28px 0 29px;">
+        <p style="margin-bottom:5px;margin-top:0">事故经过</p>
+        <el-input
+          type="textarea"
+          v-model="accident"
+          :autosize="{ minRows: 8}"
+          maxlength="700"
+          show-word-limit
+          resize="none"
+          disabled
+        ></el-input>
+        <p style="margin-bottom:5px;">伤病诊断</p>
+        <!-- v-model="diagnose" -->
+        <el-input
+          type="textarea"
+          v-model="diagnose"
+          :autosize="{ minRows: 8}"
+          maxlength="700"
+          show-word-limit
+          resize="none"
+          disabled
+        >{{diagnose}}</el-input>
+        <div class="toshowContent">
+          <p style="margin-bottom:5px;">投保前异常情况</p>
+          <el-form-item prop="abnormals">
+            <el-input
+              disabled
+              type="textarea"
+              placeholder="请输入内容"
+              v-model="aor"
+              :autosize="{ minRows: 8}"
+              maxlength="700"
+              resize="none"
+              show-word-limit
+            ></el-input>
+          </el-form-item>
+          <div style="background-color:#fff" prop="type">
+            <el-checkbox-group v-model="secondinfo" disabled>
+              <el-checkbox
+                class="checkItem"
+                v-for="(item) in checkItem"
+                :key="item.id"
+                :label="item.id"
+              >{{item.name}}</el-checkbox>
+            </el-checkbox-group>
+          </div>
+        </div>
+      </div>
+    </el-form>
+    <div>
+      <div class="work_queue work_queued">
+        <span>发起二核意见</span>
+        <div class="box"></div>
+      </div>
+      <el-form class="formContent">
+        <div class="grid-content">
+          <el-row class="survey_selects">
+            <el-col :span="24">
+              <span class="redStar">&nbsp*&nbsp</span>
+              <el-form-item label="意见">
+                <el-select v-model="form.inqidea" placeholder="请选择">
+                  <el-option
+                    v-for="item in opinion"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  ></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row class="survey_selects">
+            <el-col :span="12">
+              <div class="grid-content" v-if="form.inqidea != '02'">
+                <el-form-item label="意见说明">
+                  <el-input
+                    type="textarea"
+                    v-model="form.inqideadesc"
+                    :rows="6"
+                    resize="none"
+                    maxlength="700"
+                    show-word-limit
+                  ></el-input>
+                </el-form-item>
+              </div>
+              <div class="grid-content" v-else>
+                <span class="redStar">&nbsp*&nbsp</span>
+                <el-form-item label="意见说明">
+                  <el-input
+                    type="textarea"
+                    v-model="form.inqideadesc"
+                    :rows="6"
+                    resize="none"
+                    maxlength="700"
+                    show-word-limit
+                  ></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+        </div>
+        <div class="footBtnAll">
+          <el-button class="elButton" type="primary" @click="confirmBtn()">确定</el-button>
+          <el-button class="elButton" type="primary" @click="toInitImg()">影像查询</el-button>
+          <el-button class="elButton" type="primary" @click="goBack()">返回</el-button>
+        </div>
+      </el-form>
+    </div>
+    <back-to-top
+      :custom-style="myBackToTopStyle"
+      :visibility-height="200"
+      :back-position="50"
+      :transition-name="fade"
+    />
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+import { getDate, getTime } from "../../utils/common.js";
+import BackToTop from "../../components/backToTop";
+export default {
+  components: { BackToTop },
+  data() {
+    return {
+      myBackToTopStyle: {
+        right: "50px",
+        bottom: "50px",
+        width: "40px",
+        height: "40px",
+        "border-radius": "4px",
+        "line-height": "45px", // 请保持与高度一致以垂直居中 Please keep consistent with height to center vertically
+        background: "#e7eaf1" // 按钮的背景颜色 The background color of the button
+      },
+      pagesize: 5,
+      currpage: 1,
+      caseNo: "",
+      customerno: "",
+      accident: "",
+      diagnose: "",
+      aor: "",
+      polnoa: [],
+      tableData: [],
+      checkItem: [
+        {
+          id: "01",
+          name: "请重新评估合同风险"
+        },
+        {
+          id: "02",
+          name: "请重新评估附加合同风险"
+        },
+        {
+          id: "03",
+          name: "请重新评估被保人职业等级"
+        },
+        {
+          id: "04",
+          name: "请告知相应健告模块"
+        }
+      ],
+      standbyflag1: "",
+      form: {
+        inqidea: "",
+        inqideadesc: ""
+      },
+      secondinfo: [],
+      opinion: [
+        {
+          value: "01",
+          label: "同意"
+        },
+        {
+          value: "02",
+          label: "回退"
+        }
+      ],
+      resultCode: "",
+      polno: ""
+    };
+  },
+  created() {
+    this.clmno = this.$route.query.clmno;
+    this.rgtno = this.$route.query.rgtno;
+    this.contno = this.$route.query.contno;
+    this.accidenttype = this.$route.query.accidenttype;
+    this.customerno = this.$route.query.customerno;
+    this.secondno = this.$route.query.secondno;
+    this.getTwoNuclear();
+    this.getTwoAccident();
+    this.getTwoDiagnose();
+    this.getApprovalabnormal(); // 异常情况
+    this.getsecondabnormal(); // 二核内容
+  },
+  methods: {
+    ToGetCotno(row) {
+      this.polno = row.contno;
+    },
+    // 二核审批保单信息查询
+    getTwoNuclear() {
+      post(service.approvalpending, {
+        bodys: {
+          uwstate: JSON.parse(this.$route.params.dataOfTable).uwstate,
+          caseno: JSON.parse(this.$route.params.dataOfTable).rgtno
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          console.log("二核保单信息", res);
+          this.tableData = res.data.bodys;
+          console.log(this.tableData);
+
+          for (var key in this.tableData) {
+            this.polnoa.push({
+              polno: this.tableData[key].contno
+            });
+          }
+          console.log("ccc", this.polnoa);
+        }
+      });
+    },
+    // 待审批 事故经过
+    getTwoAccident() {
+      post(service.approvalaccident, {
+        bodys: {
+          rgtno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+          accidenttype: JSON.parse(this.$route.params.dataOfTable).accidenttype
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.accident = res.data.bodys.accident;
+        }
+      });
+    },
+    // 待审批 伤病诊断
+    getTwoDiagnose() {
+      post(service.diagnose, {
+        bodys: {
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno
+        }
+      }).then(res => {
+        if (res.data.header.success === true) {
+          if (res.data.bodys) {
+            res.data.bodys.forEach(item => {
+              this.diagnose += item.diagcode + "，";
+            });
+            this.diagnose = this.diagnose.substring(
+              0,
+              this.diagnose.length - 1
+            );
+          }
+        }
+      });
+    },
+    // 待审批 投保前异常情况
+    getApprovalabnormal() {
+      post(service.approvalabnormal, {
+        bodys: {
+          secondno: JSON.parse(this.$route.params.dataOfTable).secondno,
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.aor = res.data.bodys.aor;
+        }
+      });
+    },
+    // 待审批 二核内容
+    getsecondabnormal() {
+      post(service.secondabnormal, {
+        bodys: {
+          secondno: JSON.parse(this.$route.params.dataOfTable).secondno,
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.secondinfo = res.data.bodys.secondinfos;
+        }
+      });
+    },
+    // 二核审批 + 校验
+    // 校验
+    confirmBtn() {
+      if (!this.form.inqidea) {
+        this.$message.error("请选择意见");
+        return;
+      }
+      if (this.form.inqidea == "02") {
+        if (!this.form.inqideadesc) {
+          this.$message.error("请填写意见说明！");
+          return;
+        }
+      }
+      //  校验
+      post(service.checkoutaudit, {
+        bodys: {
+          polnos: this.polnoa,
+          clmno: JSON.parse(this.$route.params.dataOfTable).rgtno
+        }
+      }).then(res => {
+        this.resultCode = res.data.header.standbyflag2;
+        if (this.form.inqidea == "01") {
+          if (this.resultCode == "02") {
+            this.$confirm("该客户已存在未结束的二核，是否继续？", "提示", {
+              confirmButtonText: "确定",
+              cancelButtonText: "取消",
+              type: "warning"
+            })
+              .then(() => {
+                post(service.confirmsss, {
+                  bodys: {
+                    polnos: this.polnoa,
+                    clmno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+                    secondno: JSON.parse(this.$route.params.dataOfTable)
+                      .secondno,
+                    idea: this.form.inqidea,
+                    ideaexplain: this.form.inqideadesc || "",
+                    operator: localStorage.getItem("userCode"),
+                    senddate: getDate() + " " + getTime()
+                  }
+                }).then(res => {
+                  if (res.data.header.code === "200") {
+                    this.$message({
+                      type: "success",
+                      message: "操作成功!"
+                    });
+                    this.$router.go(-1);
+                  } else {
+                    this.$message.error(res.data.header.message);
+                  }
+                });
+              })
+              .catch(() => {
+                this.$message({
+                  type: "info",
+                  message: "已取消该操作"
+                });
+              });
+          } else {
+            post(service.confirmsss, {
+              bodys: {
+                polnos: this.polnoa,
+                clmno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+                secondno: JSON.parse(this.$route.params.dataOfTable).secondno,
+                idea: this.form.inqidea,
+                ideaexplain: this.form.inqideadesc || "",
+                operator: localStorage.getItem("userCode"),
+                senddate: getDate() + " " + getTime()
+              }
+            }).then(res => {
+              if (res.data.header.code === "200") {
+                this.$message({
+                  type: "success",
+                  message: "操作成功!"
+                });
+                this.$router.go(-1);
+              } else {
+                this.$message.error(res.data.header.message);
+              }
+            });
+          }
+        }
+        if (this.form.inqidea == "02") {
+          post(service.confirmsss, {
+            bodys: {
+              polnos: this.polnoa,
+              clmno: JSON.parse(this.$route.params.dataOfTable).rgtno,
+              secondno: JSON.parse(this.$route.params.dataOfTable).secondno,
+              idea: this.form.inqidea,
+              ideaexplain: this.form.inqideadesc || "",
+              operator: localStorage.getItem("userCode"),
+              senddate: getDate() + " " + getTime()
+            }
+          }).then(res => {
+            if (res.data.header.code === "200") {
+              this.$message({
+                type: "success",
+                message: "操作成功!"
+              });
+              this.$router.go(-1);
+            } else {
+              this.$message.error(res.data.header.message);
+            }
+          });
+        }
+      });
+    },
+    // 返回按钮
+    goBack() {
+      this.$router.go(-1);
+    },
+    // 影像查询
+    toInitImg() {
+      let routeUrl = this.$router.resolve({
+        name: "initImg",
+        query: {
+          rgtno: JSON.parse(this.$route.params.dataOfTable).rgtno
+        }
+      });
+      window.open(routeUrl.href, "_blank");
+    },
+    // 分页
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currpage - 1) * 5;
+    }
+  }
+};
+</script>
+<style scoped lang="less">
+.survey_selects {
+  // margin-top: 20px;
+  padding: 20px 30px 0 30px;
+  margin-bottom: 0 !important;
+}
+.work_queued {
+  margin-top: 30px;
+}
+.formContent {
+  background: #fff;
+}
+.footBtnAll {
+  padding-top: 10px;
+  padding-bottom: 20px;
+  margin-left: 30px;
+}
+.secondary {
+  margin: 20px;
+  .work_queue {
+    position: relative;
+    //   img{
+    //      position: relative;
+    //   }
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+}
+.checkItem {
+  display: block;
+  padding-bottom: 20px;
+}
+</style>

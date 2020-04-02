@@ -1,0 +1,582 @@
+<template>
+  <div class="aside">
+    <el-radio-group v-model="isCollapse" class="isShowAside">
+      <el-radio-button v-show="this.isCollapse" :label="false">>>></el-radio-button>
+      <el-radio-button v-show="!this.isCollapse" :label="true"><<<</el-radio-button>
+      <div></div>
+    </el-radio-group>
+    <div style="clear:both"></div>
+    <div v-show="!this.isCollapse" class="asideTop">
+      <p class="box">
+        <img src="../../assets/images/aside/logo@1x.png" alt class="logo_img" />
+        理赔业务系统
+      </p>
+      <p style="font-size:12px;text-align:center;">欢迎使用理赔系统</p>
+      <p style="font-size:14px;">{{getName}}：{{getCode}}</p>
+      <p style="font-size:14px;">{{getComname}}</p>
+      <p style="font-size:14px;">
+        <span class="geItem">个人状态：</span>
+        <el-select v-model="setHoliday" @change="changeState" class="selectState">
+          <el-option
+            v-for="item in holidayList"
+            :key="item.id"
+            :label="item.label"
+            :value="item.label"
+          ></el-option>
+        </el-select>
+      </p>
+      <el-popover offset="100" placement="top" width="260" v-model="visible">
+        <p>
+          <span>休假开始日期</span>
+          <!-- type="date" -->
+          <el-date-picker
+            @blur="blurStartData"
+            v-model="startTime"
+            size="mini"
+            value-format="yyyy-MM-dd HH:mm:ss"
+            placeholder="选择日期"
+            type="datetime"
+            default-time="09:00:00"
+          >></el-date-picker>
+        </p>
+        <p>
+          <span>休假结束日期</span>
+          <el-date-picker
+            @blur="blurEndData"
+            v-model="endTime"
+            size="mini"
+            value-format="yyyy-MM-dd HH:mm:ss"
+            placeholder="选择日期"
+            type="datetime"
+            default-time="18:00:00"
+          ></el-date-picker>
+        </p>
+        <div style="text-align: center; margin: 0">
+          <el-button type="primary" size="mini" @click="beSureXJ">确定</el-button>
+          <el-button type="primary" size="mini" @click="goBack">返回</el-button>
+        </div>
+      </el-popover>
+    </div>
+    <el-menu
+      v-if="menuData[0]"
+      :default-active="menuData[0].nodecode"
+      class="el-menu-vertical-demo"
+      background-color="#001B6F"
+      text-color="#fff"
+      active-text-color="#ffd04b"
+      :collapse="isCollapse"
+    >
+      <div v-for="item in menuData" :key="item.nodecode">
+        <!-- @click.ctrl="goPages(item.nodecode)" -->
+        <!-- @click.ctrl.native="goPagess(item.nodecode)" -->
+        <el-menu-item
+          v-if="item.children == null && item.nodecode != 'L'"
+          :index="item.nodecode"
+          @click="goPages(item.nodecode)"
+        >
+          <img :src="item.nodeImg" class="asideImg" alt />&nbsp;&nbsp;
+          <span slot="title">{{item.nodename}}</span>
+        </el-menu-item>
+        <el-menu-item
+          v-else-if="item.children == null && item.nodecode == 'L'"
+          :index="item.nodecode"
+          @click.ctrl.native="goPagess(item.nodecode)"
+        >
+          <img :src="item.nodeImg" class="asideImg" alt />&nbsp;&nbsp;
+          <span slot="title">{{item.nodename}}</span>
+        </el-menu-item>
+        <el-submenu v-else :index="item.nodecode">
+          <template slot="title">
+            <img :src="item.nodeImg" alt class="asideImg" />&nbsp;&nbsp;
+            <span slot="title" :class="{ nosshow: isCollapse }">{{item.nodename}}</span>
+          </template>
+          <el-menu-item
+            v-for="itemItem in item.children"
+            :key="itemItem.nodecode"
+            @click="goPages(itemItem.nodecode)"
+            :index="itemItem.nodecode"
+            style="margin-left:15px"
+          >{{itemItem.nodename}}</el-menu-item>
+        </el-submenu>
+      </div>
+    </el-menu>
+  </div>
+</template>
+<script>
+import { post, service } from "../../utils/request.js";
+import { generateUUID, getDate, getTime } from "../../utils/common.js";
+export default {
+  inject: ["reload"],
+  data() {
+    return {
+      userCode: localStorage.getItem("userCode"),
+      userName: localStorage.getItem("userName"),
+      comname: localStorage.getItem("comName"),
+      setHoliday: localStorage.getItem("setHoliday"),
+      isCollapse: false,
+      holidayList: [
+        {
+          id: "01",
+          label: "工作"
+        },
+        {
+          id: "02",
+          label: "休假"
+        }
+      ],
+      visible: false,
+      startTime: "",
+      endTime: "",
+      menuData: JSON.parse(localStorage.getItem("menuData")),
+      activeIndex: "A"
+    };
+  },
+  name: "Aside",
+  created() {
+    this.menus();
+  },
+  methods: {
+    show(a) {
+      console.log("SSSS");
+    },
+    // 权限菜单获取
+    menus() {
+      for (var key in this.menuData) {
+        // debugger;
+        switch (this.menuData[key].nodecode) {
+          case "A": // 首页
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/home@1x.png");
+            break;
+          case "B": // 报案
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/report@1x.png");
+            break;
+          case "C": // 立案
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/filing@1x.png");
+            break;
+          case "D": // 审核
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/audit@1x.png");
+            break;
+          case "E": // 审批
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/approval@1x.png");
+            break;
+          case "F": // 保单挂起
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/policy@1x.png");
+            break;
+          case "G": // 二次核保
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/secondary@1x.png");
+            break;
+          case "H": // 照会管理
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/note@1x.png");
+            break;
+          case "I": // 调查管理
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/investigation@1x.png");
+            break;
+          case "J": // 回退管理
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/huitui@1x.png");
+            break;
+          case "K": // 任务重新分配
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/task@1x.png");
+            break;
+          case "L": // 理赔综合查询
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/claim@1x.png");
+            break;
+          case "M": // 配置管理
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/configManage@1x.png");
+            break;
+          case "N": // 系统管理
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/system@1x.png");
+            break;
+          case "O": // 理赔支付
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/payment@1x.png");
+            break;
+          case "P": // 报表管理
+            this.menuData[
+              key
+            ].nodeImg = require("../../assets/images/aside/baobiao@1x.png");
+            break;
+          default:
+            break;
+        }
+      }
+    },
+    goPagess(key) {
+      if (key == "L") {
+        let routeUrl = this.$router.resolve({
+          name: "ListQuery"
+        });
+        window.open(routeUrl.href, "_blank");
+      }
+    },
+    // 页面跳转
+    goPages(key) {
+      switch (key) {
+        case "A": // 首页
+          if (localStorage.getItem("homepageflag") == "1") {
+            // 权限标签控制是否显示
+            this.$router.push({ name: "Home" });
+          }
+          break;
+        case "B": // 报案
+          this.$router.push({ name: "ReportRegistration" });
+          break;
+        case "C": // 立案
+          this.$router.push({ name: "TaskList" });
+          break;
+        case "D": // 审核
+          this.$router.push({ name: "WorkPool" });
+          break;
+        case "E": // 审批
+          this.$router.push({ name: "EAList" });
+          break;
+        case "F": // 保单挂起修改
+          this.$router.push({ name: "pending" });
+          break;
+        case "G": // 二次核保
+          if (
+            localStorage.getItem("seconduwflag") == "1" ||
+            localStorage.getItem("secondreplayflag") == "1"
+          ) {
+            this.$router.push({ name: "secondCore" });
+          }
+          break;
+        case "H": // 照会管理
+          if (
+            localStorage.getItem("notesignflag") == "1" ||
+            localStorage.getItem("noteuwflag") == "1"
+          ) {
+            this.$router.push({ name: "diplomaticnoteManger" });
+          }
+          break;
+        case "I": // 调查管理
+          if (localStorage.getItem("inquwflag") == "1") {
+            this.$router.push({ name: "InvestigationIndex" });
+          }
+          break;
+        case "J": // 回退管理
+          this.$router.push({ name: "goback" });
+          break;
+        case "K": // 任务重新分配
+          this.$router.push({ name: "Task" });
+          break;
+        case "L": // 理赔综合查询
+          this.$router.push({ name: "ListQuery" });
+          break;
+        case "M": // 配置管理
+          // this.$router.push({ name: "Home" });
+          break;
+        case "M1": // 累加器配置
+          // this.$router.push({ name: "accumulator" });
+          break;
+        case "M2": // 医院配置
+          this.$router.push({ name: "HospitalConfig" });
+          break;
+        case "M3": // 权限配置
+          this.$router.push({ name: "RolePermissions" });
+          break;
+        case "M4": // 绿色通道配置
+          this.$router.push({ name: "GreenConfig" });
+          break;
+        case "M5": // 产品配置
+          this.$router.push({ name: "productConfig" });
+          break;
+        case "N": // 系统管理
+          // this.$router.push({ name: "Home" });
+          break;
+        case "N1": // 用户管理
+          this.$router.push({ name: "UserManage" });
+          break;
+        case "N2": // 菜单管理
+          this.$router.push({ name: "MenuManage" });
+          break;
+        case "N3": // 客户标识管理
+          this.$router.push({ name: "CustomerIdentifi" });
+          break;
+        case "N4": // 对公账户管理
+          this.$router.push({ name: "PublicAccount" });
+          break;
+        case "N5": // 费用名称管理
+          this.$router.push({ name: "ExpenseName" });
+          break;
+        case "N6": // 工作流管理
+          this.$router.push({ name: "WorkflowManage" });
+          break;
+        case "N7": // 疾病管理
+          this.$router.push({ name: "DiseaseManage" });
+          break;
+        case "O": // 理赔支付管理
+          this.$router.push({ name: "pay" });
+          break;
+        case "P": // 报表管理
+          break;
+        case "P1": // 个险理赔精算报表
+          this.$router.push({ name: "ActuarialForm" });
+          break;
+        case "P2": // 理赔综合服务报表
+          this.$router.push({ name: "ServiceForm" });
+          break;
+        case "P3": // 理赔综合服务报表（明细）
+          this.$router.push({ name: "ServiceDetailForm" });
+          break;
+        case "P4": // 个险理赔月报表
+          this.$router.push({ name: "ClaimMonthForm" });
+          break;
+        case "P5": // 个险产品赔付率
+          this.$router.push({ name: "ProductPayForm" });
+          break;
+        case "P6": // 理赔回访
+          this.$router.push({ name: "ClaimVisitForm" });
+          break;
+        case "P7": // 公司KPI考核_理赔报表（按营销服务部统计）
+          this.$router.push({ name: "StatisticsKPIForm" });
+          break;
+        case "P8": // 公司KPI考核_理赔报表
+          this.$router.push({ name: "CheckKPIForm" });
+          break;
+        case "P9": // 总表
+          this.$router.push({ name: "TotalForm" });
+          break;
+        case "PA": // 指标库
+          this.$router.push({ name: "IndexDatabaseForm" });
+          break;
+
+        default:
+          break;
+      }
+    },
+    // 确认休假
+    beSureXJ() {
+      if (!this.startTime) {
+        this.$message.error("请完善休假信息！");
+        return;
+      }
+      if (!this.endTime) {
+        this.$message.error("请完善休假信息！");
+        return;
+      }
+      this.visible = false;
+      post(service.changeWorkerState, {
+        bodys: {
+          operator: localStorage.getItem("userCode"),
+          mngcom: localStorage.getItem("comCode"),
+          startdate: this.startTime,
+          enddate: this.endTime
+        }
+      }).then(res => {
+        this.$message.success("操作成功！");
+        localStorage.setItem("setHoliday", "休假");
+      });
+    },
+    // 返回休假
+    goBack() {
+      this.setHoliday = "工作";
+      this.visible = false;
+      this.startTime = "";
+      this.endTime = "";
+    },
+    // 休假开始失焦校验
+    blurStartData() {
+      if (this.startTime && this.endTime) {
+        if (
+          (new Date(this.endTime).getTime() -
+            new Date(this.startTime).getTime()) /
+            1000 <
+          0
+        ) {
+          this.$message.error("开始日期不能大于结束日期！");
+          this.startTime = null;
+        }
+      }
+    },
+    // 休假结束失焦校验
+    blurEndData() {
+      if (this.startTime && this.endTime) {
+        if (
+          (new Date(this.endTime).getTime() -
+            new Date(this.startTime).getTime()) /
+            1000 <
+          0
+        ) {
+          this.$message.error("开始日期不能大于结束日期！");
+          this.endTime = null;
+        }
+      }
+    },
+    // 改变个人状态
+    changeState() {
+      if (this.setHoliday == "休假") {
+        this.visible = true;
+      } else {
+        this.visible = false;
+        post(service.toWork, {
+          bodys: {
+            operator: localStorage.getItem("userCode"),
+            mngcom: localStorage.getItem("comCode")
+          }
+        }).then(res => {
+          this.$message.success("操作成功！");
+          localStorage.setItem("setHoliday", "工作");
+        });
+      }
+    }
+  },
+  computed: {
+    getName() {
+      return localStorage.getItem("userName");
+    },
+    getCode() {
+      return localStorage.getItem("userCode");
+    },
+    getHoliday() {
+      return localStorage.getItem("setHoliday");
+    },
+    getComname() {
+      return localStorage.getItem("comName");
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.asideImg {
+  width: 22px;
+  height: 22px;
+}
+.nosshow {
+  display: none;
+}
+/deep/.el-icon-arrow-right:before {
+  display: none;
+}
+/deep/.el-select {
+  width: 90px;
+}
+/deep/.el-select .el-input.is-focus .el-input__inner {
+  border-color: #0033ac !important;
+}
+/deep/.el-select:hover .el-input__inner {
+  border: none !important;
+  border-color: transparent !important;
+}
+/deep/.el-select .el-input__inner:focus {
+  border: none !important;
+  border-color: transparent !important;
+}
+/deep/.selectState {
+  .el-input__inner {
+    background: #0033ac;
+    border: 1px solid transparent;
+    color: #fff;
+    text-align: center;
+    margin: 0 auto;
+    border-radius: 25px;
+    height: 35px;
+    line-height: 35px;
+  }
+  .el-input--suffix .el-input__inner {
+    padding-right: 20px;
+  }
+  .el-input__suffix-inner {
+    display: none !important;
+  }
+  .el-select .el-input .el-select__caret {
+    background: #fff;
+  }
+}
+.el-date-editor.el-input {
+  width: 160px;
+}
+.isShowAside {
+  float: right;
+}
+/deep/.el-radio-button:first-child {
+  border: none !important;
+}
+/deep/.el-radio-button__inner {
+  background: none !important;
+  border: none !important;
+  color: #fff !important;
+}
+.aside {
+  p {
+    // padding: 0;
+    text-align: center;
+  }
+  .box {
+    // height: 40px;
+    // line-height: 40px;
+    font-size: 24px;
+  }
+  .logo_img {
+    // display: inline-block;
+    width: 32px;
+    height: 32px;
+    vertical-align: middle;
+    // align-items: center;
+  }
+  .avatar {
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+  }
+}
+</style>
+<style lang="less">
+.el-aside {
+  width: auto !important;
+  padding: 0 10px;
+}
+.el-submenu .el-menu-item {
+  padding: 0 20px;
+  min-width: 120px;
+}
+
+.aside {
+  .el-menu {
+    border: none;
+  }
+  .el-menu-item {
+    font-size: 16px;
+  }
+  .el-submenu {
+    font-size: 16px;
+  }
+  .el-submenu__title {
+    font-size: 16px;
+  }
+}
+a {
+  text-decoraction: none;
+}
+.router-link-active {
+  text-decoration: none;
+}
+</style>
