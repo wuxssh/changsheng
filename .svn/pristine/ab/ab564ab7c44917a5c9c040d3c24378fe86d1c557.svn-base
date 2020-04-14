@@ -1,0 +1,1216 @@
+<template>
+  <div class="reportInquiry">
+    <!-- 报案查询 -->
+    <!-- 工作队列 -->
+    <div class="work_queue">
+      <!-- <img src="../../assets/images/report/tab_btn@1x.png" alt=""> -->
+      <span>案件信息</span>
+      <div class="box"></div>
+    </div>
+    <el-table :data="anJianList" class="tables" style="width: 100%;height:100%;">
+      <el-table-column type="index" width="50" label="序号"></el-table-column>
+      <el-table-column align="center" prop="contno" label="保单号"></el-table-column>
+      <el-table-column align="center" prop="appntname" label="投保人姓名"></el-table-column>
+      <el-table-column align="center" prop="insuredname" label="被保人姓名"></el-table-column>
+      <el-table-column align="center" prop="managename" label="保单所属分公司"></el-table-column>
+      <el-table-column align="center" prop="caseno" label="理赔号"></el-table-column>
+      <el-table-column align="center" prop="accdate" label="出险日期"></el-table-column>
+      <el-table-column align="center" prop="customername" label="出险人姓名"></el-table-column>
+      <el-table-column align="center" prop="accidenttype" label="出险类型"></el-table-column>
+      <el-table-column align="center" prop="reportchnlname" label="报案渠道"></el-table-column>
+    </el-table>
+    <template v-if="this.typeStatus != '02'">
+      <div style="margin-top:20px;">
+        <Policy :customerno="this.customerno"></Policy>
+      </div>
+    </template>
+
+    <div class="work_queue" style="margin-top: 15px;">
+      <span>照会信息</span>
+      <div class="box"></div>
+    </div>
+    <el-table
+      :data="zhaohuiList.slice((currpage - 1) * pagesize, currpage * pagesize)"
+      highlight-current-row
+      @row-click="toGetNoticeno"
+      style="width: 100%"
+    >
+      <el-table-column type="expand">
+        <template slot-scope="props">
+          <el-form v-model="labelPosition">
+            <el-row>
+              <el-col :span="24">
+                <div class="grid-content">
+                  <el-form-item label="照会描述">
+                    <el-input
+                      disabled
+                      type="textarea"
+                      resize="none"
+                      v-model="props.row.noticedesc"
+                      :rows="6"
+                    ></el-input>
+                  </el-form-item>
+                </div>
+              </el-col>
+            </el-row>
+          </el-form>
+        </template>
+      </el-table-column>
+      <el-table-column type="index" width="50" label="序号" :index="indexMethod"></el-table-column>
+      <el-table-column prop="rgtno" label="理赔号" align="center"></el-table-column>
+      <el-table-column prop="receivename" label="接收对象" align="center"></el-table-column>
+      <el-table-column prop="noticekind" label="照会种类" align="center"></el-table-column>
+      <el-table-column prop="noticetype" label="照会类型" align="center"></el-table-column>
+      <el-table-column prop="noticesigndate" label="下发日期" align="center"></el-table-column>
+      <el-table-column prop="noticestatuname" label="照会状态" align="center"></el-table-column>
+      <el-table-column label="操作" align="center">
+        <template slot-scope="scope">
+          <el-button size="mini" type="primary" @click="lookPDF(scope.row,scope.$index)">预览</el-button>
+        </template>
+      </el-table-column>
+      <!-- <el-table-column prop="noticestatus" label="" align="center" ></el-table-column> -->
+    </el-table>
+    <div style="margin-top:10px;">
+      <el-pagination
+        background
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :page-size="pagesize"
+        layout="prev, pager, next,jumper"
+        :total="zhaohuiList.length"
+      ></el-pagination>
+    </div>
+    <div class="work_queue" style="margin-top: 15px;">
+      <span>照会意见下发</span>
+      <div class="box"></div>
+    </div>
+    <el-form class="noticeCss" v-if="this.typeStatus == '02'">
+      <div class="surveyForm">
+        <el-row class="survey_select">
+          <el-col :span="8">
+            <span class="redStar">&nbsp*&nbsp</span>
+            <el-form-item label="意见">
+              <el-select v-model="notice.noticeidea" placeholder="请选择">
+                <el-option
+                  v-for="item in opinion"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <span class="redStar">&nbsp*&nbsp</span>
+            <el-form-item label="照会终止日期">
+              <el-date-picker
+                v-model="notice.noticeenddate"
+                value-format="yyyy-MM-dd"
+                type="date"
+                placeholder="选择日期"
+              ></el-date-picker>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row class="survey_select">
+          <el-col :span="24">
+            <div class="grid-content" v-if="notice.noticeidea != '02'">
+              <el-form-item label="意见说明">
+                <el-input
+                  type="textarea"
+                  v-model="notice.noticeideadesc"
+                  :rows="6"
+                  resize="none"
+                  maxlength="700"
+                  show-word-limit
+                ></el-input>
+              </el-form-item>
+            </div>
+            <div class="grid-content" v-else>
+              <span class="redStar">&nbsp*&nbsp</span>
+              <el-form-item label="意见说明">
+                <el-input
+                  type="textarea"
+                  v-model="notice.noticeideadesc"
+                  :rows="6"
+                  maxlength="700"
+                  resize="none"
+                  show-word-limit
+                ></el-input>
+              </el-form-item>
+            </div>
+          </el-col>
+        </el-row>
+        <div class="footAll">
+          <el-button class="elButton" type="primary" size="small" round @click="confirmBtn()">确定</el-button>
+          <el-button class="elButton" type="primary" size="small" round @click="toInitImg()">影像查询</el-button>
+          <el-button class="elButton" type="primary" size="small" round @click="goBack()">返回</el-button>
+        </div>
+      </div>
+    </el-form>
+    <el-form class="noticeCss" v-else-if="this.typeStatus == '03'">
+      <div class="surveyForm">
+        <el-row class="survey_select">
+          <el-col :span="8">
+            <!-- <span class="redStar">&nbsp*&nbsp</span> -->
+            <el-form-item label="照会类型">
+              <el-select v-model="noticeForm.noticetypename" placeholder="请选择">
+                <el-option
+                  v-for="item in noticeTypeList"
+                  :key="item.noicetypecode"
+                  :label="item.noticetypename"
+                  :value="item.noicetypecode"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <div class="footAll">
+          <el-button class="elButton" type="primary" size="small" round @click="confirmBtn1()">确定</el-button>
+          <!-- multiple -->
+          <!-- <el-upload
+            class="upload-file"
+            action
+            :http-request="noticeFileUpload"
+            :file-list="filenamelist"
+          >
+            <el-button class="elButton" type="primary">上传</el-button>
+          </el-upload>-->
+          <input
+            type="file"
+            name="file"
+            multiple="multiple"
+            id="filesnames"
+            class="oldFiless"
+            accept=".png, .jpeg, .pdf, .msg, .rar, .zip, .jpg, .tif"
+            @change="imgUpload1"
+          />
+          <label for="filesnames" class="newFiless">上传</label>
+          <el-button class="elButton" type="primary" size="small" round @click="toInitImg()">影像查询</el-button>
+          <el-button class="elButton" type="primary" size="small" round @click="goBack()">返回</el-button>
+        </div>
+      </div>
+    </el-form>
+    <el-form class="noticeCss" v-else-if="this.typeStatus == '04'">
+      <div class="surveyForm">
+        <el-row class="survey_select">
+          <el-col :span="8">
+            <span class="redStar">&nbsp;*&nbsp;</span>
+            <el-form-item label="意见">
+              <el-select v-model="notice1.sellidea" placeholder="请选择">
+                <el-option
+                  v-for="item in opinion1"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row class="survey_select">
+          <el-col :span="24">
+            <div class="grid-content" v-if="notice1.sellidea != '02'">
+              <el-form-item label="意见说明">
+                <el-input
+                  type="textarea"
+                  v-model="notice1.sellideadesc"
+                  :rows="6"
+                  resize="none"
+                  maxlength="700"
+                  show-word-limit
+                ></el-input>
+              </el-form-item>
+            </div>
+            <div class="grid-content" v-else>
+              <span class="redStar">&nbsp;*&nbsp;</span>
+              <el-form-item label="意见说明">
+                <el-input
+                  type="textarea"
+                  v-model="notice1.sellideadesc"
+                  :rows="6"
+                  resize="none"
+                  maxlength="700"
+                  show-word-limit
+                ></el-input>
+              </el-form-item>
+            </div>
+          </el-col>
+        </el-row>
+        <el-row class="survey_select">
+          <el-col :span="8">
+            <!-- <span class="redStar">&nbsp*&nbsp</span> -->
+            <el-form-item label="照会类型">
+              <el-select v-model="notice1.noticetypename" placeholder="请选择" clearable>
+                <el-option
+                  v-for="item in noticeTypeList"
+                  :key="item.noicetypecode"
+                  :label="item.noticetypename"
+                  :value="item.noicetypecode"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <div class="footAll">
+          <el-button class="elButton" type="primary" round size="small" @click="confirmBtn2()">确定</el-button>
+          <!-- <el-upload
+            class="upload-file"
+            action
+            :http-request="noticeFileUpload"
+            :file-list="filenamelist"
+            :before-upload="fileUpload"
+          >
+            <el-button class="elButton" type="primary">上传</el-button>
+          </el-upload>-->
+          <input
+            type="file"
+            name="file"
+            id="filenames"
+            multiple="multiple"
+            accept=".png, .jpeg, .pdf, .msg, .rar, .zip, .jpg, .tif"
+            class="oldFiless"
+            @change="imgUpload"
+          />
+          <label for="filenames" class="newFiless">上传</label>
+          <el-button class="elButton" type="primary" size="small" round @click="toInitImg()">影像查询</el-button>
+          <el-button class="elButton" type="primary" size="small" round @click="goBack()">返回</el-button>
+        </div>
+      </div>
+    </el-form>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import Banners from "@/components/Banners";
+import { IDType } from "../../utils/service.js";
+import { post, service } from "../../utils/request.js";
+import Policy from "../../components/policy";
+export default {
+  name: "diplomaticnoteDetail",
+  components: {
+    Banners,
+    Policy
+  },
+  inject: ["reload"],
+  data() {
+    return {
+      filenamelist: [
+        {
+          fileoriginalname: ""
+        }
+      ], // 文件上传列表
+      filePaths: [],
+      claimQueryList: [], // 审批列表
+      pagesize: 10,
+      currpage: 1,
+      labelPosition: "right",
+      className: "工作队列",
+      head_pic: require("../../assets/images/eapproval/gold.png"),
+      examineArray: [], // 调查对列
+      peiDiaoList: [],
+      typeStatus: null,
+      anJianList: [],
+      zhaohuiList: [],
+      zhaohuiDesc: "",
+      noticeTypeList: [], // 照会类型
+      notice: {
+        noticeidea: "",
+        noticeideadesc: "",
+        noticeno: "",
+        rgtno: "",
+        comcode: "",
+        agentcode: "",
+        noticeenddate: this.getTime()
+      },
+      notice1: {
+        sellidea: "",
+        sellideadesc: "",
+        noticeno: "",
+        comcode: "",
+        agentcode: "",
+        selltypename: "",
+        noticetypename: ""
+      },
+      noticeForm: { noticetypename: "" },
+      opinion: [
+        {
+          value: "01",
+          label: "同意"
+        },
+        {
+          value: "02",
+          label: "回退"
+        }
+      ],
+      opinion1: [
+        {
+          value: "01",
+          label: "通过"
+        },
+        {
+          value: "02",
+          label: "回退"
+        }
+      ],
+      applyDesc: "",
+      resultcode: "",
+      noticenos: "",
+
+      file: "",
+      src: "",
+      files: [],
+      url: "",
+      typemin1: "",
+      typemin: "",
+      typemax1: "",
+      typemax: "",
+      stateCode: 0,
+      filenames: "",
+      filesnames: "",
+      filelastname: "",
+      filelastname1: "",
+      pdfList: [] // 预览
+    };
+  },
+  // beforeRouteLeave(to, from, next) {
+  //   // 设置下一个路由的 meta
+  //   to.meta.keepAlive = true; // 让 A 缓存，即不刷新
+  //   console.log("AAA",to.meta.keepAlive)
+  //   next();
+  // },
+  mounted() {
+    this.$watermark.set(
+      localStorage.getItem("userCode"),
+      localStorage.getItem("userName")
+    );
+    this.getTime();
+  },
+  created() {
+    this.customerno = JSON.parse(this.$route.params.dataOfTable).customerno;
+    this.getClaimQuery();
+    this.getNoticeQuery();
+    this.getNoticeTypeQuery();
+  },
+  methods: {
+    //  照会预览
+    lookPDF(row, index) {
+      post(service.noticepdfprint, {
+        rgtno: JSON.parse(this.$route.params.dataOfTable).caseno,
+        noticeno: row.noticeno,
+        printtype: "01"
+        // noticeno: "Zh001910018",
+        // rgtno: "1910110002401"
+      }).then(res => {
+        this.pdfList = res.data.pdflist;
+        console.log("ddddddddd", this.pdfList);
+        if (this.pdfList) {
+          window.open(this.pdfList[0].pdfurl, "_blank");
+        } else {
+          this.$message.error("未查询到照会预览pdf路径！");
+        }
+      });
+    },
+    // 照会类型查询
+    getNoticeTypeQuery() {
+      post(service.noticeTypeQuery, {
+        bodys: {
+          rgtno: JSON.parse(this.$route.params.dataOfTable).caseno,
+          noticeno: JSON.parse(this.$route.params.dataOfTable).noticeno
+        }
+      }).then(res => {
+        this.noticeTypeList = res.data.bodys;
+        console.log("照会类型查询", res);
+      });
+    },
+    // 照会终止默认日期为当前系统时间+14天
+    getTime() {
+      var date1 = new Date();
+      var date2 = new Date(date1);
+      date2.setDate(date1.getDate() + 14);
+
+      var datee =
+        date2.getFullYear() +
+        "-" +
+        (date2.getMonth() + 1) +
+        "-" +
+        date2.getDate();
+      return datee;
+    },
+    // 返回上一页
+    goBack() {
+      // this.$router.go(-1);
+      this.$router.push({ name: "diplomaticnoteManger" });
+    },
+    typeToname(code) {
+      var a = null;
+      IDType().forEach(element => {
+        if (element.value === code) {
+          a = element.text;
+        }
+      });
+      return a;
+    },
+    // 查询案件信息
+    getClaimQuery() {
+      post(service.claimQuery, {
+        bodys: {
+          rgtno: JSON.parse(this.$route.params.dataOfTable).caseno
+        }
+      }).then(result => {
+        this.anJianList = result.data.bodys;
+      });
+    },
+    // 查询照会信息
+    getNoticeQuery() {
+      if (JSON.parse(this.$route.params.dataOfTable).noticestatus == "02") {
+        // 待审批
+        this.typeStatus = "02";
+      } else if (
+        JSON.parse(this.$route.params.dataOfTable).noticestatus == "05"
+      ) {
+        //待回销
+        this.typeStatus = "04";
+      } else if (
+        JSON.parse(this.$route.params.dataOfTable).noticestatus == "06" ||
+        JSON.parse(this.$route.params.dataOfTable).noticestatus == "04"
+      ) {
+        //  04待回复06部分回销
+        this.typeStatus = "03";
+      }
+      post(service.noticeQuery, {
+        bodys: {
+          rgtno: JSON.parse(this.$route.params.dataOfTable).caseno,
+          querytype: this.typeStatus
+        }
+      }).then(res => {
+        this.zhaohuiList = res.data.bodys;
+        this.zhaohuiDesc = res.data.bodys[0].noticeno;
+        console.log("vvv", this.zhaohuiDesc);
+        console.log(typeof this.zhaohuiDesc);
+        console.log("照会列表", res);
+      });
+    },
+    // 照会回销
+    confirmBtn2() {
+      for (var key in this.zhaohuiList) {
+        if (this.zhaohuiList[key].noticestatus === "05") {
+          this.noticenos = this.zhaohuiList[key].noticeno;
+        }
+      }
+      if (!this.notice1.sellidea) {
+        this.$message.error("请选择意见！");
+        return;
+      }
+      if (this.notice1.sellidea == "02") {
+        if (!this.notice1.sellideadesc) {
+          this.$message.error("请填写意见说明！");
+          return;
+        }
+      }
+      post(service.noticeSellBack, {
+        bodys: {
+          noticeno: this.noticenos,
+          sellidea: this.notice1.sellidea,
+          sellideadesc: this.notice1.sellideadesc || "",
+          comcode: localStorage.getItem("comCode"),
+          agentcode: localStorage.getItem("userCode"),
+          rgtno: JSON.parse(this.$route.params.dataOfTable).caseno
+        }
+      }).then(res => {
+        this.$message({
+          message: "操作成功！",
+          type: "success"
+        });
+        this.$router.go(-1);
+      });
+    },
+    toGetNoticeno() {},
+    // 照会回复每个类型至少上传一张影像
+    imageCheckUpload() {
+      for (var key in this.zhaohuiList) {
+        if (
+          this.zhaohuiList[key].noticestatus === "04" ||
+          this.zhaohuiList[key].noticestatus === "06"
+        ) {
+          this.noticenos = this.zhaohuiList[key].noticeno;
+        }
+      }
+      post(service.imageCheckUpload, {
+        bodys: {
+          rgtno: JSON.parse(this.$route.params.dataOfTable).caseno,
+          noticeno: this.noticenos
+        }
+      }).then(res => {
+        console.log("AAAAAA", res);
+        if (res.data.bodys.resultcode == "505") {
+          this.$message.error("影像不齐全，无法提交");
+          return;
+        } else if (res.data.bodys.resultcode == "500") {
+          this.$message.error(res.data.bodys.resultcode);
+        } else {
+          console.log("qqq");
+          for (var key in this.zhaohuiList) {
+            if (
+              this.zhaohuiList[key].noticestatus === "04" ||
+              this.zhaohuiList[key].noticestatus === "06"
+            ) {
+              this.noticenos = this.zhaohuiList[key].noticeno;
+            }
+          }
+          post(service.noticeReplyInfo, {
+            bodys: {
+              noticeno: this.noticenos,
+              comcode: localStorage.getItem("comCode"),
+              agentcode: localStorage.getItem("userCode"),
+              rgtno: JSON.parse(this.$route.params.dataOfTable).caseno
+            }
+          }).then(res => {
+            this.$message({
+              message: "操作成功！",
+              type: "success"
+            });
+            this.$router.go(-1);
+          });
+        }
+      });
+    },
+    // 照会回复
+    confirmBtn1() {
+      this.imageCheckUpload();
+    },
+    // fileUpload() {},
+    fileUpload() {
+      if (!this.notice1.noticetypename) {
+        this.$message.error("请先选择照会类型！");
+        return;
+      }
+    },
+    // 影像查询
+    toInitImg() {
+      let routeUrl = this.$router.resolve({
+        name: "initImg",
+        query: { rgtno: JSON.parse(this.$route.params.dataOfTable).caseno }
+      });
+      window.open(routeUrl.href, "_blank");
+    },
+    // 文件上传
+    dataURLtoFile11(dataurl, filename) {
+      //将base64转换为文件流
+      var arr = dataurl.split(","),
+        mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]),
+        n = bstr.length,
+        u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new File([u8arr], filename, { type: mime });
+    },
+    // 待回复上传
+    imgUpload1(event) {
+      if (!this.noticeForm.noticetypename) {
+        this.$message.error("请选择照会类型！");
+        event.target.value = "";
+        return false;
+      }
+      let config = {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      };
+      switch (this.noticeForm.noticetypename) {
+        case "0101":
+          this.typemin = "LPTJBG";
+          break;
+        case "0102":
+          this.typemin = "LPSZ";
+          break;
+        case "0103":
+          this.typemin = "LPBC";
+          break;
+        case "0104":
+          this.typemin = "LPCS";
+          break;
+        case "0105":
+          this.typemin = "LPSF";
+          break;
+        case "0106":
+          this.typemin = "LPSW";
+          break;
+        case "0107":
+          this.typemin = "LPYW";
+          break;
+        case "0108":
+          this.typemin = "LPQT";
+          break;
+        case "0201":
+          this.typemin = "LPWJ";
+          break;
+        case "0202":
+          this.typemin = "LPKXQ";
+          break;
+        case "0203":
+          this.typemin = "LPSM";
+          break;
+        case "0301":
+          this.typemin = "LPQB";
+          break;
+        default:
+          break;
+      }
+      for (var key in this.zhaohuiList) {
+        if (
+          this.zhaohuiList[key].noticestatus === "04" ||
+          this.zhaohuiList[key].noticestatus === "06"
+        ) {
+          this.noticenos = this.zhaohuiList[key].noticeno;
+        }
+      }
+      for (let keys = 0; keys < event.target.files.length; keys++) {
+        console.log("AAAAAAAAA", event.target.files[keys]);
+        let img1 = event.target.files[keys];
+        // let img1 = event.target.files[0];
+        // 提取文件后缀名
+        var index = img1.name.lastIndexOf(".");
+        var suffix = img1.name.substring(index + 1).toUpperCase();
+        // 判断filetype
+        if (suffix == ("JPG" || "PNG" || "JPEG")) {
+          this.filelastname = "01";
+        } else {
+          this.filelastname = "02";
+        }
+        let reader = new FileReader();
+        reader.readAsDataURL(img1); //将文件已url的形式读入页面
+        let that = this;
+        reader.onload = function(e) {
+          let blob = that.dataURLtoFile11(reader.result, img1.name);
+          var files = new FormData();
+          files.set("files", blob);
+          var imageinfos = {
+            rgtno: that.zhaohuiList[0].rgtno,
+            otherno: that.noticenos,
+            filetype: that.filelastname,
+            uploadtype: "01",
+            imagetype: blob.type,
+            userCode: localStorage.getItem("userCode"),
+            typemax: "LP2",
+            typemin: that.typemin
+          };
+          files.append("imageinfo", JSON.stringify(imageinfos));
+          that.$axios
+            .post("/filedeal/file/imageinfo/image/upload", files, config)
+            .then(res => {
+              if (res.resultcode === "200") {
+                that.stateCode += 1;
+                console.log("BBBBB", that.stateCode);
+                console.log("DDDDDDDDDDD", event.target.files.length);
+                if (that.stateCode === event.target.files.length) {
+                  that.$message.success("操作成功！");
+                  event.target.value = "";
+                  that.filelastname = "";
+                  that.stateCode = 0;
+                }
+                that.noticeForm.noticetypename = "";
+              } else {
+                that.$message.error(res.resultdesc);
+              }
+            });
+        };
+      }
+      // let img1 = event.target.files[0];
+      // // let img1 = event.target.files[0];
+      // console.log("SSSSSSSSSSSS", event.target.files[0]);
+      // console.log("HHHHHHHHHHHH", event.target.files);
+      // let reader = new FileReader();
+      // reader.readAsDataURL(img1); //将文件已url的形式读入页面
+      // // reader.readAsArrayBuffer(img1); //将文件已url的形式读入页面
+      // let that = this;
+      // reader.onload = function(e) {
+      //   console.log("e", e.target.result);
+      //   let blob = that.dataURLtoFile11(reader.result, img1.name);
+      //   var files = new FormData();
+      //   files.set("files", blob);
+      //   var imageinfos = {
+      //     rgtno: that.zhaohuiList[0].rgtno,
+      //     uploadtype: "01",
+      //     imagetype: blob.type,
+      //     userCode: localStorage.getItem("userCode"),
+      //     typemax: "CLAIM2",
+      //     typemin: that.typemin
+      //   };
+      //   files.append("imageinfo", JSON.stringify(imageinfos));
+      //   that.$axios
+      //     .post("/filedeal/file/imageinfo/image/upload", files, config)
+      //     .then(res => {
+      //       if (res.resultcode === "200") {
+      //         that.$message.success("操作成功！");
+      //         that.noticeForm.noticetypename = "";
+      //       } else {
+      //         that.$message.error(res.resultdesc);
+      //       }
+      //     });
+      // };
+    },
+    // 待回销上传
+    imgUpload(event) {
+      if (this.notice1.noticetypename == "") {
+        this.$message.error("请选择照会类型！");
+        event.target.value = "";
+        return false;
+      }
+      let config = {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      };
+      switch (this.notice1.noticetypename) {
+        case "0101":
+          this.typemin1 = "LPTJBG";
+          break;
+        case "0102":
+          this.typemin1 = "LPSZ";
+          break;
+        case "0103":
+          this.typemin1 = "LPBC";
+          break;
+        case "0104":
+          this.typemin1 = "LPCS";
+          break;
+        case "0105":
+          this.typemin1 = "LPSF";
+          break;
+        case "0106":
+          this.typemin1 = "LPSW";
+          break;
+        case "0107":
+          this.typemin1 = "LPYW";
+          break;
+        case "0108":
+          this.typemin1 = "LPQT";
+          break;
+        case "0201":
+          this.typemin1 = "LPWJ";
+          break;
+        case "0202":
+          this.typemin1 = "LPKXQ";
+          break;
+        case "0203":
+          this.typemin1 = "LPSM";
+          break;
+        case "0301":
+          this.typemin1 = "LPQB";
+          break;
+        default:
+          break;
+      }
+      for (var key in this.zhaohuiList) {
+        if (this.zhaohuiList[key].noticestatus === "05") {
+          this.noticenos = this.zhaohuiList[key].noticeno;
+        }
+      }
+      for (let keys = 0; keys < event.target.files.length; keys++) {
+        console.log("AAAAAAAAA", event.target.files[keys]);
+        let img1 = event.target.files[keys];
+        // let img1 = event.target.files[0];
+
+        // 提取文件后缀名
+        var index = img1.name.lastIndexOf(".");
+        var suffix = img1.name.substring(index + 1).toUpperCase();
+        // 判断filetype
+        if (suffix == ("JPG" || "PNG" || "JPEG")) {
+          this.filelastname1 = "01";
+        } else {
+          this.filelastname1 = "02";
+        }
+        let reader = new FileReader();
+        reader.readAsDataURL(img1); //将文件已url的形式读入页面
+        let that = this;
+        reader.onload = function(e) {
+          console.log("e", e.target.result);
+          let blob = that.dataURLtoFile11(reader.result, img1.name);
+          var files = new FormData();
+          files.set("files", blob);
+          var imageinfos = {
+            rgtno: that.zhaohuiList[0].rgtno,
+            otherno: that.noticenos,
+            filetype: that.filelastname1,
+            uploadtype: "01",
+            imagetype: blob.type,
+            userCode: localStorage.getItem("userCode"),
+            operator: localStorage.getItem("userCode"),
+            typemax: "LP2",
+            typemin: that.typemin1
+          };
+          files.append("imageinfo", JSON.stringify(imageinfos));
+          that.$axios
+            .post("/filedeal/file/imageinfo/image/upload", files, config)
+            .then(res => {
+              if (res.resultcode === "200") {
+                that.stateCode += 1;
+                if (that.stateCode === event.target.files.length) {
+                  that.$message.success("操作成功！");
+                  event.target.value = "";
+                  that.filelastname1 = "";
+                  that.stateCode = 0;
+                }
+                that.notice1.noticetypename = "";
+              } else {
+                that.$message.error(res.resultdesc);
+              }
+            });
+        };
+      }
+      // let img1 = event.target.files[0];
+      // let reader = new FileReader();
+      // reader.readAsDataURL(img1); //将文件已url的形式读入页面
+      // // reader.readAsArrayBuffer(img1); //将文件已url的形式读入页面
+      // let that = this;
+      // reader.onload = function(e) {
+      //   console.log("e", e.target.result);
+      //   let blob = that.dataURLtoFile11(reader.result, img1.name);
+      //   // var blob = reader.result;
+      //   console.log("LLLLLLLLLLLLLLLLLLL", blob, "111");
+      //   var files = new FormData();
+      //   files.set("files", blob);
+      //   var imageinfos = {
+      //     rgtno: that.zhaohuiList[0].rgtno,
+      //     uploadtype: "01",
+      //     imagetype: blob.type,
+      //     userCode: localStorage.getItem("userCode"),
+      //     typemax: "CLAIM2",
+      //     typemin: that.typemin1
+      //   };
+      //   files.append("imageinfo", JSON.stringify(imageinfos));
+      //   that.$axios
+      //     .post("/filedeal/file/imageinfo/image/upload", files, config)
+      //     .then(res => {
+      //       console.log("wwwwwwwwwwwwwwwwwwwwwwwwwww", res);
+      //       if (res.resultcode === "200") {
+      //         that.$message.success("操作成功！");
+      //         that.notice1.noticetypename = "";
+      //       } else {
+      //         that.$message.error(res.resultdesc);
+      //       }
+      //     });
+      // };
+    },
+    // 照会审批 + 校验
+    confirmBtn() {
+      for (var key in this.zhaohuiList) {
+        if (this.zhaohuiList[key].noticestatus === "02") {
+          this.noticenos = this.zhaohuiList[key].noticeno;
+        }
+      }
+      //  校验
+      if (!this.notice.noticeidea) {
+        this.$message.error("请选择意见！");
+        return;
+      }
+      if (!this.notice.noticeenddate) {
+        this.$message.error("请选择照会终止日期！");
+        return;
+      }
+      if (this.notice.noticeenddate) {
+        let time1 = new Date().getTime() - 1 * 24 * 60 * 60 * 1000;
+        let idenddate = new Date(this.notice.noticeenddate).getTime();
+        if (time1 > idenddate) {
+          this.$message.error("照会终止日期不能小于当前日期！");
+          return false;
+        }
+      }
+      if (this.notice.noticeidea == "02") {
+        if (!this.notice.noticeideadesc) {
+          this.$message.error("请填写意见说明！");
+          return;
+        }
+      }
+      post(service.checkNoticeAudit, {
+        bodys: {
+          rgtno: this.zhaohuiList[0].rgtno,
+          noticeno: this.noticenos,
+          noticeenddate: this.notice.noticeenddate,
+          noticeidea: this.notice.noticeidea,
+          noticeideadesc: this.notice.noticeideadesc || "",
+          comcode: localStorage.getItem("comCode"),
+          agentcode: localStorage.getItem("userCode")
+        }
+      }).then(res => {
+        console.log("照会审批校验", res.data.header.message);
+        this.resultcode = res.data.header.code;
+        if (this.notice.noticeidea == "01") {
+          if (this.resultcode === "200") {
+            post(service.noticeser, {
+              bodys: {
+                rgtno: this.zhaohuiList[0].rgtno,
+                noticeno: this.noticenos,
+                noticeenddate: this.notice.noticeenddate,
+                noticeidea: this.notice.noticeidea,
+                noticeideadesc: this.notice.noticeideadesc || "",
+                comcode: localStorage.getItem("comCode"),
+                agentcode: localStorage.getItem("userCode")
+              }
+            }).then(res => {
+              this.$message({
+                type: "success",
+                message: "操作成功!"
+              });
+              this.$router.go(-1);
+            });
+          } else if (this.resultcode === "500") {
+            this.$confirm("该客户已存在未结束的照会，是否继续？", "提示", {
+              confirmButtonText: "确定",
+              cancelButtonText: "取消",
+              type: "warning"
+            })
+              .then(() => {
+                post(service.noticeser, {
+                  bodys: {
+                    rgtno: this.zhaohuiList[0].rgtno,
+                    noticeno: this.noticenos,
+                    noticeenddate: this.notice.noticeenddate,
+                    noticeidea: this.notice.noticeidea,
+                    noticeideadesc: this.notice.noticeideadesc || "",
+                    //   inqinfo: this.notice.inqinfo,
+                    comcode: localStorage.getItem("comCode"),
+                    agentcode: localStorage.getItem("userCode")
+                  }
+                }).then(res => {
+                  this.$message({
+                    type: "success",
+                    message: "操作成功!"
+                  });
+                  this.$router.go(-1);
+                });
+              })
+              .catch(() => {
+                this.$message({
+                  type: "info",
+                  message: "已取消该操作"
+                });
+              });
+          }
+        }
+        if (this.notice.noticeidea == "02") {
+          post(service.noticeser, {
+            bodys: {
+              rgtno: this.zhaohuiList[0].rgtno,
+              noticeno: this.noticenos,
+              noticeenddate: this.notice.noticeenddate,
+              noticeidea: this.notice.noticeidea,
+              noticeideadesc: this.notice.noticeideadesc || "",
+              //   inqinfo: this.notice.inqinfo,
+              comcode: localStorage.getItem("comCode"),
+              agentcode: localStorage.getItem("userCode")
+            }
+          }).then(res => {
+            this.$message({
+              type: "success",
+              message: "操作成功!"
+            });
+            this.$router.go(-1);
+          });
+        }
+      });
+    },
+
+    // 查看调查保单列表
+    diaochaList() {
+      post(service.diaochaPolicy, {
+        bodys: {
+          rgtno: "550000000014"
+        }
+      }).then(result => {
+        if (result.data.header.code === "200") {
+          this.examineArray = result.data.bodys;
+        }
+      });
+    },
+    handleSizeChange(val) {
+      this.pagesize = val;
+    },
+    handleCurrentChange(val) {
+      this.currpage = val;
+    },
+    tableList() {
+      this.displayData = [];
+      for (
+        var j = this.total * (this.currentPage - 1);
+        j < this.total * this.currentPage;
+        j++
+      ) {
+        if (this.list[j]) {
+          this.displayData.push(this.list[j]);
+        }
+      }
+      console.log(this.displayData);
+    },
+    currentChange: function(page) {
+      this.currentPage = page;
+      this.tableList();
+    },
+    indexMethod(index) {
+      return index + 1 + (this.currpage - 1) * 10;
+    }
+  }
+};
+</script>
+<style scoped lang="less">
+/deep/.el-tabs__active-bar {
+  border: none;
+  background: transparent;
+}
+/deep/ .el-tabs__item {
+  background: #fff;
+  font-size: 16px;
+  padding: 0 !important;
+  text-align: center;
+  width: 120px;
+  border-right: 1px solid #f1f1f1;
+}
+/deep/ .el-tabs__item:hover {
+  color: #000;
+}
+/deep/ .el-tabs__item.is-active {
+  background-color: #0673ff;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  color: #fff;
+}
+.box {
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #0673ff;
+  position: absolute;
+  z-index: 999;
+}
+/deep/ .el-tabs__header {
+  margin: 0;
+}
+// ------tab选项卡End--------
+.footAll {
+  padding: 0 30px 30px;
+}
+.survey_select:nth-child(1) {
+  padding-top: 20px;
+}
+.survey_select {
+  padding: 0 30px 0 30px;
+  margin-bottom: 0 !important;
+}
+/deep/.el-table__expanded-cell[class*="cell"] {
+  padding: 0 30px;
+}
+.upload-file {
+  display: inline-block;
+}
+// /deep/.el-upload-list {
+//   display: none;
+// }
+.simplesimple {
+  height: 14px;
+  background: #ffffff;
+  box-shadow: 0px 13px 9px rgba(204, 204, 204, 0.15);
+  opacity: 1;
+}
+
+.tables {
+  width: 1541px;
+  height: 364px;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0px 13px 9px rgba(204, 204, 204, 0.15);
+  opacity: 1;
+  border-radius: 0px 0px 6px 6px;
+}
+.noticeCss {
+  // margin-top: 30px;
+  background: #fff;
+}
+.reportInquiry {
+  margin: 20px;
+  .elButton {
+    margin-left: 10px !important;
+  }
+
+  .work_queue {
+    position: relative;
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+
+  .title {
+    width: 82px;
+    height: 20px;
+    font-size: 20px;
+    font-family: Source Han Sans CN;
+    font-weight: bold;
+    line-height: 25px;
+    color: rgba(238, 238, 238, 1);
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    opacity: 1;
+  }
+}
+
+//rgba(238,238,238,1)
+.el-row {
+  text-align: center;
+  margin-bottom: 20px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.grid-content {
+  border-radius: 4px;
+  min-height: 36px;
+
+  span {
+    display: inline-block;
+    width: 20%;
+  }
+}
+
+.row-bg {
+  padding: 10px 0;
+  background-color: #f9fafc;
+}
+</style>
+<style lang="less">
+.reportInquiry {
+  .el-input {
+    width: 58%;
+  }
+
+  .el-select {
+    width: 58%;
+
+    .el-input {
+      width: 100%;
+    }
+  }
+}
+</style>

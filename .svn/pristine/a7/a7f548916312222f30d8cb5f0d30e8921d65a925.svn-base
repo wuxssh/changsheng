@@ -1,0 +1,253 @@
+<template>
+  <div id="app">
+    <transition name="router-fade" mode="out-in">
+      <el-container>
+        <Aside
+          class="el-aside"
+          v-if="!($route.name==='Login' || $route.name==='ModifyPsd' || $route.name === 'initImg' || ($route.name === 'IntegratDetails' && ($route.query && $route.query.source && $route.query.source == 'Query')))"
+        ></Aside>
+        <el-container style="display: flex;
+            flex-direction: column;">
+          <el-header
+            v-if="!($route.name==='Login' || $route.name==='ModifyPsd' || ($route.name === 'IntegratDetails' && ($route.query && $route.query.source && $route.query.source == 'Query')))&&gettitleshow!='true'"
+          >
+            <div>{{gettitleshow}}</div>
+            <Header></Header>
+          </el-header>
+          <el-main :class="{'colorSet': getScroll, '': !getScroll}">
+            <!-- <router-view v-if="isRouterAlive" /> -->
+            <keep-alive>
+              <router-view v-if="$route.meta.keepAlive && isRouterAlive"></router-view>
+            </keep-alive>
+            <router-view v-if="!$route.meta.keepAlive && isRouterAlive"></router-view>
+          </el-main>
+        </el-container>
+      </el-container>
+    </transition>
+  </div>
+</template>
+
+<script>
+import Aside from "./components/common/Aside";
+import Header from "./components/common/Header";
+import { MP } from './map'    //引入上面创建的map.js文件
+// import {mapState, mapGetters, mapMutations} from 'vuex'
+export default {
+  name: "App",
+  components: {
+    Aside,
+    Header
+  },
+  provide() {
+    return {
+      reload: this.reload,
+      ak:"aiM7jMPeUV9uEepWsxr642Plxqgfpvt9"
+    };
+  },
+  data() {
+    return {
+      isRouterAlive: true
+    };
+  },
+  created() {
+    // console.log("fff", this.$route.query);
+    // console.log("fff", this.$route.params);
+    // console.log("fff", JSON.parse(this.$route.params.dataOfTable).caseno==='2003120000801');
+  },
+  async mounted(){
+      await MP(this.ak);
+  },
+  computed: {
+    getScroll() {
+      return this.$store.getters.isScroll;
+    },
+    gettitleshow() {
+      return this.$store.getters.titleshow;
+    }
+  },
+  methods: {
+    reload() {
+      this.isRouterAlive = false;
+      this.$nextTick(function() {
+        this.isRouterAlive = true;
+      });
+    }
+  },
+  watch: {
+    gettitleshow(val) {
+      this.$store.dispatch("titleclose", "true");
+    }
+  }
+};
+</script>
+
+<style lang="less">
+.router-fade-enter-active,
+.router-fade-leave-active {
+  transition: opacity 0.3s;
+}
+.router-fade-enter,
+.router-fade-leave-active {
+  opacity: 0;
+}
+.colorSet {
+  overflow-y: hidden;
+}
+/* #app {
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+} */
+html,
+body {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  margin: 0 auto;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+#app {
+  /* width: 100%; */
+  height: 100%;
+}
+.el-container {
+  height: 100%;
+}
+.el-header {
+  background-color: #ffffff;
+  color: #333;
+  width: 100%;
+  text-align: center;
+  height: 60px;
+  position: relative;
+  // position: fixed;
+  // line-height: 60px;
+  // z-index: 1000000;
+}
+.el-input.is-disabled .el-input__inner {
+  color: #333 !important;
+}
+.el-textarea.is-disabled .el-textarea__inner {
+  color: #333 !important;
+}
+.el-checkbox__input.is-disabled.is-checked .el-checkbox__inner {
+  background: #409eff !important;
+}
+.el-radio__input.is-disabled.is-checked .el-radio__inner {
+  background: #409eff !important;
+}
+.el-radio__input.is-disabled.is-checked .el-radio__inner::after {
+  background: #fff !important;
+  transform: translate(-50%, -50%) scale(1) !important;
+  -webkit-transform: translate(-50%, -50%) scale(1) !important;
+}
+.el-checkbox__input.is-checked .el-checkbox__inner::after {
+  border-color: #fff !important;
+  transform: rotate(45deg) scaleY(1) !important;
+  -webkit-transform: rotate(45deg) scaleY(1) !important;
+}
+
+.el-loading-mask.is-fullscreen {
+  z-index: 14000 !important;
+}
+.my-el-custom-spinner {
+  background: url("./assets/images/header/3.gif");
+  background-size: 80px 80px;
+  width: 80px;
+  height: 80px;
+  display: inline-block;
+}
+.el-loading-spinner {
+  top: 40% !important;
+}
+.el-aside {
+  background-color: #001b6f;
+  color: #fff;
+  /* line-height: 200px; */
+  height: 100%;
+  max-width: 15%;
+}
+
+.el-main {
+  padding: 0 !important;
+  margin: 0 !important;
+  height: 100%;
+  background-color: #e9eef3;
+  color: #333;
+}
+.redStar {
+  color: red;
+  float: left;
+  margin-top: 11px;
+  width: auto !important;
+}
+.redStars {
+  color: red;
+  width: auto !important;
+}
+.el-textarea .el-input__count {
+  color: #909399;
+  background: transparent !important;
+  position: absolute;
+  font-size: 12px;
+  bottom: -1px !important;
+  right: 20px !important;
+}
+// 文件上传样式
+.oldFiless {
+  display: none;
+}
+.oldFiless,
+.newFiless {
+  border-radius: 25px;
+}
+.newFiless {
+  background: #409eff;
+  color: #fff;
+  padding: 7px 15px;
+  margin-left: 10px;
+  font-size: 14px;
+  box-sizing: border-box;
+  outline: 0;
+}
+// 条款下载
+.riskcodePDF {
+  color: #409eff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.el-collapse-item__header {
+  background-color: #0673ff;
+  height: 50px;
+  line-height: 50px;
+  border-radius: 10px 10px 0 0;
+  padding: 0 15px;
+  overflow: hidden;
+  color: #fff;
+  font-size: 16px;
+  font-family: Source Han Sans CN;
+}
+// 保单信息查询内表格调整
+.sonTable {
+  /deep/tr th:last-child {
+    display: inline !important;
+  }
+}
+.el-table__expanded-cell[class*="cell"] {
+  padding: 10px !important;
+}
+// 理赔进展样式
+.lipeiPopover {
+  max-height: 400px !important;
+  overflow-y: auto !important;
+}
+@media screen and (min-height: 400px) {
+  .lipeiPopover {
+    overflow-y: scroll !important;
+  }
+}
+</style>

@@ -1,0 +1,913 @@
+/**
+ * axios请求工具类
+ */
+import axios from "axios";
+import { generateUUID, getDate, getTime } from "../utils/common";
+import { Loading } from "element-ui";
+import router from "../router";
+// import store from '../store/store.js'
+
+axios.defaults.headers.post["Content-Type"] = "application/json";
+
+axios.defaults.baseURL = process.env.baseUrl;
+
+// axios.defaults.baseURL = "http://172.18.100.187:7040/api"; // 测试环境
+// axios.defaults.baseURL = "http://172.18.100.64:7040/api"; // 测试环境
+// axios.defaults.baseURL = "http://172.18.100.41:7040/api"; // 开发环境
+// axios.defaults.baseURL = 'http://192.168.100.238:7040/api' // 生产环境
+// 加载
+let loading;
+
+function startLoading() {
+  loading = Loading.service({
+    lock: true,
+    text: "拼命加载中...",
+    spinner: "my-el-custom-spinner",
+    background: "rgba(255,255,255,0)"
+  });
+}
+
+function endLoading() {
+  loading.close();
+}
+axios.interceptors.request.use(
+  function (config) {
+    startLoading();
+    if (localStorage.getItem("token")) {
+      // let ahths = new String(window.location.href)
+      // let Author = ahths.slice(ahths.length - 13, ahths.length) || null
+      config.headers.Authorization = localStorage.getItem("token");
+      // config.headers.KKKKK = Author;
+      // console.log('JJJ',slice(window.location.hash.length-13,window.location.hash.length))
+
+      // console.log('JJJ', ahths.slice(ahths.length - 13, ahths.length))
+      // console.log('JJJ', window.location)
+      // let ahths = (window.location.href)
+      // console.log('LLL',typeof ahths)
+      // let isAuth = ahths.indexOf('auth=')
+      // console.log(isAuth)
+    } else {
+      // let str = "ahth=";
+      let ahths = (window.location.href)
+      console.log('LLL',typeof ahths)
+      let isAuth = ahths.indexOf('auth=')
+      console.log(isAuth)
+      let auths
+      if (isAuth > 0) {
+        auths = ahths.match(/auth=(\S*)/)[1];
+      } else {
+        auths = ''
+      }
+
+      // // let Author = ahths.slice(ahths.length-13,ahths.length) || null
+      // console.log('ddd', auths)
+      config.headers.Authorization = auths;
+    }
+    // console.log("requestBodys", config.data);
+    // console.log("url:", config.url);
+    return config;
+  },
+  function (error) {
+    return Promise.reject(error);
+  }
+);
+
+axios.interceptors.response.use(
+  function (response) {
+    endLoading();
+    // console.log("responsData", response.data);
+    return response;
+  },
+  function (error) {
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          localStorage.removeItem("token");
+          router.replace({
+            path: "/" //跳转首页
+          });
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+const xhr = {
+  post(url, data, config) {
+    return new Promise((resolve, reject) => {
+      axios
+        .post(url, data, config)
+        .then(res => {
+          resolve(res.data);
+        })
+        .catch(err => {
+          reject(err);
+        });
+    });
+  }
+};
+export const $axios = xhr;
+export function post(service, params) {
+  return new Promise((resolve, reject) => {
+    var target = {
+      headers: {
+        transNo: generateUUID(),
+        salechnl: "00",
+        transCode: "0",
+        requestDate: getDate(),
+        requestTime: getTime(),
+        standbyflag1: "0",
+        standbyflag2: "0",
+        standbyflag3: "0"
+      }
+    };
+    axios
+      .post(service, Object.assign(target, params))
+      .then(result => {
+        endLoading();
+        resolve(result);
+        // window.vm.$store.commit('isScroll',false);
+        // console.log(store)
+      })
+      .catch(error => {
+        endLoading();
+        // window.vm.$store.commit('isScroll',false);
+        console.log(error);
+        // alert('系统繁忙，请稍后重试！')
+
+        reject(result);
+      });
+  });
+}
+
+export const service = {
+  // 登录接口
+  login: "auth/changsheng/login",
+  // 修改密码
+  updatePsd: "user/password/updatepwd",
+  // 域账号登陆
+  domainLogin: "/auth/changsheng/domainLogin",
+  // 标签权限
+  perPower: "/auth/changsheng/perPower",
+  // 工作台
+  // 工作
+  toWork: "/homepage/workbenchController/toWork",
+  // 休假
+  changeWorkerState: "/homepage/workbenchController/changeWorkerState",
+  // 工作台统计数据
+  workbenchQuery: "/homepage/workbenchController/workbenchQuery",
+  // 工作台统计队列
+  workbenchList: "/homepage/workbenchController/workbenchList",
+  // 工作台绿色通道
+  workbenchGreen: "/homepage/workbenchController/workbenchGreen",
+  // 工作台公告信息
+  announcedList: "/homepage/workbenchController/announcedList",
+  // 审核
+  toAutdit: "/homepage/workbenchController/toAutdit",
+  // 用户权限信息
+  getPrimery: "/homepage/workbenchController/getPrimery",
+
+  // 影像查询
+  // selectimageinfo: "/imagedeal/image/imageget/selectimageinfo",
+  // queryimageJpg: "/imagedeal/imagedeal/image/imageget/queryimageJpg",
+  // 查询
+  selectimageinfo: "/imagedeal/image/imageget/queryimageJpg/selectimageinfo",
+  queryimageJpg: "/imagedeal/image/imageget/queryimageJpg/queryimageJpg",
+  // 影像查询保单信息查询
+  queryImageCount: "/filedeal/image/wx/image/queryImageCount",
+
+  // 发起照会-案件查询
+  claimQuery: "noticeser/claim/notice/claimQuery",
+  // 照会删除
+  noticeInfoDelete: "noticeser/claim/notice/noticeInfoDelete",
+  // 照会描述修改
+  noticeDescUpdate: "noticeser/claim/notice/noticeDescUpdate",
+  // 发起照会-列表查询
+  noticeQuery: "/noticeser/claim/notice/noticeQuery",
+  // 发起照会-照会信息保存
+  infoInsertQuery: "noticeser/claim/notice/noticeInfoInsert",
+  // 发起照会-获取健康问卷
+  questionQuery: "noticeser/claim/notice/questionQuery",
+  // 照会工作池
+  // 照会预览
+  noticepdfprint: "/noticeser/claim/notice/noticepdfprint",
+  // 照会工作池查询
+  noticeInfoWorkQuery: "/noticeser/claim/noticework/noticeInfoWorkQuery",
+  // 照会审核确认
+  noticeser: "/noticeser/claim/noticeaudit/noticeAuditInput",
+  // 照会审核校验
+  checkNoticeAudit: "/noticeser/claim/noticeaudit/checkNoticeAudit",
+  // 照会回复
+  noticeReplyInfo: "/noticeser/claim/noticereply/noticeReplyInfo",
+  // 照会回复每个照会类型至少上传一个影像
+  imageCheckUpload: "/noticeser/claim/noticereply/imageCheckUpload",
+  // 照会文件上传
+  imageUpload: "/noticeser/file/imageinfo/image/upload",
+  imageQuery: "/noticeser/file/imageinfo/image/query",
+  noticeFileUpload: "/noticeser/claim/noticereply/noticeFileUpload1",
+  // 照会回销
+  noticeSellBack: "/noticeser/claim/noticesellback/noticeSellBack",
+  // 照会类型查询
+  noticeTypeQuery: "/noticeser/claim/noticereply/noticeTypeQuery",
+
+  claimQuery: "noticeser/claim/notice/claimQuery",
+  // 点击照会
+  // 发起照会-申请下发-校验
+  checkNoticeLowerHair: "noticeser/claim/notice/checkNoticeLowerHair",
+  // 发起照会-申请下发
+  noticeLowerHair: "noticeser/claim/notice/noticeLowerHair",
+
+  // 发起调查-保单信息查询
+  contInfoQuery: "investigation/claim/investigation/contInfoQuery",
+  // 发起调查-发起调查
+  inqInfoInput: "investigation/claim/investigation/inqInfoInput",
+  // 发起调查-调查列表查询
+  inqInfoQuery: "investigation/claim/investigation/inqInfoQuery",
+  // 发起调查-申请提掉
+  inqInfoApply: "investigation/claim/investigation/inqInfoApply",
+  // 发起调查-医院机构信息查询
+  hospitalInfoQuery: "investigation/claim/investigation/hospitalInfoQuery",
+  // 是否委托调查
+  commissionInvestigation:
+    "investigation/claim/investigation/CommissionInvestigation",
+  // 提调校验
+  inqAuditCheck: "investigation/claim/investigation/inqAuditCheck",
+  // 调查列表删除
+  inqInfoDelete: "investigation/claim/investigation/inqInfoDelete",
+  // 调查录入
+  inqInfoSellBack: "investigation/claim/inqsellback/inqInfoSellBack",
+  // 调查必上传影像校验
+  inqImageUploadCkeck: "investigation/claim/inqsellback/inqImageUploadCkeck",
+  // 调查回销  生成报告
+  LLinqReportPreview: "filedeal/print/LLinqReportPreview",
+  // 调查影像上传查询
+  inqImageListQuery: "/investigation/claim/inqsellback/inqImageListQuery",
+
+  // 照会信息
+  apply: "/notice/noticeLowerHair",
+  // 报案查询接口
+  query: "report/changsheng/LLReportMiss/queryMiss",
+  // 报案查询-出险人信息
+  riskMsg: "report/changsheng/report/queryRisk",
+  // 报案查询-报案申请信息
+  appMsg: "report/changsheng/report/queryApp",
+  // 报案查询-出险信息
+  outMsg: "report/changsheng/report/queryOut",
+  // 报案查询-保单信息查询
+  lccontMsg: "report/changsheng/report/queryLccont",
+  // 报案查询-既往赔案
+  oldLccontMsg: "report/changsheng/report/queryOldLccont",
+  // 报案查询-保全记录
+  suspendMsg: "report/changsheng/report/querySuspend",
+  // 备注信息查询
+  queryDesc: "report/changsheng/LLClaimDesc/queryDesc",
+  //  理赔进展
+  LPJZ: "/queryservice/changsheng/common/LPJZ",
+  // 备注信息新增
+  insertDesc: "report/changsheng/LLClaimDesc/insertDesc",
+  // 剩余未分配件数
+  querypoolcount: "/registers/register/querypoolcount",
+  // 立案-个人队列
+  registerpool: "registers/register/registerpool",
+  // 立案-客户查询
+  querycustomer: "registers/register/querycustomer",
+  // 立案-新增-出险人查询
+  querycustomer1: "registers/register/querycustomer1",
+  // 立案-新增-保存
+  saveregister: "registers/register/saveregister",
+
+  // 立案页面新增营销员查询条件
+  queryagentby: 'registers/register/queryagentby',
+  queryagentgroup: 'registers/register/queryagentgroup',
+
+
+  // 立案-申领任务
+  applyTask: "registers/register/claimformission",
+  // 立案-出险人信息
+  occperson: "registers/register/occperson",
+  // 立案-申请信息
+  rgantperson: "registers/register/rgantperson",
+  // 立案-出险信息
+  occinformation: "registers/register/occinformation",
+  // 立案-申请人信息
+  rgantperson: "registers/register/rgantperson",
+  // 立案确认
+  registerconfirm: "registers/register/registerconfirm",
+  // 立案结论
+  conculsionregister: "registers/register/conclusion",
+
+  receviceperson: "registers/register/receviceperson",
+  //  立案的保单信息查询
+  lianPolicy: "queryservice/changsheng/common/queryLccont",
+  // 立案的既往赔案查询
+  lianJiwang: "queryservice/changsheng/common/queryOldLccont",
+  //  立案的保全查询
+  lianBaoquan: "queryservice/changsheng/common/querySuspend",
+  // 审核-回退信息查询
+  queryLLCaseBack: "/registers/register/queryLLCaseBack",
+  rgtntregister: "registers/register/rgtntregister",
+  //立案申请
+  queryagent: "registers/register/queryagent",
+  // 审批查询
+  auditSearch: "/approve/approveSelect/registerList",
+  // 出险人信息
+  dangerperInfor: "/approve/approveSelect/insure",
+  // 立案申请信息
+  initApplicationInfor: "/approve/approveSelect/registerAppl",
+  // 出险信息
+  dangerInfor: "/approve/approveSelect/insureInfor",
+  // 获取理赔类型
+  getResaonCode: "/approve/approveSelect/resaonCode",
+  // 申请人信息
+  applicationInfor: "/approve/approveSelect/applicator",
+  //领款人信息
+  drawMoneyInfor: "approve/approveSelect/beneficiary",
+  // 保单信息
+  policyInList: "approve/approveSelect/contList",
+  // 保单信息详情
+  policyInDetailList: "approve/approveSelect/getContInforList",
+  // 既往赔案查询
+  caseLossList: "approve/approveSelect/oldCaseList",
+  baoquanList: "approve/approveSelect/edorList",
+  // 保全查询
+  peianInfor: "approve/approveSelect/compCount",
+  // 赔案计算信息
+  peianTypeInfor: "approve/approveSelect/compTypeCount",
+  // 赔案类型计算
+  baodangSum: "approve/approveSelect/policyCount",
+  // 保单计算
+  baoxiangSum: "approve/approveSelect/detail",
+  // 保项计算
+  auditMange: "approve/approveSelect/auditList",
+  // 审核管理
+  shengpiMange: "approve/approveSelect/approveList",
+  // 审批管理、
+  shengpiQue: "approve/approveOperate/modify",
+  // 审批确认
+  zhaohuiDetail: "approve/approveJumpSelect/getNoticeList",
+  // 照会查询
+  diaochaPolicy: "approve/approveJumpSelect/getContList",
+  // 查看调查保单列表
+  diaochaDetail: "approve/approveJumpSelect/getInvestList",
+  // 审批管理-获取查看调查，查看照会,二核查询，医疗单证按钮状态
+  getButtonState: "approve/approveJumpSelect/getButtonState",
+  // 查看调查
+  secondSearch: "/app/audit/queryClaimCuwBatch",
+  // 二核查看
+  // queryClaimDetailInfo: '/app/audit/queryClaimDetailInfo',
+  // 二核查看
+  diplomaticList: "noticeser/claim/notice/noticeQuery",
+  // 审核-个人工作池
+  querySelfWorkPool: "/app/audit/querySelfWorkPool",
+  // 审核-赔案计算信息
+  queryClaimInfo: "/app/audit/queryClaimInfo",
+  // 审核-理赔类型计算信息
+  queryClaimDutyKindInfo: "/app/audit/queryClaimDutyKindInfo",
+  // 查询 疾病，诊断，手术
+  getquList: "/app/audit/queryCode",
+  // 重疾 查询
+  queryCritical: "/group/queryCode/queryCritical",
+  // 骨折 查询
+  queryFracture: "/group/queryCode/queryFracture",
+  // 审核-申领任务
+  forTheTask: "app/dispose/applyTask",
+
+  // ====================二次核保======================
+  // ----------------------发起二核Start---------------
+  // 保单信息
+  two: "/seconduwall/twonucleus/two",
+  // 发起二核  事故经过
+  accident: "/seconduwall/twonucleus/accident",
+  // 发起二核  伤病诊断
+  diagnose: "/seconduwall/twonucleus/diagnose",
+  // 发起二核  申请+校验
+  launchedTwoNuclear: "/seconduwall/twonucleus/launchedTwoNuclear",
+  launchedcheckout: "/seconduwall/twonucleus/launchedcheckout",
+  // ---------------------发起二核End------------------
+  // 审核页面发起二核按钮校验
+  checkoutsecond: "/seconduwall/twonucleus/checkoutsecond",
+  // 二核工作池
+  workpool: "/seconduwall/second/workpool",
+  // ---------------------二核审批Start-----------------
+  // 保单查询
+  approvalpending: "/seconduwall/secondapproval/approvalpending",
+  // 事故经过
+  approvalaccident: "/seconduwall/secondapproval/approvalaccident",
+  // 伤病诊断
+  approvaldiagnose: "/seconduwall/secondapproval/approvaldiagnose",
+  // 投保前异常情况
+  approvalabnormal: "/seconduwall/secondapproval/approvalabnormal",
+  // 二核内容
+  secondabnormal: "/seconduwall/secondapproval/secondabnormal",
+  // 审批+校验
+  confirmsss: "/seconduwall/secondapproval/confirm",
+  checkoutaudit: "/seconduwall/secondapproval/checkoutaudit",
+  // ---------------------二核审批End-------------------
+  // ---------------------二核回复Start-----------------
+  // 保单信息
+  waitreply: "/seconduwall/secondaduit/waitreply",
+  // 事故经过
+  accidentaduit: "/seconduwall/secondaduit/accidentaduit",
+  // 伤病诊断
+  diagnoseaduit: "/seconduwall/secondaduit/diagnoseaduit",
+  // 异常情况
+  abnormaladuit: "/seconduwall/secondaduit/abnormaladuit",
+  // 二核内容
+  secondaduit: "/seconduwall/secondaduit/secondaduit",
+  // 理赔意见
+  claimopinion: "/seconduwall/secondaduit/claimopinion",
+  // 历史核保意见
+  uwopinion: "/seconduwall/secondaduit/uwopinion",
+  // 核保决定
+  queryuwopinion: "/seconduwall/secondaduit/queryuwopinion",
+  // 确认提交
+  confirmsubmit: "/seconduwall/secondaduit/confirmsubmit",
+  // 核保决定保存
+  saveaduit: "/seconduwall/secondaduit/saveaduit",
+  // 保存校验
+  checkoutreply: "/seconduwall/secondaduit/checkoutreply",
+  // ---------------------二核回复End------------------
+  // ---------------------二核处理Start----------------
+  // 保单信息查询
+  policypending: "/seconduwall/pending/policypending",
+  // 事故经过、伤病诊断、异常情况、二核内容、理赔意见、核保意见 ==>同二核回复
+  // 添加按钮
+  createClaimSuggest: "/seconduwall/pending/createclaimsuggest",
+  // 删除按钮
+  deleteClaimSuggest: "/seconduwall/pending/deleteclaimsuggest",
+  // 返回核保按钮
+  returnUnderwrite: "/seconduwall/pending/returnunderwrite",
+  // 返回核保校验
+  verifyreturnunderwriting: "/seconduwall/pending/verifyreturnunderwriting",
+  // 接受按钮
+  acceptConclusion: "/seconduwall/pending/acceptconclusion",
+  // ---------------------二核处理End------------------
+  // ---------------------二核查看Start----------------
+  // 二核列表
+  querySecond: "/seconduwall/querySecondUWall/querySecond",
+  // 核保列表
+  queryContUW: "/seconduwall/querySecondUWall/queryContUW",
+  // ---------------------二核查看End------------------
+  // =====================二次核保End==================
+  //  ===================回退管理================
+  // 可选赔案
+  queryWaitCaseBackInfo: "/audit/queryWaitCaseBackInfo",
+  // 回退队列
+  queryCaseBackInfo: "/audit/queryCaseBackInfo",
+  // 回退处理页面初始化
+  initCaseBack: "/audit/initCaseBack",
+  // 保存
+  saveCaseBack: "/audit/saveCaseBack",
+  // 暂缴费核销
+  dealTempFee: "/audit/dealTempFee",
+  // 完成
+  confirmCaseBack: "/audit/confirmCaseBack",
+  // 待回销应收信息
+  queryLjspayInfo: "/audit/queryLjspayInfo",
+  // ===================回退管理End================
+  // ===================保单挂起================
+  // 保单挂起查询
+  queryHangupInfo: "/report/policy/queryHangupInfo",
+  // 保单挂起修改
+  modifyHangupInfo: "/report/policy/modifyHangupInfo",
+  // ===================产品累加器配置================
+  // 产品查询
+  getLmRisk: "/comprehensive/accumulator/getLmRisk",
+  // 产品更改
+  updateLmRisk: "/comprehensive/accumulator/updateLmRisk",
+  // 上传险种
+  riskUpLoad: "/comprehensive/accumulator/riskUpLoad",
+  // 已有责任查询
+  selectLmDuty: "/comprehensive/accumulator/selectLmDuty",
+  // 未有责任查询
+  selectLmDutyUn: "/comprehensive/accumulator/selectLmDutyUn",
+  // 已有责任移除
+  deleteLmRiskDuty: "/comprehensive/accumulator/deleteLmRiskDuty",
+  // 未有责任添加
+  addLmDutyAndRela: "/comprehensive/accumulator/addLmDutyAndRela",
+  // 责任新增并与产品关联
+  insertLmDuty: "/comprehensive/accumulator/insertLmDuty",
+
+  // 累加器配置
+  // 已有责任给付赔付项
+  productAttributenQuery: "/comprehensive/accumulator/productAttributenQuery",
+  // 新增责任给付赔付项
+  insertProductAttribute: "/comprehensive/accumulator/insertProductAttribute",
+  // 未有责任查询
+  productAttributenQueryUn:
+    "/comprehensive/accumulator/productAttributenQueryUn",
+  // 未有责任添加
+  addProductAttribute: "/comprehensive/accumulator/addProductAttribute",
+  // 系统输出算法
+  selectLmcalmode: "/comprehensive/accumulator/selectLmcalmode",
+  // 修改责任给付赔付项
+  updateProductAttribute: "/comprehensive/accumulator/updateProductAttribute",
+  // 删除责任给付赔付项
+  deleteProductAttribute: "/comprehensive/accumulator/deleteProductAttribute",
+  // 删除累加器
+  deleteCalculate: "/comprehensive/accumulator/deleteCalculate",
+  // 产品已定义的累加器
+  calculateQuery: "/comprehensive/accumulator/calculateQuery",
+  // 未定义的累加器
+  calculateQueryUn: "/comprehensive/accumulator/calculateQueryUn",
+  // 未定义累加器添加
+  addCalculate: "/comprehensive/accumulator/addCalculate",
+  // 新增累加器
+  insertCalculate: "/comprehensive/accumulator/insertCalculate",
+  // 修改累加器
+  updateCalculate: "/comprehensive/accumulator/updateCalculate",
+  // 产品赔付项详细
+  productAttributeInfo: "/comprehensive/accumulator/productAttributeInfo",
+  // 累加器详细
+  calculateInfo: "/comprehensive/accumulator/calculateInfo",
+
+  // ===================产品累加器配置end================
+  // 审核-保单计算信息
+  queryClaimPolicyInfo: "/app/audit/queryClaimPolicyInfo",
+  // 审核-保项计算信息
+  queryClaimDetailInfo: "/app/audit/queryClaimDetailInfo",
+  // 审核-二核列表
+  queryClaimCuwBatch: "/app/audit/queryClaimCuwBatch",
+  // 审核-提取豁免信息
+  queryExemptInfo: "/app/audit/queryExemptInfo",
+  // 审核-合同处理-保单结算结果
+  queryPolBalanceInfo: "/app/audit/queryPolBalanceInfo",
+  // 审核-合同处理-赔案未涉及合同
+  queryNoContClaimInfo: "/app/audit/queryNoContClaimInfo",
+  // 审核-合同处理-赔案涉及的合同
+  queryHasContClaimInfo: "/app/audit/queryHasContClaimInfo",
+  // 审核-合同处理-赔案涉及的险种
+  queryPolsInfo: "/app/audit/queryPolsInfo",
+  // 审核-合同处理-合同终止信息
+  queryTerminationContInfo: "/app/audit/queryTerminationContInfo",
+  // 审核-合同处理-解除合同结果计算
+  queryTerminationContResultInfo: "/app/audit/queryTerminationContResultInfo",
+  // 受益人改变被保险人
+  queryChangeBnf: "/app/audit/queryChangeBnf",
+
+  // 审核-案件复制
+  caseCopy: "app/dispose/caseCopy",
+  // 审核-赔案保单信息查询
+  queryClaimCont: "app/audit/queryClaimCont",
+  // 审核-理赔受益人信息
+  queryClaimBnf: "app/audit/queryClaimBnf",
+  saveBnf: "app/dispose/saveBnf",
+  deleteBnf: "app/dispose/deleteBnf",
+  // 理算
+  adjustment: "/matchdutypay/match/DutyPay",
+  //客户标识管理
+  //客户标识查询
+  personQuery: "/comprehensive/person/personQuery",
+  getpath: "/comprehensive/riskcode/getpath",
+  //批量下载
+  down: "/comprehensive/batch/down",
+  //批量导入
+  import: "/comprehensive/batch/upLoad",
+  //配置管理
+  //绿色通道配置
+  //查询
+  queryGreenChannel: "/comprehensive/configure/queryGreenChannel",
+  //增加
+  saveGreenChannel: "/comprehensive/configure/saveGreenChannel",
+  //修改状态
+  updateGreenChannel: "/comprehensive/configure/updateGreenChannel",
+  //删除
+  deleteGreenChannel: "/comprehensive/configure/deleteGreenChannel",
+  //费用名称管理
+  //费用名称查询
+  feenamelist: "/comprehensive/feenamemanager/feenamelist",
+  //费用名称新增
+  feedetailinsert: "/comprehensive/feenamemanager/feedetailinsert",
+  //费用名称列表点击
+  querylisttomenu: "/comprehensive/feenamemanager/querylisttomenu",
+  //费用名称修改
+  feedetailupdate: "/comprehensive/feenamemanager/feedetailupdate",
+  //费用名称删除
+  feenamedelete: "/comprehensive/feenamemanager/feenamedelete",
+  //费用名称批量导入
+  bulkimport: "/comprehensive/feenamemanager/bulkimport",
+  //对公账户管理
+  //对公账户查询
+  compAccountQuery: "/comprehensive/accountManage/compAccountQuery",
+  //对公账户新增
+  compAccountInsert: "/comprehensive/accountManage/compAccountInsert",
+  //对公账户列表点击
+  compAccountInfo: "/comprehensive/accountManage/compAccountInfo",
+  //对公账户修改
+  compAccountUpdate: "/comprehensive/accountManage/compAccountUpdate",
+  //对公账户删除
+  compAccountDelete: "/comprehensive/accountManage/compAccountDelete",
+
+  //医院配置
+  //查询
+  getHospitalInfos: "/comprehensive/hospital/getHospitalInfos",
+  //新增
+  insertHospitalInfo: "/comprehensive/hospital/insertHospitalInfo",
+  //更改
+  updateHospitalInfo: "/comprehensive/hospital/updateHospitalInfo",
+  //医院配置详细
+  getHospitalInfo: "/comprehensive/hospital/getHospitalInfo",
+  //删除
+  deleteHospitalInfo: "/comprehensive/hospital/deleteHospitalInfo",
+
+  //对公受益人分配
+  //查询对公受益人
+  queryGroupBnf: "/group/groupQuery/queryGroupBnf",
+  //账户名称下拉模糊
+  fuzzyQueryAccount: "/group/groupQuery/fuzzyQueryAccount",
+  //保存受益人
+  saveGroupBnf: "/group/groupDispose/saveGroupBnf",
+  // 立案下浮动框展示
+  queryRegisterRelation: '/group/groupQuery/queryRegisterRelation',
+  // 查询tranno
+  queryTranNo: '/group/groupQuery/queryTranNo',
+
+  //疾病管理
+  //查询
+  diagquery: "/comprehensive/diag/diagquery",
+  //新增
+  insertDiag: "/comprehensive/diag/insertDiag",
+  //修改
+  updatediag: "/comprehensive/diag/updatediag",
+  //点击
+  listtomenu: "/comprehensive/diag/listtomenu",
+  //删除
+  deletediag: "/comprehensive/diag/deletediag",
+
+  //报表管理
+  //个险理赔月报表
+  monReportForm: "/reportform/claimReport/monReportForm",
+  //总表
+  totalReportForm: "/reportform/claimReport/totalReportForm",
+
+  // ----------------获取枚举值的接口-------------------
+  getCodeList: "/queryservice/changsheng/common/ldcode",
+  getHospital: "/queryservice/changsheng/common/ldhospital",
+  ldaccresult: "/queryservice/changsheng/common/ldaccresult",
+  occupation: "/queryservice/changsheng/common/occupation",
+  getWork: "/queryservice/changsheng/common/ldOccupation",
+  lldiagcode: "/queryservice/changsheng/common/lldiagcode",
+  //骨折代码
+  ldfracture: "/queryservice/changsheng/common/ldfracture",
+  // 重疾代码
+  ldcritical: "/queryservice/changsheng/common/ldcritical",
+  // 获取费用项名称、扣费项名称
+  llfeeitem: "/queryservice/changsheng/common/llfeeitem",
+  deductiontype: "/queryservice/changsheng/common/deductiontype",
+  // 获取保单的下的信息
+  getPolicyDetail: "/queryservice/changsheng/common/lcpol",
+  // 调查管理
+  inqInfoWorkQuery: "/investigation/claim/investigation/inqInfoWorkQuery",
+  inqAuditInput: "/investigation/claim/investigation/inqAuditInput",
+  inqauditquery: "/investigation/claim/investigation/inqauditquery",
+
+  // 调查审批校验
+  WorkQueryInqAuditCheck: "/investigation/claim/investigation/inqAuditCheck",
+
+  // 获取医院
+  getCity: "/registers/register/queryaddress",
+  //立案-明细录入
+  savecfee: "registers/medicine/savecfee",
+  // 扣费录入
+  savecpay: "registers/medicine/savecpay",
+  // 医疗单证录入
+  submitcfee: "registers/medicine/commonmedicine",
+  // 医疗单证删除
+  deletefeemain: "registers/medicine/deletefeemain",
+  // 医疗单证查询
+  getcfee: "registers/medicine/querycommonmedicine",
+  // 医疗明细查询
+  getcfeeDetail: "registers/medicine/querycpay",
+  // 删除明细
+  medicinecheckdelete: "registers/medicine/medicinecheckdelete",
+
+  // 扣费明细查询
+
+  // 查看明细
+  // /registers/medicine/querycpay
+  getcpayDetail: "registers/medicine/querycpay",
+  postAudit: "audit/saveAudit",
+  getAuditor: "audit/queryAuditUsers",
+  evenInfor: "app/audit/queryEventInfo",
+  // 获取事件信息
+  lossCase: "app/audit/queryRelateClaim",
+  affirm: "app/dispose/sameAffirmation",
+  // 认定保存
+  // 获取结论
+  getMsg: "audit/queryAudit",
+  // 获取审批人的接口
+  // 通过省去获取市
+  // 通过市去获取区
+  // 通过区去获取县
+  // 获取授权总行
+  tBank: "/queryservice/changsheng/common/tbank",
+  queryBank: "/queryservice/changsheng/common/queryBank",
+  queryBankLocation: "/queryservice/changsheng/common/queryBankLocation",
+  // 银行支行查询
+  queryBankBranch: "/queryservice/changsheng/common/queryBankBranch",
+
+  // 授权总行所在地区
+  queryStand: "/queryservice/changsheng/common/queryStand",
+  // 获取授权分行
+  queryTbanklocations: "/queryservice/changsheng/common/queryTbanklocations",
+  auditSure: "audit/auditConfirm",
+
+  // 获取伤残代码，等级
+  getDisability: "/queryservice/changsheng/common/disabilitycode",
+  accSure: "/dispose/sameAffirmation", // 统一事故认定
+  // 获取同一立案号下的所有编号
+  getDeffNum: "registers/medicine/querymainfeeno",
+  // 诊断代码
+  zhengduanCode: "/queryservice/changsheng/common/diagcode",
+
+  // 立案机构
+  mngComQuery: "/comprehensive/claimsQuery/mngComQuery",
+  // 赔案列表
+  queryClaimsInfo: "/comprehensive/claimsQuery/queryClaimsInfo",
+  // 菜单列表
+  menuGrpInfoQuery: "/manage/menu/menuGrpInfoQuery",
+  // 菜单组新增
+  menuGrpInfoInsert: "/manage/menu/menuGrpInfoInsert",
+  // 菜单组删除
+  menuGrpInfoDelete: "/manage/menu/menuGrpInfoDelete",
+  // 菜单配置
+  menuInit: "/manage/menuConfig/menuInit",
+  // 菜单操作员下拉框
+  operatorInfoQuery: "/manage/menu/operatorInfoQuery",
+  // 菜单配置确定
+  menuSave: "/manage/menuConfig/menuSave",
+  // 数据同步接口
+  doDataSync: "/data/ds/doDataSync",
+  // 角色权限下拉框
+  roleQuery: "/manage/userManage/roleQuery",
+  // 角色已拥有权限
+  menuGrpQuery: "/manage/menugrp/menuGrpQuery",
+  // 角色未拥有权限
+  menuNoGrpQuery: "/manage/menugrp/menuNoGrpQuery",
+  // 未拥有权限新增
+  menuGrpInsert: "/manage/menugrp/menuGrpInsert",
+  // 理赔权限维护-新增
+  rolePopedomInsert: "/manage/popedomConfig/rolePopedomInsert",
+  // 理赔权限维护-修改
+  rolePopedomUpdate: "/manage/popedomConfig/rolePopedomUpdate",
+  // 理赔权限维护-删除
+  rolePopedomDelete: "/manage/popedomConfig/rolePopedomDelete",
+  // 重置密码
+  repw: "/user/repw",
+  // 管理机构下拉框
+  comGradeQuery: "/manage/userManage/comGradeQuery",
+  // 上级机构下拉框
+  upUserList: "/manage/userManage/upUserList",
+  // 角色权限
+  rolePopedomQuery: "/manage/popedomConfig/rolePopedomQuery",
+  // 理赔用户查询
+  userList: "/manage/userManage/userList",
+  // 理赔用户权限增加
+  insertUser: "/manage/userManagement/insertUser",
+  // 理赔用户权限修改
+  updateUser: "/manage/userManagement/updateUser",
+  // 按钮
+  queryAuth: "/audit/queryAuth",
+  // 菜单栏
+  memus: "/user/login/memus",
+  // 任务重新分配 赔案列表
+  claimlist: "/taskreassignment/taskreassignment/claimlist",
+  // 任务重新分配 用户列表
+  userlist: "/taskreassignment/taskreassignment/userlist",
+  // 用户 点击一条
+  userQuery: "/manage/userManagement/userQuery",
+  // 任务重新分配 指定确认
+  appointoperator: "/taskreassignment/taskreassignment/appointoperator",
+  // 影像是否归档-校验
+  checkIsexitImageInfo:
+    "/imagedeal/image/imageget/queryimageJpg/checkIsexitImageInfo",
+  // 影像归档
+  imageInfoFileToStstem:
+    "/imagedeal/image/imageget/queryimageJpg/imageInfoFileToStstem",
+  // 北京录入明细增加
+  savebmpay: "/registers/medicine/savebmpay",
+  // 北京主表保存
+  beijngmedicine: "/registers/medicine/beijngmedicine",
+  // 北京医疗单证主表查看
+  querybeiingmedicine: "/registers/medicine/querybeiingmedicine",
+  // 北京医疗单证明细费用查看
+  querybpay: "/registers/medicine/querybpay",
+  // 北京医疗单证明细诊断查看
+  queryDiag: "/registers/medicine/queryDiag",
+  // 北京单证主表删除
+  deletebm: "/registers/medicine/deletebm",
+  // 工作流管理查询+起点终止
+  queryProcessTrans: "/workflow/workflow/queryProcessTrans",
+  // 工作流起点
+  queryStart: "/workflow/workflow/queryStart",
+  // 工作流起点\终止
+  queryStartAndEnd: "/workflow/workflow/queryStartAndEnd",
+  // 新增工作流
+  createProcessTrans: "/workflow/workflow/createProcessTrans",
+  // 修改工作流
+  updateProcessTrans: "/workflow/workflow/updateProcessTrans",
+  // 删除工作流
+  deleteProcessTrans: "/workflow/workflow/deleteProcessTrans",
+
+  // =============== 合同处理Start===============
+  // 赔案未涉及合同信息查询
+  policyNoClaimQuery: "/contdeal/contdeal/policyNoClaimQuery",
+  // 赔案涉及的保单信息查询
+  policyClaimQuery: "/contdeal/contdeal/policyClaimQuery",
+  // 保单清算结果
+  policyTerminateClaimQuery: "/contdeal/contdeal/policyTerminateClaimQuery",
+  // 新增调整原因
+  saveReason: "/contdeal/contmodify/saveReason",
+  // 历史调整原因
+  policyCalculateClaimQuery: "/contdeal/contdeal/policyCalculateClaimQuery",
+  // 重置清算结果按钮
+  remakeResult: "/contdeal/contmodify/remakeResult",
+  // 点击【保存并计算】按钮
+  saveAndCal: "/contdeal/contmodify/saveAndCal",
+  // 点击【合同状态自动处理】按钮
+  policyStateAutoDeal: "/contdeal/contdeal/policyStateAutoDeal",
+  // 合同处理是否首次校验
+  policyStateAutoCheck: "/contdeal/contdeal/policyStateAutoCheck",
+  // 确定按钮
+  confirm: "/contdeal/contmodify/confirm",
+  // 受益人分配按钮控制
+  buttonCheck: "/contdeal/contdeal/buttonCheck",
+  // 综合查询合同处理按钮控制
+  queryButtonCheck: "/contdeal/contdeal/queryButtonCheck",
+  // 审核页面合同处理按钮控制
+  contDealButton: "/contdeal/contdeal/contDealButton",
+  // =============== 合同处理 End ===============
+  // ==========支付管理===========
+  // 支付查询
+  paymentMangerQuery: "/payment/claim/paymentQuery/paymentMangerQuery",
+  // 发起支付
+  paymentMangerSend: "/payment/claim/payment/paymentSend",
+
+  // 险种赔付渠道
+  // casenum:'/firstpage/firstpage/casenum',
+  // top5
+  toppay: "/firstpage/firstpage/toppay",
+  //各渠道赔付件数及占比
+  numbychannel: "/firstpage/firstpage/numbychannel",
+  //按渠道赔付金额及占比
+  paybychannel: "/firstpage/firstpage/paybychannel",
+  //分公司赔付件数及占比
+  casenum: "/firstpage/firstpage/casenum",
+  //各分公司赔付金额及占比
+  casepay: "/firstpage/firstpage/casepay",
+  //各险种赔付件数及占比（
+  numbyrisktype: "/firstpage/firstpage/numbyrisktype",
+  //各险种赔付金额及占比
+  paybyrisktype: "/firstpage/firstpage/paybyriskcode",
+  //处理件数，支付时效，申请支付时效，出险支付时效
+  paynum: "/firstpage/firstpage/paynum",
+  //区域图
+  areanum: "/firstpage/firstpage/areanum",
+
+  // ================报表管理=======================
+  // 总表
+  totalReportFormGet: "/reportform/claim/totalReportForm/totalReportFormGet",
+  // 指标库
+  targeReportFormGet: "/reportform/claim/targeReportForm/targeReportFormGet",
+  // 月表
+  monReportFormGet: "/reportform/claim/monReportForm/monReportFormGet",
+  // 回访表
+  visitReportFormGet: "/reportform/claim/visitReportForm/visitReportFormGet",
+  // 枚举值
+  pageQuery: "/reportform/claim/totalReportForm/pageQuery",
+  // 险种接口
+  queryRiskCode: "reportform/reportForm/queryRiskCode",
+
+
+  // 个险报表
+  generateActuarialReportForm: "/reportform/reportForm/generateActuarialReportForm",
+  // 理赔综合服务
+  generateComprehensiveReportForm: "/reportform/reportForm/generateComprehensiveReportForm",
+  // 理赔综合服务 明细
+  generateComprehensiveDetailReportForm: "/reportform/reportForm/generateComprehensiveDetailReportForm",
+  // 个险产品赔付率
+  generateRiskPayReportForm: "/reportform/reportForm/generateRiskPayReportForm",
+  // 公司kpi
+  generateClaimKpiReportForm: "/reportform/reportForm/generateClaimKpiReportForm",
+  // 公司kpi 营销服务部
+  generateMarketingKpiReportForm: "/reportform/reportForm/generateMarketingKpiReportForm",
+
+  // ========报案接口==========
+  // 报案工作池查询
+  reportList: "/report/dataInReport/reportList",
+  // 报案详情查询
+  reportInformation: "/report/dataInReport/reportInformation",
+  // 报案确认
+  reportConfirm: "/report/dataInReport/reportConfirm",
+  checkConfirm: "/report/dataInReport/checkConfirm",
+  // 理赔咨询辅助回复
+  consultationChange: "/report/dataInReport/consultationChange",
+  // =============立案领款人改变与被保人关系========
+  queryPayeeInfo: "/group/groupQuery/queryPayeeInfo",
+  // 立案领款人校验
+  checkPayeeInfo: "/group/groupDispose/checkPayeeInfo",
+  // 立案保存后调用
+  noFiling: "/registers/register/noFiling",
+
+
+};

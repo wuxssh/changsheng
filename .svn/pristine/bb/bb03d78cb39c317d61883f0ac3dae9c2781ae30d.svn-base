@@ -1,0 +1,1236 @@
+<template>
+  <div class="home">
+    <el-row>
+      <el-col :span="12">
+        <div class="grid-content bg-purple">
+          <el-tabs
+            class="isTitle"
+            id="isTitle"
+            v-model="activeName"
+            type="card"
+            @tab-click="handleClick"
+          >
+            <div :style="style1" :class="isbox ? 'box' : ''"></div>
+            <el-tab-pane label="医疗险" name="first">
+              <div style="padding:15px 0 10px 15px">
+                <el-date-picker
+                  v-model="startdate"
+                  type="date"
+                  placeholder="开始日期"
+                  @change="findEe('medical')"
+                  value-format="yyyy-MM-dd"
+                ></el-date-picker>
+                <el-date-picker
+                  v-model="enddate"
+                  type="date"
+                  placeholder="结束日期"
+                  @change="findEe('medical')"
+                  value-format="yyyy-MM-dd"
+                ></el-date-picker>
+              </div>
+              <div id="medical"></div>
+              <div id="medical1"></div>
+            </el-tab-pane>
+            <el-tab-pane label="寿 险" name="second">
+              <div style="padding:15px 0 10px 15px">
+                <el-date-picker
+                  v-model="lifedate.startdate"
+                  type="date"
+                  placeholder="开始日期"
+                  @change="findEe('life')"
+                  value-format="yyyy-MM-dd"
+                ></el-date-picker>
+                <el-date-picker
+                  v-model="lifedate.enddate"
+                  type="date"
+                  placeholder="结束日期"
+                  @change="findEe('life')"
+                  value-format="yyyy-MM-dd"
+                ></el-date-picker>
+              </div>
+              <div id="life"></div>
+              <div id="life1"></div>
+            </el-tab-pane>
+            <el-tab-pane label="重疾险" name="third">
+              <div style="padding:15px 0 10px 15px">
+                <el-date-picker
+                  v-model="illnessdate.startdate"
+                  type="date"
+                  placeholder="开始日期"
+                  @change="findEe('illness')"
+                  value-format="yyyy-MM-dd"
+                ></el-date-picker>
+                <el-date-picker
+                  v-model="illnessdate.enddate"
+                  type="date"
+                  placeholder="结束日期"
+                  @change="findEe('illness')"
+                  value-format="yyyy-MM-dd"
+                ></el-date-picker>
+              </div>
+              <div id="illness"></div>
+              <div id="illness1"></div>
+            </el-tab-pane>
+            <el-tab-pane label="意外险" name="fourth">
+              <div style="padding:15px 0 10px 15px">
+                <el-date-picker
+                  v-model="accidentdate.startdate"
+                  type="date"
+                  placeholder="开始日期"
+                  @change="findEe('accident')"
+                  value-format="yyyy-MM-dd"
+                ></el-date-picker>
+                <el-date-picker
+                  v-model="accidentdate.enddate"
+                  type="date"
+                  placeholder="结束日期"
+                  @change="findEe('accident')"
+                  value-format="yyyy-MM-dd"
+                ></el-date-picker>
+              </div>
+              <div id="accident"></div>
+              <div id="accident1"></div>
+            </el-tab-pane>
+            <el-tab-pane label="全 部" name="fifth">
+              <div style="padding:15px 0 10px 15px">
+                <el-date-picker
+                  v-model="accidentdate.startdate"
+                  type="date"
+                  placeholder="开始日期"
+                  @change="findEe('all')"
+                  value-format="yyyy-MM-dd"
+                ></el-date-picker>
+                <el-date-picker
+                  v-model="accidentdate.enddate"
+                  type="date"
+                  placeholder="结束日期"
+                  @change="findEe('all')"
+                  value-format="yyyy-MM-dd"
+                ></el-date-picker>
+              </div>
+              <div id="all"></div>
+              <div id="all1"></div>
+            </el-tab-pane>
+          </el-tabs>
+        </div>
+      </el-col>
+      <el-col :span="12">
+        <div class="grid-content">
+          <MapFar />
+        </div>
+      </el-col>
+    </el-row>
+    <div class="charts-all">
+      <div class="charts-1">
+        <div>
+          <div class="charts-1-1" style>
+            <el-date-picker
+              type="month"
+              placeholder="开始日期"
+              style="margin-left: 10px"
+              v-model="top5.startdate"
+              @change="top5changedate"
+              :picker-options="pickerOptions0"
+            ></el-date-picker>
+            <el-date-picker
+              type="month"
+              placeholder="结束日期"
+              style="margin-left: 10px"
+              v-model="top5.enddate"
+              @change="top5changedate"
+              :picker-options="pickerOptions0"
+            ></el-date-picker>
+            <div class="span-1" style="margin-right: 10px;display: flex">
+              <div class="img-pro">
+                <img src="../../assets/images/home/1z.png" />
+                <span>{{lineobj.risknamelist?lineobj.risknamelist[0]:''}}</span>
+              </div>
+              <div class="img-pro">
+                <img src="../../assets/images/home/2z.png" />
+                <span>{{lineobj.risknamelist?lineobj.risknamelist[1]:''}}</span>
+              </div>
+              <div class="img-pro">
+                <img src="../../assets/images/home/3z.png" />
+                <span>{{lineobj.risknamelist?lineobj.risknamelist[2]:''}}</span>
+              </div>
+              <div class="img-pro">
+                <img src="../../assets/images/home/4z.png" />
+                <span>{{lineobj.risknamelist?lineobj.risknamelist[3]:''}}</span>
+              </div>
+              <div class="img-pro">
+                <img src="../../assets/images/home/5z.png" />
+                <span>{{lineobj.risknamelist?lineobj.risknamelist[4]:''}}</span>
+              </div>
+            </div>
+          </div>
+          <div id="amountPay"></div>
+        </div>
+        <div>
+          <div class="charts-1-1">
+            <el-date-picker
+              type="date"
+              placeholder="选择日期"
+              v-model="cases.startdate"
+              style="margin-left: 10px"
+              :picker-options="pickerOptions1"
+              :default-value="defaulttimeval()"
+              @change="getpaybyrisktypedata()"
+            ></el-date-picker>
+            <div class="span-1" style="margin-right: 10px;display: flex">
+              <div class="img-pro">
+                <img src="../../assets/images/home/1y.png" />
+                <span>{{caserisklist?caserisklist[0]:''}}</span>
+              </div>
+              <div class="img-pro">
+                <img src="../../assets/images/home/2y.png" />
+                <span>{{caserisklist?caserisklist[1]:''}}</span>
+              </div>
+              <div class="img-pro">
+                <img src="../../assets/images/home/3y.png" />
+                <span>{{caserisklist?caserisklist[2]:''}}</span>
+              </div>
+              <div class="img-pro">
+                <img src="../../assets/images/home/4y.png" />
+                <span>{{caserisklist?caserisklist[3]:''}}</span>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex">
+            <div id="amountPay1"></div>
+            <div id="amountPay2"></div>
+          </div>
+        </div>
+      </div>
+      <div class="charts-2">
+        <div class="charts-2-1">
+          <div class="charts-2-1-1">
+            <div id="channel1" style="top:10px;"></div>
+          </div>
+          <div class="charts-2-1-2">
+            <div class="item">
+              <img src="../../assets/images/home/dealItem.png" />
+              <span class="span-1">处理总件数(件)</span>
+              <span class="span-2 color-change1">{{payandtime.casenum?payandtime.casenum:'0'}}</span>
+            </div>
+            <div class="item">
+              <img src="../../assets/images/home/dealpre.png" />
+              <span class="span-1">理赔获赔率(%)</span>
+              <span
+                class="span-2 color-change2"
+              >{{payandtime.paypercent?(payandtime.paypercent*100).toFixed(2):'0'}}</span>
+            </div>
+            <div class="item">
+              <img src="../../assets/images/home/apply.png" />
+              <span class="span-1">申请支付时效(天)</span>
+              <span
+                class="span-2 color-change3"
+              >{{payandtime.applypercent?(payandtime.applypercent).toFixed(1):'0'}}</span>
+            </div>
+            <div class="item">
+              <img src="../../assets/images/home/pay.png" />
+              <span class="span-1">出险支付时效(天)</span>
+              <span
+                class="span-2 color-change4"
+              >{{payandtime.occpercent?(payandtime.occpercent).toFixed(1):'0'}}</span>
+            </div>
+          </div>
+        </div>
+        <div class="charts-2-2">
+          <div id="channel"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+// import ColumChart from "@/components/charts/ColumChart";
+import MapFar from "../../components/charts/Charts";
+import { drawCharts } from "../../utils/fillcharts";
+import { drawCharts1 } from "../../utils/charts";
+import { channelChart } from "../../utils/charts1";
+import { drawpieCharts } from "../../utils/piecharts";
+import { getmapdata } from "../../utils/mapcharts";
+import { sumDays } from "../../utils/service";
+
+export default {
+  components: {
+    MapFar
+  },
+  data() {
+    return {
+      lineobj: {},
+      activeName: "first",
+      isbox: true,
+      style1: {
+        margin: "0 0 0 15px"
+      },
+      options: [],
+      startdate: "",
+      enddate: "",
+      value: "",
+      value1: "",
+      compy: [],
+      jingdailist: [],
+      yingbaolist: [],
+      gexianlist: [],
+      otherlist: [],
+      dianshanglist: [],
+      top5: {
+        startdate: "",
+        enddate: "",
+        kindcode: ""
+      },
+      cases: {
+        startdate: ""
+      },
+      caserisklist: [],
+      lifedate: {
+        startdate: "",
+        enddate: ""
+      },
+      illnessdate: {
+        startdate: "",
+        enddate: ""
+      },
+      accidentdate: {
+        startdate: "",
+        enddate: ""
+      },
+      alldate: {
+        startdate: "",
+        enddate: ""
+      },
+      mapdata: [],
+      payandtime: {},
+      pickerOptions0: {
+        disabledDate(time) {
+          return time.getTime() > Date.now() - 8.64e7;
+        }
+      },
+      pickerOptions1: {
+        disabledDate(time) {
+          let nowdate = new Date();
+          let syear = nowdate.getFullYear() - 5;
+          let smonth = nowdate.getMonth() + 1;
+          let sday = nowdate.getDate();
+          let stime = syear + "-" + smonth + "-" + sday;
+          let sdate = new Date(stime).getTime();
+          return time.getTime() > sdate - 8.64e7;
+        }
+      },
+      ssd: ["四川", "浙江", "江苏", "山东", "北京", "上海", "河南"]
+    };
+  },
+  created() {
+    this.getcasepaydate("2", "medical1");
+    this.getcasepaydate("2", "medical");
+    // this.getcasenumdate("4", "life");
+    // this.getcasepaydate("4", "life1");
+    // this.getcasenumdate("3", "illness");
+    // this.getcasepaydate("3", "illness1");
+    // this.getcasenumdate("1", "accident");
+    // this.getcasepaydate("1", "accident1");
+    // this.getcasenumdate("5", "all");
+    // this.getcasepaydate("5", "all1");
+    // post(service.casenum, {
+    //   bodys: {
+    //     kindcode: "2",
+    //     startdate: this.startdate,
+    //     enddate: this.enddate
+    //   }
+    // }).then(res => {
+    //   if (res.data.headers.code === "200" && res.data.headers.success) {
+    //     this.compy = res.data.bodys.comlist;
+    //     // this.otherlist = ["100", "111", "222", "444", "34"];
+    //     // // this.otherlist = res.data.bodys.otherlist;
+    //     // this.yingbaolist = res.data.bodys.yingbaolist;
+    //     // this.dianshanglist = res.data.bodys.dianshanglist;
+    //     // this.jingdailist = res.data.bodys.jingdailist;
+    //     // this.gexianlist = res.data.bodys.gexianlist;
+
+    //     this.$nextTick(() => {
+    //       this.drawChart(
+    //         "medical",
+    //         {
+    //           xAxis: res.data.bodys.comlist,
+    //           Approved1: res.data.bodys.resultlist[0],
+    //           Approved2: res.data.bodys.resultlist[1],
+    //           Approved3: res.data.bodys.resultlist[2],
+    //           Approved4: res.data.bodys.resultlist[3],
+    //           Approved5: res.data.bodys.resultlist[4]
+    //         },
+    //         res.data.bodys.channellist
+    //       );
+    //     });
+    //   }
+    // });
+
+    // top5接口
+    post(service.toppay, {
+      bodys: {
+        kindcode: this.top5.kindcode,
+        startdate: this.top5.startdate,
+        enddate: this.top5.enddate
+      }
+    }).then(res => {
+      if (res.data.headers.code === "200" && res.data.headers.success) {
+        this.lineobj = res.data.bodys;
+        this.$nextTick(() => {
+          this.drawChart(
+            "amountPay",
+            {
+              xAxis: this.lineobj.datelist,
+              // xAxis:[],
+              Approved1: this.lineobj.resultlist[0],
+              Approved2: this.lineobj.resultlist[1],
+              Approved3: this.lineobj.resultlist[2],
+              Approved4: this.lineobj.resultlist[3],
+              Approved5: this.lineobj.resultlist[4]
+            },
+            this.lineobj.risknamelist
+          );
+        });
+      }
+    });
+    //各渠道赔付件数及占比
+    post(service.numbychannel, {
+      bodys: { startdate: new Date() }
+    }).then(res => {
+      if (res.data.headers.code === "200" && res.data.headers.success) {
+        this.$nextTick(() => {
+          this.drawChart("channel1", res.data.bodys);
+        });
+      }
+    });
+    //各渠道赔付金额及占比
+    post(service.paybychannel, {
+      bodys: { startdate: new Date() }
+    }).then(res => {
+      if (res.data.headers.code === "200" && res.data.headers.success) {
+        this.$nextTick(() => {
+          this.drawChart("channel", res.data.bodys);
+        });
+      }
+    });
+    //各险种赔付件数及占比（
+    post(service.numbyrisktype, {
+      bodys: {
+        startdate: this.cases.startdate
+          ? this.cases.startdate
+          : new Date().getFullYear() -
+            4 +
+            "-" +
+            (new Date().getMonth() + 1) +
+            "-" +
+            new Date().getDate()
+      }
+    }).then(res => {
+      if (res.data.headers.code === "200" && res.data.headers.success) {
+        this.caserisklist = res.data.bodys.risklist;
+        this.$nextTick(() => {
+          this.drawChart(
+            "amountPay1",
+            {
+              xAxis: res.data.bodys.yearlist,
+              Approved1: res.data.bodys.resultlist[0],
+              Approved2: res.data.bodys.resultlist[1],
+              Approved3: res.data.bodys.resultlist[2],
+              Approved4: res.data.bodys.resultlist[3],
+              Approved5: res.data.bodys.resultlist[4]
+            },
+            this.caserisklist
+          );
+        });
+      }
+    });
+
+    //各险种赔付金额及占比（
+    post(service.paybyrisktype, {
+      bodys: {
+        startdate: this.cases.startdate
+          ? this.cases.startdate
+          : new Date().getFullYear() -
+            4 +
+            "-" +
+            (new Date().getMonth() + 1) +
+            "-" +
+            new Date().getDate()
+      }
+    }).then(res => {
+      if (res.data.headers.code === "200" && res.data.headers.success) {
+        this.$nextTick(() => {
+          this.drawChart(
+            "amountPay2",
+            {
+              xAxis: res.data.bodys.yearlist,
+              Approved1: res.data.bodys.resultlist[0],
+              Approved2: res.data.bodys.resultlist[1],
+              Approved3: res.data.bodys.resultlist[2],
+              Approved4: res.data.bodys.resultlist[3],
+              Approved5: res.data.bodys.resultlist[4]
+            },
+            this.caserisklist
+          );
+        });
+      }
+    });
+    //处理件数，支付时效，申请支付时效，出险支付时效
+    post(service.paynum, { bodys: {} }).then(res => {
+      if (res.data.headers.code === "200") {
+        this.payandtime = res.data.bodys;
+      }
+    });
+  },
+  mounted() {
+    this.$watermark.set(
+      localStorage.getItem("userCode"),
+      localStorage.getItem("userName")
+    );
+    let isWidth = document.defaultView.getComputedStyle(
+      document.getElementById("isTitle")
+    ).width;
+    if (document.getElementById("medical")) {
+      let echart = document.getElementById("medical");
+      echart.style.width = isWidth;
+      this.siteLine = this.$echarts.init(echart);
+      window.addEventListener("resize", this.handleResize, true);
+    }
+    if (document.getElementById("medical1")) {
+      let echart = document.getElementById("medical1");
+      echart.style.width = isWidth;
+      this.siteLine = this.$echarts.init(echart);
+      window.addEventListener("resize", this.handleResize, true);
+    }
+    if (document.getElementById("life")) {
+      let echart = document.getElementById("life");
+      echart.style.width = isWidth;
+      this.siteLine = this.$echarts.init(echart);
+      window.addEventListener("resize", this.handleResize, true);
+    }
+    if (document.getElementById("life1")) {
+      let echart = document.getElementById("life1");
+      echart.style.width = isWidth;
+      this.siteLine = this.$echarts.init(echart);
+      window.addEventListener("resize", this.handleResize, true);
+    }
+    if (document.getElementById("illness")) {
+      let echart = document.getElementById("illness");
+      echart.style.width = isWidth;
+      this.siteLine = this.$echarts.init(echart);
+      window.addEventListener("resize", this.handleResize, true);
+    }
+    if (document.getElementById("illness1")) {
+      let echart = document.getElementById("illness1");
+      echart.style.width = isWidth;
+      this.siteLine = this.$echarts.init(echart);
+      window.addEventListener("resize", this.handleResize, true);
+    }
+    if (document.getElementById("accident")) {
+      let echart = document.getElementById("accident");
+      echart.style.width = isWidth;
+      this.siteLine = this.$echarts.init(echart);
+      window.addEventListener("resize", this.handleResize, true);
+    }
+    if (document.getElementById("accident1")) {
+      let echart = document.getElementById("accident1");
+      echart.style.width = isWidth;
+      this.siteLine = this.$echarts.init(echart);
+      window.addEventListener("resize", this.handleResize, true);
+    }
+    if (document.getElementById("all")) {
+      let echart = document.getElementById("all");
+      echart.style.width = isWidth;
+      this.siteLine = this.$echarts.init(echart);
+      window.addEventListener("resize", this.handleResize, true);
+    }
+    if (document.getElementById("all1")) {
+      let echart = document.getElementById("all1");
+      echart.style.width = isWidth;
+      this.siteLine = this.$echarts.init(echart);
+      window.addEventListener("resize", this.handleResize, true);
+    }
+  },
+  beforeDestroy() {
+    window.removeEventListener("resize", this.handleResize, true);
+  },
+  methods: {
+    getpaybyrisktypedata() {
+      //各险种赔付件数及占比（
+      post(service.numbyrisktype, {
+        bodys: {
+          startdate: this.cases.startdate
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200" && res.data.headers.success) {
+          this.caserisklist = res.data.bodys.risklist;
+          this.$nextTick(() => {
+            this.drawChart(
+              "amountPay1",
+              {
+                xAxis: res.data.bodys.yearlist,
+                Approved1: res.data.bodys.resultlist[0],
+                Approved2: res.data.bodys.resultlist[1],
+                Approved3: res.data.bodys.resultlist[2],
+                Approved4: res.data.bodys.resultlist[3],
+                Approved5: res.data.bodys.resultlist[4]
+              },
+              this.caserisklist
+            );
+          });
+        }
+      });
+      post(service.paybyrisktype, {
+        bodys: {
+          startdate: this.cases.startdate
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200" && res.data.headers.success) {
+          this.$nextTick(() => {
+            this.drawChart(
+              "amountPay2",
+              {
+                xAxis: res.data.bodys.yearlist,
+                Approved1: res.data.bodys.resultlist[0],
+                Approved2: res.data.bodys.resultlist[1],
+                Approved3: res.data.bodys.resultlist[2],
+                Approved4: res.data.bodys.resultlist[3],
+                Approved5: res.data.bodys.resultlist[4]
+              },
+              this.caserisklist
+            );
+          });
+        }
+      });
+    },
+    defaulttimeval() {
+      let nowdate = new Date();
+      let syear = nowdate.getFullYear() - 5;
+      let smonth = nowdate.getMonth() + 1;
+      let sday = nowdate.getDate();
+      let stime = syear + "-" + smonth + "-" + sday;
+      return stime;
+    },
+    getcasenumdate(type, echartstype) {
+      let startdate;
+      let enddate;
+      if (echartstype === "medical" || echartstype === "medical1") {
+        startdate = this.startdate;
+        enddate = this.enddate;
+      } else if (echartstype === "life" || echartstype === "life1") {
+        startdate = this.lifedate.startdate;
+        enddate = this.lifedate.enddate;
+      } else if (echartstype === "illness" || echartstype === "illness1") {
+        startdate = this.illnessdate.startdate;
+        enddate = this.illnessdate.enddate;
+      } else if (echartstype === "accident" || echartstype === "accident1") {
+        startdate = this.accidentdate.startdate;
+        enddate = this.accidentdate.enddate;
+      } else if (echartstype === "all" || echartstype === "all1") {
+        startdate = this.alldate.startdate;
+        enddate = this.alldate.enddate;
+      }
+      post(service.casenum, {
+        bodys: {
+          kindcode: type,
+          startdate: startdate,
+          enddate: enddate
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200" && res.data.headers.success) {
+          this.$nextTick(() => {
+            this.drawChart(
+              echartstype,
+              {
+                xAxis: res.data.bodys.comlist,
+                Approved1: res.data.bodys.resultlist[0],
+                Approved2: res.data.bodys.resultlist[1],
+                Approved3: res.data.bodys.resultlist[2],
+                Approved4: res.data.bodys.resultlist[3],
+                Approved5: res.data.bodys.resultlist[4]
+              },
+              res.data.bodys.channellist
+            );
+          });
+        }
+      });
+    },
+    getcasepaydate(type, echartstype) {
+      let startdate;
+      let enddate;
+      if (echartstype === "medical" || echartstype === "medical1") {
+        startdate = this.startdate;
+        enddate = this.enddate;
+      } else if (echartstype === "life" || echartstype === "life1") {
+        startdate = this.lifedate.startdate;
+        enddate = this.lifedate.enddate;
+      } else if (echartstype === "illness" || echartstype === "illness1") {
+        startdate = this.illnessdate.startdate;
+        enddate = this.illnessdate.enddate;
+      } else if (echartstype === "accident" || echartstype === "accident1") {
+        startdate = this.accidentdate.startdate;
+        enddate = this.accidentdate.enddate;
+      } else if (echartstype === "all" || echartstype === "all1") {
+        startdate = this.alldate.startdate;
+        enddate = this.alldate.enddate;
+      }
+      post(service.casepay, {
+        bodys: {
+          kindcode: type,
+          startdate: startdate,
+          enddate: enddate
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200" && res.data.headers.success) {
+          this.$nextTick(() => {
+            this.drawChart(
+              echartstype,
+              {
+                xAxis: res.data.bodys.comlist,
+                Approved1: res.data.bodys.resultlist[0],
+                Approved2: res.data.bodys.resultlist[1],
+                Approved3: res.data.bodys.resultlist[2],
+                Approved4: res.data.bodys.resultlist[3],
+                Approved5: res.data.bodys.resultlist[4]
+              },
+              res.data.bodys.channellist
+            );
+          });
+        }
+      });
+    },
+    top5changedate() {
+      let ysatrttime;
+      let yendtime;
+      let ystartyear;
+      let yendyear;
+      let ystartmonth;
+      let yendmonth;
+
+      if (this.top5.startdate && this.top5.enddate) {
+        ysatrttime = new Date(this.top5.startdate);
+        yendtime = new Date(this.top5.enddate);
+
+        ystartyear = ysatrttime.getFullYear();
+        yendyear = yendtime.getFullYear();
+
+        ystartmonth = ysatrttime.getMonth() + 1;
+        yendmonth = yendtime.getMonth() + 1;
+      }
+
+      if (this.top5.startdate && this.top5.enddate) {
+        if (ysatrttime > yendtime) {
+          this.$message.error("开始时间不能晚于结束时间");
+        } else if (
+          ystartyear < yendyear &&
+          12 - ystartmonth + 1 + yendmonth > 12
+        ) {
+          this.$message.error("开始时间与结束时间不能相差超过12个月");
+        } else {
+          this.gettop5data();
+        }
+      }
+    },
+    gettop5data() {
+      // top5接口
+      post(service.toppay, {
+        bodys: {
+          kindcode: this.top5.kindcode,
+          startdate: this.top5.startdate,
+          enddate: this.top5.enddate
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200" && res.data.headers.success) {
+          this.lineobj = res.data.bodys;
+
+          this.$nextTick(() => {
+            this.drawChart(
+              "amountPay",
+              {
+                xAxis: this.lineobj.datelist,
+                // xAxis:[],
+                Approved1: this.lineobj.resultlist[0],
+                Approved2: this.lineobj.resultlist[1],
+                Approved3: this.lineobj.resultlist[2],
+                Approved4: this.lineobj.resultlist[3],
+                Approved5: this.lineobj.resultlist[4]
+              },
+              this.lineobj.risknamelist
+            );
+          });
+        }
+      });
+      // });
+    },
+    handleResize() {
+      if (document.getElementById("medical")) {
+        let _this = this;
+        let echart = document.getElementById("medical");
+        echart.style.width = "100%";
+        _this.siteLine.resize();
+      }
+      if (document.getElementById("medical1")) {
+        let _this = this;
+        let echart = document.getElementById("medical1");
+        echart.style.width = "100%";
+        _this.siteLine.resize();
+      }
+      if (document.getElementById("life")) {
+        let _this = this;
+        let echart = document.getElementById("life");
+        echart.style.width = "100%";
+        _this.siteLine.resize();
+      }
+      if (document.getElementById("life1")) {
+        let _this = this;
+        let echart = document.getElementById("life1");
+        echart.style.width = "100%";
+        _this.siteLine.resize();
+      }
+      if (document.getElementById("all1")) {
+        let _this = this;
+        let echart = document.getElementById("all1");
+        echart.style.width = "100%";
+        _this.siteLine.resize();
+      }
+      if (document.getElementById("all1")) {
+        let _this = this;
+        let echart = document.getElementById("all1");
+        echart.style.width = "100%";
+        _this.siteLine.resize();
+      }
+      if (document.getElementById("all1")) {
+        let _this = this;
+        let echart = document.getElementById("all1");
+        echart.style.width = "100%";
+        _this.siteLine.resize();
+      }
+    },
+    handleClick(tab, event) {
+      this.isbox = true;
+      if (tab.index === "0") {
+        this.style1 = "margin: 0 0 0 15px";
+        this.getcasepaydate("2", "medical1");
+        this.getcasepaydate("2", "medical");
+      }
+      if (tab.index === "1") {
+        this.style1 = "margin: 0 0 0 97px";
+        this.getcasenumdate("4", "life");
+        this.getcasepaydate("4", "life1");
+
+        // this.style1="transform: translateX(100%+15px)"
+      }
+      if (tab.index === "2") {
+        this.style1 = "margin: 0 0 0 172px";
+        this.getcasenumdate("3", "illness");
+        this.getcasepaydate("3", "illness1");
+      }
+      if (tab.index === "3") {
+        this.style1 = "margin: 0 0 0 257px";
+        this.getcasenumdate("1", "accident");
+        this.getcasepaydate("1", "accident1");
+      }
+      if (tab.index === "4") {
+        this.style1 = "margin: 0 0 0 337px";
+        this.getcasenumdate("5", "all");
+        this.getcasepaydate("5", "all1");
+      }
+    },
+    drawChart(id, options, ydata) {
+      if (id === "medical") {
+        // 人力资源类
+        if (document.getElementById(id)) {
+          let echart = this.$echarts.init(document.getElementById(id));
+          echart.setOption(drawCharts(options, "medical", ydata));
+        }
+      } else if (id === "medical1") {
+        if (document.getElementById(id)) {
+          let echart = this.$echarts.init(document.getElementById(id));
+          echart.setOption(drawCharts(options, "medical1", ydata));
+        }
+      } else if (id === "life") {
+        if (document.getElementById(id)) {
+          let echart = this.$echarts.init(document.getElementById(id));
+          echart.setOption(drawCharts(options, "life", ydata));
+        }
+      } else if (id === "life1") {
+        if (document.getElementById(id)) {
+          let echart = this.$echarts.init(document.getElementById(id));
+          echart.setOption(drawCharts(options, "life1", ydata));
+        }
+      } else if (id === "illness") {
+        if (document.getElementById(id)) {
+          let echart = this.$echarts.init(document.getElementById(id));
+          echart.setOption(drawCharts(options, "illness", ydata));
+        }
+      } else if (id === "illness1") {
+        if (document.getElementById(id)) {
+          let echart = this.$echarts.init(document.getElementById(id));
+          echart.setOption(drawCharts(options, "illness1", ydata));
+        }
+      } else if (id === "accident") {
+        if (document.getElementById(id)) {
+          let echart = this.$echarts.init(document.getElementById(id));
+          echart.setOption(drawCharts(options, "accident", ydata));
+        }
+      } else if (id === "accident1") {
+        if (document.getElementById(id)) {
+          let echart = this.$echarts.init(document.getElementById(id));
+          echart.setOption(drawCharts(options, "accident1", ydata));
+        }
+      } else if (id === "all") {
+        if (document.getElementById(id)) {
+          let echart = this.$echarts.init(document.getElementById(id));
+          echart.setOption(drawCharts(options, "all", ydata));
+        }
+      } else if (id === "all1") {
+        if (document.getElementById(id)) {
+          let echart = this.$echarts.init(document.getElementById(id));
+          echart.setOption(drawCharts(options, "all1", ydata));
+        }
+      } else if (id === "amountPay") {
+        if (document.getElementById(id)) {
+          let echart = this.$echarts.init(document.getElementById(id));
+          echart.setOption(drawCharts1(options, "amountPay", ydata));
+        }
+      } else if (id === "amountPay1") {
+        if (document.getElementById(id)) {
+          let echart = this.$echarts.init(document.getElementById(id));
+          echart.setOption(drawCharts1(options, "amountPay1", ydata));
+        }
+      } else if (id === "amountPay2") {
+        if (document.getElementById(id)) {
+          let echart = this.$echarts.init(document.getElementById(id));
+          echart.setOption(drawCharts1(options, "amountPay2", ydata));
+        }
+      } else if (id === "channel") {
+        if (document.getElementById(id)) {
+          let echart = this.$echarts.init(document.getElementById(id));
+          echart.setOption(channelChart(options, "channel"));
+        }
+      } else if (id === "channel1") {
+        if (document.getElementById(id)) {
+          let echart = this.$echarts.init(document.getElementById(id));
+          echart.setOption(drawpieCharts(options, "channel1"));
+        }
+      }
+    },
+    findEe(type) {
+      if (type === "medical") {
+        if (this.startdate && this.enddate) {
+          if (
+            new Date(this.startdate).getTime() >
+            new Date(this.enddate).getTime()
+          ) {
+            this.$message.error("开始时间不能晚于结束时间");
+          } else {
+            this.getcasenumdate("01", "medical");
+            this.getcasepaydate("01", "medical1");
+          }
+        }
+      } else if (type === "life") {
+        if (this.lifedate.startdate && this.lifedate.enddate) {
+          if (
+            new Date(this.lifedate.startdate).getTime() >
+            new Date(this.lifedate.enddate).getTime()
+          ) {
+            this.$message.error("开始时间不能晚于结束时间");
+          } else {
+            this.getcasenumdate("02", "life");
+            this.getcasepaydate("02", "life1");
+          }
+        }
+      } else if (type === "illness") {
+        if (this.illnessdate.startdate && this.illnessdate.enddate) {
+          if (
+            new Date(this.illnessdate.startdate).getTime() >
+            new Date(this.illnessdate.enddate).getTime()
+          ) {
+            this.$message.error("开始时间不能晚于结束时间");
+          } else {
+            this.getcasenumdate("03", "illness");
+            this.getcasepaydate("03", "illness1");
+          }
+        }
+      } else if (type === "accident") {
+        if (this.accidentdate.startdate && this.accidentdate.enddate) {
+          if (
+            new Date(this.accidentdate.startdate).getTime() >
+            new Date(this.accidentdate.enddate).getTime()
+          ) {
+            this.$message.error("开始时间不能晚于结束时间");
+          } else {
+            this.getcasenumdate("04", "accident");
+            this.getcasepaydate("04", "accident1");
+          }
+        }
+      } else if (type === "all") {
+        if (this.alldate.startdate && this.alldate.enddate) {
+          if (
+            new Date(this.alldate.startdate).getTime() >
+            new Date(this.alldate.enddate).getTime()
+          ) {
+            this.$message.error("开始时间不能晚于结束时间");
+          } else {
+            this.getcasenumdate("05", "all");
+            this.getcasepaydate("05", "all1");
+          }
+        }
+      }
+    }
+  }
+};
+</script>
+<style scoped lang="less">
+#medical {
+  height: 200px;
+  width: 100%;
+}
+
+#medical1 {
+  height: 200px;
+  width: 100%;
+}
+#life {
+  height: 200px;
+  width: 100%;
+}
+
+#life1 {
+  height: 200px;
+  width: 100%;
+}
+#illness {
+  height: 200px;
+  width: 100%;
+}
+
+#illness1 {
+  height: 200px;
+  width: 100%;
+}
+#accident {
+  height: 200px;
+  width: 100%;
+}
+
+#accident1 {
+  height: 200px;
+  width: 100%;
+}
+#all {
+  height: 200px;
+  width: 100%;
+}
+
+#all1 {
+  height: 200px;
+  width: 100%;
+}
+#mapChart {
+  width: 100%;
+  height: 500px;
+}
+#amountPay {
+  height: 200px;
+  width: 100%;
+  border-bottom: 10px solid #e9eef3 !important;
+  border-right: 1px solid #e9eef3 !important;
+}
+
+#amountPay1 {
+  height: 200px;
+  width: 50%;
+}
+
+#amountPay2 {
+  height: 200px;
+  width: 50%;
+}
+#channel {
+  height: 250px;
+  width: 100%;
+  // margin-bottom: 10px;
+}
+#channel1 {
+  height: 95%;
+  width: 100%;
+}
+
+.home {
+  margin: 15px;
+
+  .img-pro {
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
+
+    img {
+      margin-right: 5px;
+      width: 15px;
+      /* height: 15px; */
+    }
+  }
+
+  .item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    img {
+      width: 40px;
+    }
+
+    .span-1 {
+      font-size: 14px;
+      /* flex-basis: 55%; */
+    }
+
+    .span-2 {
+      font-size: 36px;
+      font-family: DIN Alternate;
+      font-weight: bold;
+
+      text-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16);
+      opacity: 1;
+      margin-right: 10px;
+    }
+    .color-change1 {
+      color: #f64e6f;
+    }
+
+    .color-change2 {
+      color: #fca12f;
+    }
+
+    .color-change3 {
+      color: #0673ff;
+    }
+
+    .color-change4 {
+      color: #5e2aef;
+    }
+  }
+
+  .el-row {
+    margin-bottom: 20px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    &:first-child {
+      margin-top: 20px;
+    }
+  }
+  .bg-purple-light {
+    background: pink;
+  }
+
+  .grid-content {
+    padding-right: 15px;
+    min-height: 480px;
+  }
+
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+
+  .charts-all {
+    display: flex;
+    background-color: #ffffff;
+
+    .charts-1 {
+      flex-basis: 60%;
+      padding-top: 10px;
+      border-right: 10px solid #e9eef3 !important;
+
+      .charts-1-1 {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px !important;
+
+        .span-1 {
+          font-size: 10px;
+        }
+      }
+
+      .charts-1-2 {
+        margin-left: 10px;
+        margin-top: 10px;
+      }
+    }
+
+    .charts-2 {
+      flex-basis: 40%;
+      display: flex;
+      flex-direction: column;
+
+      .charts-2-1 {
+        flex-basis: 60%;
+        display: flex;
+
+        .charts-2-1-1 {
+          flex-basis: 55%;
+        }
+
+        .charts-2-1-2 {
+          flex-basis: 45%;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-around;
+        }
+      }
+
+      .charts-2-2 {
+        flex-basis: 40%;
+      }
+    }
+  }
+}
+</style>
+<style lang="less" scoped>
+.box {
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #0673ff;
+  position: absolute;
+  z-index: 999;
+}
+.isTitle {
+  width: 100% !important;
+}
+</style>
+<style>
+.home .el-select {
+  margin: 15px 10px;
+}
+
+.home .el-tab-pane {
+  background-color: #fff;
+}
+
+.home .el-tabs--card > .el-tabs__header .el-tabs__item.is-active {
+  background-color: #0673ff;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  color: #fff;
+}
+
+.home .el-tabs__header {
+  margin: 0;
+}
+
+.home .el-tabs--card > .el-tabs__header .el-tabs__item {
+  background-color: #fff;
+  color: #999999;
+  border-radius: 4px 4px 0 0;
+}
+.home .el-tabs--card > .el-tabs__header .el-tabs__nav {
+  border: none;
+}
+</style>

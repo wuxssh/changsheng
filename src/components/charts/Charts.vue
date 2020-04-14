@@ -1,32 +1,48 @@
 <template>
-  <div ref="chartDom" style="height: 510px"></div>
+  <div class="isMap" ref="chartDom" style="height: 510px"></div>
 </template>
 <script>
 import echarts from "echarts/lib/echarts";
 import "echarts/extension/bmap/bmap";
-import mapData from "../../utils/mapcharts";
+// import mapData from "../../utils/mapcharts";
 import { MP } from "../../map";
-// import debounce from "lodash/debounce";
-import { addListener, removeListener } from "resize-detector";
+import { post, service } from "../../utils/request.js";
 export default {
   props: {},
   data() {
     return {
-      chart: null
+      chart: null,
+      mapAreaList: {},
+      mapAreaLists: [],
+      chartList: [],
+      ak: "aiM7jMPeUV9uEepWsxr642Plxqgfpvt9"
     };
   },
 
-  created() {},
+  created() {
+    this.getData();
+  },
   mounted() {
-    this.$nextTick(function() {
-      var _this = this;
-      MP(_this.ak).then(BMap => {
-        console.log(_this.ak);
+    //  this.getData();
+    //  setTimeout(() => {
+    //    this.getData();
+    //     this.drawECharts();
+    //   }, 500);
 
-        this.renderChart();
-      });
+    // window.onload = function() {
+    //   resolve(this.ak);
+    // };
+    // this.drawECharts();
+
+    this.$nextTick(() => {
+      // this.drawECharts();
+
+      setTimeout(() => {
+        console.log("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFQ");
+        MP(this.ak);
+        this.drawECharts();
+      }, 1000);
     });
-    this.renderChart();
   },
   beforeDestroy() {
     if (!this.chart) {
@@ -36,11 +52,45 @@ export default {
     this.chart = null;
   },
   methods: {
-    renderChart() {
-      this.chart = echarts.init(this.$refs.chartDom);
-      console.log(this.chart);
+    getData() {
+      post(service.areanum).then(res => {
+        this.chartList = res.data.bodys;
+      });
+      post(service.getAreacode).then(res => {
+        this.mapAreaLists = res.data.bodys;
+        this.mapAreaList = {};
+        this.mapAreaLists.map(item => {
+          item.coordinate = item.coordinate.slice(
+            1,
+            item.coordinate.length - 1
+          );
+          item.coordinate = item.coordinate.split(",");
+          item.coordinate[0] = Number(item.coordinate[0]);
+          item.coordinate[1] = Number(item.coordinate[1]);
+          this.mapAreaList[item.name] = item.coordinate;
+        });
+      });
+      console.log("wwwwwwwwwwwwwwwwwwww1  ");
+    },
+    convertData(data) {
+      var res = [];
+      for (var i = 0; i < data.length; i++) {
+        var geoCoord = this.mapAreaList[data[i].name];
+        if (geoCoord) {
+          res.push({
+            name: data[i].name,
+            value: geoCoord.concat(data[i].value)
+          });
+        }
+      }
+      return res;
+    },
 
-      this.chart.setOption({
+    drawECharts() {
+      this.getData();
+      this.chart = echarts.init(this.$refs.chartDom);
+      var option = {};
+      option = {
         title: {
           text: "",
           sublink: "",
@@ -48,17 +98,14 @@ export default {
         },
         tooltip: {
           trigger: "item",
-          // formatter:function(b,c){
-          //   console.log(b,c)
-          //   return b
-          // }
           formatter: function(params) {
             return params.name + ":" + params.value[2];
           }
         },
         bmap: {
-          center: [104.114129, 37.550339],
-          zoom: 5,
+          center: [115.114129, 35.550339],
+          // center: [114.114129, 37.550339],
+          zoom: 6,
           roam: true,
           mapStyle: {
             styleJson: [
@@ -180,41 +227,23 @@ export default {
         series: [
           {
             name: "",
-            type: "scatter",
-            coordinateSystem: "bmap",
-            data: mapData.convertData(mapData.data),
-            symbolSize: function(val) {
-              return val[2] / 10;
-            },
-            label: {
-              normal: {
-                formatter: "{b}",
-                position: "right",
-                show: false
-              },
-              emphasis: {
-                show: true
-              }
-            },
-            itemStyle: {
-              normal: {
-                color: " #17257D"
-              }
-            }
-          },
-          {
-            name: "",
             type: "effectScatter",
             coordinateSystem: "bmap",
-            data: mapData.convertData(
-              mapData.data
-                .sort(function(a, b) {
-                  return b.value - a.value;
-                })
-                .slice(0, 6)
+            data: this.convertData(
+              this.chartList.sort(function(a, b) {
+                return b.value - a.value;
+              })
             ),
             symbolSize: function(val) {
-              return val[2] / 10;
+              if (val[2] < 50) {
+                return 10;
+              } else if (val[2] < 100) {
+                return 30;
+              } else if (val[2] < 150) {
+                return 55;
+              } else if (val[2] > 200) {
+                return 80;
+              }
             },
             showEffectOn: "render",
             rippleEffect: {
@@ -224,13 +253,13 @@ export default {
             label: {
               normal: {
                 formatter: "{b}",
-                position: "right",
-                show: true
+                position: "right"
+                // show: true
               }
             },
             itemStyle: {
               normal: {
-                color: " #17257D",
+                color: " #0673ff",
                 shadowBlur: 10,
                 shadowColor: "#333"
               }
@@ -238,8 +267,57 @@ export default {
             zlevel: 1
           }
         ]
-      });
+      };
+      // if (option && typeof option === "object") {
+      this.chart.setOption(option, true);
+      // }
+      //       {
+      //   type: "map",
+      //   mapType: "china",
+      //   label: {
+      //     emphasis: {
+      //       show: false
+      //     }
+      //   },
+      //   roam: true,
+      //   zoom: 1,
+      //   itemStyle: {
+      //     normal: {
+      //       borderColor: "#387ba7",
+      //       shadowColor: "rgba(0, 0, 0, 0.5)",
+      //       shadowBlur: 10,
+      //       shadowOffsetX: 10
+      //     },
+      //     emphasis: {
+      //       areaColor: "#b3f3f3"
+      //     }
+      //   },
+      //   data: [
+      //     {
+      //       value: ["123.50", "26.03", "1"]
+      //     },
+      //     {
+      //       value: ["123.0", "25.93", "1"]
+      //     },
+      //     {
+      //       value: ["122.8", "25.73", "1"]
+      //     },
+      //     {
+      //       value: ["121.4", "22.33", "1"]
+      //     },
+      //     {
+      //       value: ["119.55", "23.28", "1"]
+      //     }
+      //   ]
+      // }
     }
   }
 };
 </script>
+<style lang="less" scope>
+.isMap {
+  /deep/.anchorBL {
+    display: none !important;
+  }
+}
+</style>  
