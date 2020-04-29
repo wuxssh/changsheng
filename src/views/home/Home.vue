@@ -2,14 +2,8 @@
   <div class="home">
     <el-row>
       <el-col :span="12">
-        <div class="grid-content bg-purple">
-          <el-tabs
-            class="isTitle"
-            id="isTitle"
-            v-model="activeName"
-            type="card"
-            @tab-click="handleClick"
-          >
+        <div id="isTitle" class="grid-content bg-purple">
+          <el-tabs class="isTitle" v-model="activeName" type="card" @tab-click="handleClick">
             <div :style="style1" :class="isbox ? 'box' : ''"></div>
             <el-tab-pane label="医疗险" name="first">
               <div style="padding:15px 0 10px 15px">
@@ -123,10 +117,11 @@
     <div class="charts-all">
       <div class="charts-1">
         <div>
-          <div class="charts-1-1" style>
+          <div class="charts-1-1">
             <el-date-picker
               type="month"
               placeholder="开始日期"
+              format="yyyy-MM"
               style="margin-left: 10px"
               v-model="top5.startdate"
               @change="top5changedate"
@@ -135,6 +130,7 @@
             <el-date-picker
               type="month"
               placeholder="结束日期"
+              format="yyyy-MM"
               style="margin-left: 10px"
               v-model="top5.enddate"
               @change="top5changedate"
@@ -142,23 +138,29 @@
             ></el-date-picker>
             <div class="span-1" style="margin-right: 10px;display: flex">
               <div class="img-pro">
-                <img src="../../assets/images/home/1z.png" />
+                <!-- <img src="../../assets/images/home/1z.png" /> -->
+                <!-- #CCA36E', BFBDAD  0D6DB2  02A9FF 63E0FF -->
+                <span class="isImg" style="background:#CCA36E;"></span>
                 <span>{{lineobj.risknamelist?lineobj.risknamelist[0]:''}}</span>
               </div>
               <div class="img-pro">
-                <img src="../../assets/images/home/2z.png" />
+                <!-- <img src="../../assets/images/home/2z.png" /> -->
+                <span class="isImg" style="background:#BFBDAD"></span>
                 <span>{{lineobj.risknamelist?lineobj.risknamelist[1]:''}}</span>
               </div>
               <div class="img-pro">
-                <img src="../../assets/images/home/3z.png" />
+                <!-- <img src="../../assets/images/home/3z.png" /> -->
+                <span class="isImg" style="background:#0D6DB2"></span>
                 <span>{{lineobj.risknamelist?lineobj.risknamelist[2]:''}}</span>
               </div>
               <div class="img-pro">
-                <img src="../../assets/images/home/4z.png" />
+                <!-- <img src="../../assets/images/home/4z.png" /> -->
+                <span class="isImg" style="background:#02A9FF"></span>
                 <span>{{lineobj.risknamelist?lineobj.risknamelist[3]:''}}</span>
               </div>
               <div class="img-pro">
-                <img src="../../assets/images/home/5z.png" />
+                <!-- <img src="../../assets/images/home/5z.png" /> -->
+                <span class="isImg" style="background:#63E0FF"></span>
                 <span>{{lineobj.risknamelist?lineobj.risknamelist[4]:''}}</span>
               </div>
             </div>
@@ -168,10 +170,11 @@
         <div>
           <div class="charts-1-1">
             <el-date-picker
-              type="date"
+              type="year"
               placeholder="选择日期"
               v-model="cases.startdate"
               style="margin-left: 10px"
+              format="yyyy"
               :picker-options="pickerOptions1"
               :default-value="defaulttimeval()"
               @change="getpaybyrisktypedata()"
@@ -245,14 +248,13 @@
 <script>
 import axios from "axios";
 import { post, service } from "../../utils/request.js";
-// import ColumChart from "@/components/charts/ColumChart";
 import MapFar from "../../components/charts/Charts";
 import { drawCharts } from "../../utils/fillcharts";
 import { drawCharts1 } from "../../utils/charts";
 import { channelChart } from "../../utils/charts1";
 import { drawpieCharts } from "../../utils/piecharts";
 import { getmapdata } from "../../utils/mapcharts";
-import { sumDays } from "../../utils/service";
+import { ISYMD, numberChange } from "../../utils/common";
 
 export default {
   components: {
@@ -260,6 +262,7 @@ export default {
   },
   data() {
     return {
+      rightStartDate: "",
       lineobj: {},
       activeName: "first",
       isbox: true,
@@ -312,7 +315,7 @@ export default {
       pickerOptions1: {
         disabledDate(time) {
           let nowdate = new Date();
-          let syear = nowdate.getFullYear() - 5;
+          let syear = nowdate.getFullYear() - 4;
           let smonth = nowdate.getMonth() + 1;
           let sday = nowdate.getDate();
           let stime = syear + "-" + smonth + "-" + sday;
@@ -320,7 +323,6 @@ export default {
           return time.getTime() > sdate - 8.64e7;
         }
       },
-      ssd: ["四川", "浙江", "江苏", "山东", "北京", "上海", "河南"]
     };
   },
   created() {
@@ -335,160 +337,16 @@ export default {
     // this.getcasepaydate("1", "accident1");
     // this.getcasenumdate("5", "all");
     // this.getcasepaydate("5", "all1");
-    post(service.casenum, {
-      bodys: {
-        kindcode: "2",
-        startdate: this.startdate,
-        enddate: this.enddate
-      }
-    }).then(res => {
-      if (res.data.headers.code === "200" && res.data.headers.success) {
-        // this.compy = res.data.bodys.comlist;
-        // this.otherlist = ["100", "111", "222", "444", "34"];
-        // // this.otherlist = res.data.bodys.otherlist;
-        // this.yingbaolist = res.data.bodys.yingbaolist;
-        // this.dianshanglist = res.data.bodys.dianshanglist;
-        // this.jingdailist = res.data.bodys.jingdailist;
-        // this.gexianlist = res.data.bodys.gexianlist;
-        this.$nextTick(() => {
-          this.drawChart(
-            "medical",
-            {
-              xAxis: res.data.bodys.comlist,
-              Approved1: res.data.bodys.resultlist[0],
-              Approved2: res.data.bodys.resultlist[1],
-              Approved3: res.data.bodys.resultlist[2],
-              Approved4: res.data.bodys.resultlist[3],
-              Approved5: res.data.bodys.resultlist[4]
-            },
-            res.data.bodys.channellist
-          );
-        });
-      }
-    });
-
-    // top5接口
-    post(service.toppay, {
-      bodys: {
-        kindcode: this.top5.kindcode,
-        startdate: this.top5.startdate,
-        enddate: this.top5.enddate
-      }
-    }).then(res => {
-      if (res.data.headers.code === "200" && res.data.headers.success) {
-        this.lineobj = res.data.bodys;
-        this.$nextTick(() => {
-          this.drawChart(
-            "amountPay",
-            {
-              xAxis: this.lineobj.datelist,
-              // xAxis:[],
-              Approved1: this.lineobj.resultlist[0],
-              Approved2: this.lineobj.resultlist[1],
-              Approved3: this.lineobj.resultlist[2],
-              Approved4: this.lineobj.resultlist[3],
-              Approved5: this.lineobj.resultlist[4]
-            },
-            this.lineobj.risknamelist
-          );
-        });
-      }
-    });
-    //各渠道赔付件数及占比
-    post(service.numbychannel, {
-      bodys: { startdate: new Date() }
-    }).then(res => {
-      if (res.data.headers.code === "200" && res.data.headers.success) {
-        this.$nextTick(() => {
-          this.drawChart("channel1", res.data.bodys);
-        });
-      }
-    });
-    //各渠道赔付金额及占比
-    post(service.paybychannel, {
-      bodys: { startdate: new Date() }
-    }).then(res => {
-      if (res.data.headers.code === "200" && res.data.headers.success) {
-        this.$nextTick(() => {
-          this.drawChart("channel", res.data.bodys);
-        });
-      }
-    });
-    //各险种赔付件数及占比（
-    post(service.numbyrisktype, {
-      bodys: {
-        startdate: this.cases.startdate
-          ? this.cases.startdate
-          : new Date().getFullYear() -
-            4 +
-            "-" +
-            (new Date().getMonth() + 1) +
-            "-" +
-            new Date().getDate()
-      }
-    }).then(res => {
-      if (res.data.headers.code === "200" && res.data.headers.success) {
-        this.caserisklist = res.data.bodys.risklist;
-        this.$nextTick(() => {
-          this.drawChart(
-            "amountPay1",
-            {
-              xAxis: res.data.bodys.yearlist,
-              Approved1: res.data.bodys.resultlist[0],
-              Approved2: res.data.bodys.resultlist[1],
-              Approved3: res.data.bodys.resultlist[2],
-              Approved4: res.data.bodys.resultlist[3],
-              Approved5: res.data.bodys.resultlist[4]
-            },
-            this.caserisklist
-          );
-        });
-      }
-    });
-
-    //各险种赔付金额及占比（
-    post(service.paybyrisktype, {
-      bodys: {
-        startdate: this.cases.startdate
-          ? this.cases.startdate
-          : new Date().getFullYear() -
-            4 +
-            "-" +
-            (new Date().getMonth() + 1) +
-            "-" +
-            new Date().getDate()
-      }
-    }).then(res => {
-      if (res.data.headers.code === "200" && res.data.headers.success) {
-        this.$nextTick(() => {
-          this.drawChart(
-            "amountPay2",
-            {
-              xAxis: res.data.bodys.yearlist,
-              Approved1: res.data.bodys.resultlist[0],
-              Approved2: res.data.bodys.resultlist[1],
-              Approved3: res.data.bodys.resultlist[2],
-              Approved4: res.data.bodys.resultlist[3],
-              Approved5: res.data.bodys.resultlist[4]
-            },
-            this.caserisklist
-          );
-        });
-      }
-    });
-    //处理件数，支付时效，申请支付时效，出险支付时效
-    post(service.paynum, { bodys: {} }).then(res => {
-      if (res.data.headers.code === "200") {
-        this.payandtime = res.data.bodys;
-      }
-    });
+    this.getRightData();  // 右下角按渠道赔付件数/ 金额
+    this.getpaybyrisktypedata(); //正下方 各险种赔付 件数/金额 占比
+    this.gettop5data()  // TOP5
   },
   mounted() {
     this.$watermark.set(
       localStorage.getItem("userCode"),
       localStorage.getItem("userName")
     );
-    let isWidth = document.defaultView.getComputedStyle(
+    const isWidth = document.defaultView.getComputedStyle(
       document.getElementById("isTitle")
     ).width;
     if (document.getElementById("medical")) {
@@ -556,11 +414,51 @@ export default {
     window.removeEventListener("resize", this.handleResize, true);
   },
   methods: {
+    // 右下角按渠道赔付件数/ 金额
+    getRightData() {
+      //各渠道赔付件数及占比
+      post(service.numbychannel, {
+        bodys: {
+          startdate: new Date().getFullYear() + "-01-01"
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200" && res.data.headers.success) {
+          this.$nextTick(() => {
+            this.drawChart("channel1", res.data.bodys);
+          });
+        }
+      });
+      //各渠道赔付金额及占比
+      post(service.paybychannel, {
+        bodys: {
+          startdate: new Date().getFullYear() + "-01-01"
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200" && res.data.headers.success) {
+          this.$nextTick(() => {
+            this.drawChart("channel", res.data.bodys);
+          });
+        }
+      });
+      //处理件数，支付时效，申请支付时效，出险支付时效
+      post(service.paynum, {
+        bodys: {
+          startdate: new Date().getFullYear() + "-01-01"
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.payandtime = res.data.bodys;
+        }
+      });
+    },
+    // 各险种赔付 件数/金额 占比
     getpaybyrisktypedata() {
       //各险种赔付件数及占比（
       post(service.numbyrisktype, {
         bodys: {
           startdate: this.cases.startdate
+            ? ISYMD(this.cases.startdate)
+            : new Date().getFullYear() -4 + "-01-01"
         }
       }).then(res => {
         if (res.data.headers.code === "200" && res.data.headers.success) {
@@ -584,6 +482,8 @@ export default {
       post(service.paybyrisktype, {
         bodys: {
           startdate: this.cases.startdate
+            ? ISYMD(this.cases.startdate)
+            : new Date().getFullYear() -4 + "-01-01"
         }
       }).then(res => {
         if (res.data.headers.code === "200" && res.data.headers.success) {
@@ -612,6 +512,7 @@ export default {
       let stime = syear + "-" + smonth + "-" + sday;
       return stime;
     },
+    // 医疗险等件数
     getcasenumdate(type, echartstype) {
       let startdate;
       let enddate;
@@ -656,6 +557,7 @@ export default {
         }
       });
     },
+    // 医疗险等金额
     getcasepaydate(type, echartstype) {
       let startdate;
       let enddate;
@@ -700,31 +602,35 @@ export default {
         }
       });
     },
+    // TOP5日期校验
     top5changedate() {
       let ysatrttime;
       let yendtime;
-      let ystartyear;
-      let yendyear;
-      let ystartmonth;
-      let yendmonth;
+      // let ystartyear;
+      // let yendyear;
+      // let ystartmonth;
+      // let yendmonth;
 
       if (this.top5.startdate && this.top5.enddate) {
         ysatrttime = new Date(this.top5.startdate);
         yendtime = new Date(this.top5.enddate);
 
-        ystartyear = ysatrttime.getFullYear();
-        yendyear = yendtime.getFullYear();
+        // ystartyear = ysatrttime.getFullYear();
+        // yendyear = yendtime.getFullYear();
 
-        ystartmonth = ysatrttime.getMonth() + 1;
-        yendmonth = yendtime.getMonth() + 1;
+        // ystartmonth = ysatrttime.getMonth() + 1;
+        // yendmonth = yendtime.getMonth() + 1;
       }
-
       if (this.top5.startdate && this.top5.enddate) {
         if (ysatrttime > yendtime) {
           this.$message.error("开始时间不能晚于结束时间");
         } else if (
-          ystartyear < yendyear &&
-          12 - ystartmonth + 1 + yendmonth > 12
+          Math.ceil(
+            (new Date(ISYMD(this.top5.enddate)).getTime() -
+              new Date(ISYMD(this.top5.startdate)).getTime()) /
+              90000000 >
+              365
+          )
         ) {
           this.$message.error("开始时间与结束时间不能相差超过12个月");
         } else {
@@ -732,13 +638,13 @@ export default {
         }
       }
     },
+    // TOP5数据获取
     gettop5data() {
-      // top5接口
       post(service.toppay, {
         bodys: {
           kindcode: this.top5.kindcode,
-          startdate: this.top5.startdate,
-          enddate: this.top5.enddate
+          startdate: this.top5.startdate ? ISYMD(this.top5.startdate) : "",
+          enddate: this.top5.enddate ? ISYMD(this.top5.enddate) : ""
         }
       }).then(res => {
         if (res.data.headers.code === "200" && res.data.headers.success) {
@@ -807,6 +713,7 @@ export default {
         _this.siteLine.resize();
       }
     },
+    // 医疗险等选项卡切换
     handleClick(tab, event) {
       this.isbox = true;
       if (tab.index === "0") {
@@ -914,6 +821,7 @@ export default {
         }
       }
     },
+    // 医疗险等日期校验
     findEe(type) {
       if (type === "medical") {
         if (this.startdate && this.enddate) {
@@ -981,6 +889,9 @@ export default {
 };
 </script>
 <style scoped lang="less">
+.rightdate {
+  margin-top: 10px;
+}
 #medical {
   height: 200px;
   width: 100%;
@@ -1062,7 +973,11 @@ export default {
   .img-pro {
     display: flex;
     align-items: center;
-    margin-right: 10px;
+    .isImg {
+      width: 22px;
+      height: 15px;
+      margin: 0 5px;
+    }
 
     img {
       margin-right: 5px;
@@ -1082,14 +997,12 @@ export default {
 
     .span-1 {
       font-size: 14px;
-      /* flex-basis: 55%; */
     }
 
     .span-2 {
       font-size: 36px;
       font-family: DIN Alternate;
       font-weight: bold;
-
       text-shadow: 0px 3px 6px rgba(0, 0, 0, 0.16);
       opacity: 1;
       margin-right: 10px;

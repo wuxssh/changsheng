@@ -1,0 +1,252 @@
+// import {stringTonum,maxNum} from './service'
+export function channelChart(obj,key) {
+     if(key === 'Approved') {
+         console.log(stringTonum(obj.Approved1))
+         console.log(stringTonum(obj.Approved2))
+         console.log(maxNum(stringTonum(obj.Approved2)))
+         console.log(maxNum(stringTonum(obj.Approved1)))
+         // console.log(obj.Approved2.map(Number))
+         // console.log(Math.max.apply(null, obj.Approved1.map(Number)))
+         var maxint1 = Math.ceil(maxNum(stringTonum(obj.Approved1)) / 10); // 向上取整
+         var maxappreg = maxint1 * 10; // 最终设置的最大值
+         var maxint2 = Math.ceil(maxNum(stringTonum(obj.Approved2)) / 10); // 向上取整
+         var maxactive = maxint2 * 20; // 最终设置的最大值
+     
+         // var maxappreg = maxNum(stringTonum(obj.Approved1)); //注册Y轴值
+         // var maxactive = maxNum(stringTonum(obj.Approved2)) //活跃Y轴值
+     } else if(key === 'Approvedshuttle') {
+         // var maxappreg = stringTonum(obj.Approvedshuttle1).Math(...stringTonum(obj.Approvedshuttle1)); //注册Y轴值
+         // var maxactive = stringTonum(obj.Approvedshuttle2).Math(...stringTonum(obj.Approvedshuttle2)); //活跃Y轴值
+         // var maxappreg = maxNum(stringTonum(obj.Approvedshuttle1)); //注册Y轴值
+         // var maxactive = maxNum(stringTonum(obj.Approvedshuttle2)) //活跃Y轴值
+         // var maxint1 = Math.ceil(maxNum(stringTonum(obj.Approvedshuttle1)) / 10); // 向上取整
+         // var maxappreg = maxint1 * 10; // 最终设置的最大值
+         // var maxint2 = Math.ceil(maxNum(stringTonum(obj.Approvedshuttle2)) / 10); // 向上取整
+         // var maxactive = maxint2 * 10; // 最终设置的最大值
+ 
+         var maxint1 = Math.ceil(maxNum(stringTonum(obj.Approvedshuttle1)) / 10); // 向上取整
+         var maxappreg = maxint1 * 10; // 最终设置的最大值
+         var maxint2 = Math.ceil(maxNum(stringTonum(obj.Approvedshuttle2)) / 10); // 向上取整
+         var maxactive = maxint2 * 20; // 最终设置的最大值
+     }
+     let xdata=[]
+     let ydata=[]
+     if(key==='channel'){
+      xdata=obj.paylist
+      ydata=obj.channellist
+     }
+    console.log('按渠道赔付金额以及占比数据---',xdata,ydata)
+     // console.log(maxappreg)
+     // console.log(maxactive)
+     
+     var interval_left = maxappreg / 5; //左轴间隔
+     var interval_right = maxactive / 5; //右轴间隔
+     
+     var option = {
+         tooltip: {
+             trigger: "axis",
+             axisPointer: {
+               // 坐标轴指示器，坐标轴触发有效
+               type: "shadow" // 默认为直线，可选为：'line' | 'shadow'
+             }
+         },
+         title: {
+             text: '2020年度按渠道赔付金额以及占比',
+             textStyle: {
+               fontWeight: "normal",
+               color: "#000",
+               fontSize: 16
+             }
+           },
+         xAxis: [                            //（可以有多个坐标轴），数组中的对象位置决定了yAxisIndex的值（yAxisIndex会在series中用到）
+             {
+                //  name:"数量",
+                 type: "value",
+                 axisTick: {
+                   show: false
+                 },
+                 axisLine:{
+                     show:false //y轴线消失
+                     },
+                //   min : 0,
+                //  max: 1000,
+                //  splitNumber: 5,
+                //  interval: 200,
+                 axisLabel: {	//x轴字体
+                    
+                   
+                     formatter: function (value, index) { 
+                       return value;
+                   } 
+                 },
+                
+             },
+             {
+                //  name:"百分比",
+                 type: "value",
+                 axisTick: {
+                   show: false
+                 },
+                 axisLine:{
+                     show:false //y轴线消失
+                     },
+                 min : 0,
+                 max: 1,
+                 splitNumber: 5,
+                 interval: 0.2,
+                 splitLine:{
+                   show:false
+                 },
+                 axisLabel: {	//x轴字体
+                     formatter: function (value, index) { 
+                       return value*100+'%';
+                   } 
+                 },
+ 
+                   
+ 
+             }
+         ],
+         yAxis: [        //x轴属性设置
+            {
+                type: "category",
+                data:ydata,
+                axisTick: {
+                  alignWithLabel: true
+                },
+                // min : 0,
+                // max: 1000,
+                // splitNumber: 5,
+                // interval: 200,
+              }
+        ],
+         series: [  
+ 
+ 
+                     //  坐标轴实际数据内容
+             {
+                 type:'bar', 
+                 yAxisIndex: 0,                //数据表现形式（bar为柱形图，line为折线图）
+                 barGap:'0',/*多个并排柱子设置柱子之间的间距*/
+                 // barCategoryGap:'50%',/*多个并排柱子设置柱子之间的间距*/
+                 barWidth: '60%',            //柱形图宽度
+                 itemStyle:{                 //柱子的属性设置
+                     normal:{
+                         color: function(params) {
+               
+                            return {
+                                colorStops: [{
+                                  offset: 0, // 颜色的开始位置
+                                  color: '#F2CA51' // 0% 处的颜色
+                                }, {
+                                  offset: 1, // 颜色的结束位置
+                                  color: '#F8BB2E' // 100% 处的颜色
+                                }]
+                              }
+                          },   //柱子的颜色设置
+                         // barBorderRadius: key==="Approved" ? [3,3,3,3]:[9,9,9,9], //设置柱形图的边框弧度
+                         // label: {
+                         //     show: true,		//开启显示
+                         //     position: 'top',	//在上方显示
+                         //     textStyle: {	    //数值样式
+                         //         color: '#313131',
+                         //         fontSize: 8
+                         //     }
+                         // }
+                     },
+                     
+                 },
+ 
+                 
+                 data: xdata  //该条数据对应一条记录
+             }
+ 
+         ],
+         grid: {             //设置网格属性
+             // left:'10%',     //网格距离容器左侧的距离
+             // right:'10%',       //网格距离容器右侧的距离
+             // borderWidth:1
+         }
+     }
+    //  if(obj.hasOwnProperty('xAxis')){ // x轴的数据
+         
+    //      // option.xAxis[0].data = obj.ApprovedxAxis
+    //      option.xAxis[0].data = obj.xAxis.map(e => {
+    //          return e 
+    //       })
+    //  }
+    //  if(obj.hasOwnProperty('ApprovedshuttlexAxis')){ // x轴的数据
+         
+    //      option.xAxis[0].data = obj.ApprovedshuttlexAxis
+    //  }
+     
+     // if(obj.hasOwnProperty('Approved1')){ // 获取的数据的值
+     //     // 判断是
+     // 	option.series[0].data = obj.Approved1.map(e => {
+     // 		// if(parseFloat(e) >=0) {
+     // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'red';
+     // 		// } else {
+     // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'green';
+     // 		// }
+     // 		if(e.indexOf(',')!==-1) {
+     //              return parseFloat(e.replace(/,/g, ""))
+     // 		} else {
+     // 			 return e
+     // 		}
+             
+     // 	});
+     // }
+     // if(obj.hasOwnProperty('Approved2')){ // 获取的数据的值
+     //     // 判断是
+     // 	option.series[1].data = obj.Approved2.map(e => {
+     // 		// if(parseFloat(e) >=0) {
+     // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'red';
+     // 		// } else {
+     // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'green';
+     // 		// }
+     // 		if(e.indexOf(',')!==-1) {
+     //              return parseFloat(e.replace(/,/g, ""))
+     // 		} else {
+     // 			 return e
+     // 		}
+             
+     // 	});
+     // }
+     // if(obj.hasOwnProperty('Approvedshuttle1')){ // 获取的数据的值
+     //     // 判断是
+     // 	option.series[0].data = obj.Approvedshuttle1.map(e => {
+     // 		// if(parseFloat(e) >=0) {
+     // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'red';
+     // 		// } else {
+     // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'green';
+     // 		// }
+     // 		if(e.indexOf(',')!==-1) {
+     //              return parseFloat(e.replace(/,/g, ""))
+     // 		} else {
+     // 			 return e
+     // 		}
+             
+     // 	});
+     // }
+     // if(obj.hasOwnProperty('Approvedshuttle2')){ // 获取的数据的值
+     //     // 判断是
+     // 	option.series[1].data = obj.Approvedshuttle2.map(e => {
+     // 		// if(parseFloat(e) >=0) {
+     // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'red';
+     // 		// } else {
+     // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'green';
+     // 		// }
+     // 		if(e.indexOf(',')!==-1) {
+     //              return parseFloat(e.replace(/,/g, ""))
+     // 		} else {
+     // 			 return e
+     // 		}
+             
+     // 	});
+     // }
+ 
+     
+     return option;
+ 
+ 
+ }

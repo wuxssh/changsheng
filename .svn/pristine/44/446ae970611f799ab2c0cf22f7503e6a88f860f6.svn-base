@@ -1,0 +1,412 @@
+// import { numberChange } from './common'
+export function drawCharts1(obj, key, ydata) {
+    if (key === 'Approved') {
+
+        console.log(stringTonum(obj.Approved2))
+        console.log(maxNum(stringTonum(obj.Approved2)))
+        console.log(maxNum(stringTonum(obj.Approved1)))
+        // console.log(obj.Approved2.map(Number))
+        // console.log(Math.max.apply(null, obj.Approved1.map(Number)))
+        var maxint1 = Math.ceil(maxNum(stringTonum(obj.Approved1)) / 10); // 向上取整
+        var maxappreg = maxint1 * 10; // 最终设置的最大值
+        var maxint2 = Math.ceil(maxNum(stringTonum(obj.Approved2)) / 10); // 向上取整
+        var maxactive = maxint2 * 20; // 最终设置的最大值
+
+        // var maxappreg = maxNum(stringTonum(obj.Approved1)); //注册Y轴值
+        // var maxactive = maxNum(stringTonum(obj.Approved2)) //活跃Y轴值
+    } else if (key === 'Approvedshuttle') {
+        // var maxappreg = stringTonum(obj.Approvedshuttle1).Math(...stringTonum(obj.Approvedshuttle1)); //注册Y轴值
+        // var maxactive = stringTonum(obj.Approvedshuttle2).Math(...stringTonum(obj.Approvedshuttle2)); //活跃Y轴值
+        // var maxappreg = maxNum(stringTonum(obj.Approvedshuttle1)); //注册Y轴值
+        // var maxactive = maxNum(stringTonum(obj.Approvedshuttle2)) //活跃Y轴值
+        // var maxint1 = Math.ceil(maxNum(stringTonum(obj.Approvedshuttle1)) / 10); // 向上取整
+        // var maxappreg = maxint1 * 10; // 最终设置的最大值
+        // var maxint2 = Math.ceil(maxNum(stringTonum(obj.Approvedshuttle2)) / 10); // 向上取整
+        // var maxactive = maxint2 * 10; // 最终设置的最大值
+
+        var maxint1 = Math.ceil(maxNum(stringTonum(obj.Approvedshuttle1)) / 10); // 向上取整
+        var maxappreg = maxint1 * 10; // 最终设置的最大值
+        var maxint2 = Math.ceil(maxNum(stringTonum(obj.Approvedshuttle2)) / 10); // 向上取整
+        var maxactive = maxint2 * 20; // 最终设置的最大值
+    }
+    // if (key == 'amountPay') {
+    //     obj.Approved1 = obj.Approved1.map((el) => {
+    //         return numberChange(el)
+    //     })
+    //     obj.Approved2 = obj.Approved2.map((el) => {
+    //         return numberChange(el)
+    //     })
+    //     obj.Approved3 = obj.Approved3.map((el) => {
+    //         return numberChange(el)
+    //     })
+    //     obj.Approved4 = obj.Approved4.map((el) => {
+    //         return numberChange(el)
+    //     })
+    //     obj.Approved5 = obj.Approved5.map((el) => {
+    //         return numberChange(el)
+    //     })
+    // }
+    // if (key == 'amountPay2') {
+    //     obj.Approved1 = obj.Approved1.map((el) => {
+    //         return numberChange(el)
+    //     })
+    //     obj.Approved2 = obj.Approved2.map((el) => {
+    //         return numberChange(el)
+    //     })
+    //     obj.Approved3 = obj.Approved3.map((el) => {
+    //         return numberChange(el)
+    //     })
+    //     obj.Approved4 = obj.Approved4.map((el) => {
+    //         return numberChange(el)
+    //     })
+    //     obj.Approved5 = obj.Approved5.map((el) => {
+    //         return numberChange(el)
+    //     })
+    // }
+
+    var interval_left = maxappreg / 5; //左轴间隔
+    var interval_right = maxactive / 5; //右轴间隔
+
+    var option = {
+        tooltip: {
+            trigger: "axis",
+            axisPointer: {
+                // 坐标轴指示器，坐标轴触发有效
+                type: "shadow" // 默认为直线，可选为：'line' | 'shadow'
+            }
+        },
+        title: {
+            text: '',
+            textStyle: {
+                fontWeight: "normal",
+                color: "#000",
+                fontSize: 16
+            }
+        },
+        color: ["#99958A", "#005BED", "#0D6DB2", "#02A9FF", "#63E0FF"],
+        legend: {
+            left: "10",
+            top: "0",
+            data: []
+
+        },
+        xAxis: [        //x轴属性设置
+            {
+                type: "category",
+                data: [],
+                axisTick: {
+                    alignWithLabel: true
+                },
+                // min : 0,
+                // max: 1000,
+                // splitNumber: 5,
+                // interval: 200,
+            }
+        ],
+        yAxis: key === 'amountPay' ?
+            [                            //（可以有多个坐标轴），数组中的对象位置决定了yAxisIndex的值（yAxisIndex会在series中用到）
+                {
+                    //  name:"数量",
+                    type: "value",
+                    axisTick: {
+                        show: false
+                    },
+                    axisLine: {
+                        show: false //y轴线消失
+                    },
+                    //  min : 0,
+                    //  max: 1000,
+                    //  splitNumber: 5,
+                    //  interval: 200,
+                    axisLabel: {	//x轴字体
+
+
+                        formatter: function (value, index) {
+                            return value;
+                        }
+                    },
+
+                }
+            ]
+            : [
+                {
+                    // name: "数量",
+                    type: "value",
+                    axisTick: {
+                        show: false
+                    },
+                    axisLine: {
+                        show: false //y轴线消失
+                    },
+                    //  min : 0,
+                    // max: 1000,
+                    splitNumber: 5,
+                    interval: 0,
+                    axisLabel: {	//x轴字体
+                        formatter: function (value, index) {
+                            return value;
+                        }
+                    },
+
+                },
+                {
+                    name: "百分比",
+                    type: "value",
+                    axisTick: {
+                        show: false
+                    },
+                    axisLine: {
+                        show: false //y轴线消失
+                    },
+                    min: 0,
+                    max: 1,
+                    splitNumber: 5,
+                    interval: 0.2,
+                    axisLabel: {	//x轴字体
+                        formatter: function (value, index) {
+                            return value * 100 + '%';
+                        }
+                    },
+
+
+
+                }
+            ],
+        series: key === 'amountPay' ? [
+            {
+                name: ydata[0],//数据名称
+                type: 'line',
+                yAxisIndex: 0,                //数据表现形式（bar为柱形图，line为折线图）
+                barGap: '0',/*多个并排柱子设置柱子之间的间距*/
+                // barCategoryGap:'50%',/*多个并排柱子设置柱子之间的间距*/
+                // barWidth: '25%',            //柱形图宽度
+                itemStyle: {                 //柱子的属性设置
+                    normal: {
+                        color: '#CCA36E',//柱子的颜色设置
+                    },
+
+                },
+                data: obj.Approved1   //该条数据对应一条记录
+            },
+            {
+                name: ydata[1],
+                type: 'line',
+                // barGap:'100%',/*多个并排柱子设置柱子之间的间距*/
+                // barCategoryGap:'70%',/*多个并排柱子设置柱子之间的间距*/
+                yAxisIndex: 0,
+                // barWidth:'25%',
+                itemStyle: {
+                    normal: {
+                        color: "#BFBDAD",
+                    }
+                },
+                data: obj.Approved2
+            },
+            {
+                name: ydata[2],
+                type: 'line',
+                // barGap:'100%',/*多个并排柱子设置柱子之间的间距*/
+                // barCategoryGap:'70%',/*多个并排柱子设置柱子之间的间距*/
+                yAxisIndex: 0,
+                // barWidth:'25%',
+                itemStyle: {
+                    normal: {
+                        color: "#0D6DB2",
+                    }
+                },
+                data: obj.Approved3
+            },
+            {
+                name: ydata[3],
+                type: 'line',
+                // barGap:'100%',/*多个并排柱子设置柱子之间的间距*/
+                // barCategoryGap:'70%',/*多个并排柱子设置柱子之间的间距*/
+                yAxisIndex: 0,
+                // barWidth:'25%',
+                itemStyle: {
+                    normal: {
+                        color: "#02A9FF",
+                    }
+                },
+                data: obj.Approved4
+            },
+            {
+                name: ydata[4],
+                type: 'line',
+                // barGap:'',/*多个并排柱子设置柱子之间的间距*/
+                // barCategoryGap:'70%',/*多个并排柱子设置柱子之间的间距*/
+                yAxisIndex: 0,
+                // barWidth:'25%',
+                itemStyle: {
+                    normal: {
+                        color: "#63E0FF",
+                    }
+                },
+                data: obj.Approved5
+            }
+
+        ] : [
+                {
+                    name: ydata ? ydata[0] : '',//数据名称
+                    type: 'line',
+                    yAxisIndex: 0,                //数据表现形式（bar为柱形图，line为折线图）
+                    barGap: '0',/*多个并排柱子设置柱子之间的间距*/
+                    // barCategoryGap:'50%',/*多个并排柱子设置柱子之间的间距*/
+                    // barWidth: '25%',            //柱形图宽度
+                    itemStyle: {                 //柱子的属性设置
+                        normal: {
+                            color: '#0000FF',   //柱子的颜色设置                          
+                        },
+
+                    },
+
+
+                    data: obj.Approved1   //该条数据对应一条记录
+                },
+                {
+                    name: ydata ? ydata[1] : "",//数据名称
+                    type: 'line',
+                    yAxisIndex: 0,                //数据表现形式（bar为柱形图，line为折线图）
+                    barGap: '0',/*多个并排柱子设置柱子之间的间距*/
+                    // barCategoryGap:'50%',/*多个并排柱子设置柱子之间的间距*/
+                    // barWidth: '25%',            //柱形图宽度
+                    itemStyle: {                 //柱子的属性设置
+                        normal: {
+                            color: '#FF0300',   //柱子的颜色设置                        
+                        },
+
+                    },
+
+
+                    data: obj.Approved2  //该条数据对应一条记录
+                },
+                {
+                    name: ydata ? ydata[2] : '',//数据名称
+                    type: 'line',
+                    yAxisIndex: 0,                //数据表现形式（bar为柱形图，line为折线图）
+                    barGap: '0',/*多个并排柱子设置柱子之间的间距*/
+                    // barCategoryGap:'50%',/*多个并排柱子设置柱子之间的间距*/
+                    // barWidth: '25%',            //柱形图宽度
+                    itemStyle: {                 //柱子的属性设置
+                        normal: {
+                            color: '#FF7600',   //柱子的颜色设置                        
+                        },
+
+                    },
+
+
+                    data: obj.Approved3   //该条数据对应一条记录
+                },
+                {
+                    name: ydata ? ydata[3] : '',//数据名称
+                    type: 'line',
+                    yAxisIndex: 0,                //数据表现形式（bar为柱形图，line为折线图）
+                    barGap: '0',/*多个并排柱子设置柱子之间的间距*/
+                    // barCategoryGap:'50%',/*多个并排柱子设置柱子之间的间距*/
+                    // barWidth: '25%',            //柱形图宽度
+                    itemStyle: {                 //柱子的属性设置
+                        normal: {
+                            color: '#00B1FF',   //柱子的颜色设置
+                        },
+
+                    },
+                    data: obj.Approved4   //该条数据对应一条记录
+                }
+            ],
+        grid: {             //设置网格属性
+            // left:'10%',     //网格距离容器左侧的距离
+            // right:'10%',       //网格距离容器右侧的距离
+            // borderWidth:1
+        }
+    }
+    if (obj.hasOwnProperty('xAxis')) { // x轴的数据
+
+        // option.xAxis[0].data = obj.ApprovedxAxis
+        option.xAxis[0].data = obj.xAxis.map(e => {
+            return e
+        })
+    }
+    if (obj.hasOwnProperty('ApprovedshuttlexAxis')) { // x轴的数据
+
+        option.xAxis[0].data = obj.ApprovedshuttlexAxis
+    }
+    if (key === 'amountPay') {
+        option.title.text = 'TOP5产品赔付金额'
+        // option.title.text = 'TOP5产品赔付金额(万元)'
+    } else if (key === 'amountPay1') {
+        option.title.text = '各险种赔付件数及占比'
+    } else if (key === 'amountPay2') {
+        option.title.text = '各险种赔付金额及占比'
+        // option.title.text = '各险种赔付金额及占比(万元)'
+    }
+
+    // if(obj.hasOwnProperty('Approved1')){ // 获取的数据的值
+    //     // 判断是
+    // 	option.series[0].data = obj.Approved1.map(e => {
+    // 		// if(parseFloat(e) >=0) {
+    // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'red';
+    // 		// } else {
+    // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'green';
+    // 		// }
+    // 		if(e.indexOf(',')!==-1) {
+    //              return parseFloat(e.replace(/,/g, ""))
+    // 		} else {
+    // 			 return e
+    // 		}
+
+    // 	});
+    // }
+    // if(obj.hasOwnProperty('Approved2')){ // 获取的数据的值
+    //     // 判断是
+    // 	option.series[1].data = obj.Approved2.map(e => {
+    // 		// if(parseFloat(e) >=0) {
+    // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'red';
+    // 		// } else {
+    // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'green';
+    // 		// }
+    // 		if(e.indexOf(',')!==-1) {
+    //              return parseFloat(e.replace(/,/g, ""))
+    // 		} else {
+    // 			 return e
+    // 		}
+
+    // 	});
+    // }
+    // if(obj.hasOwnProperty('Approvedshuttle1')){ // 获取的数据的值
+    //     // 判断是
+    // 	option.series[0].data = obj.Approvedshuttle1.map(e => {
+    // 		// if(parseFloat(e) >=0) {
+    // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'red';
+    // 		// } else {
+    // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'green';
+    // 		// }
+    // 		if(e.indexOf(',')!==-1) {
+    //              return parseFloat(e.replace(/,/g, ""))
+    // 		} else {
+    // 			 return e
+    // 		}
+
+    // 	});
+    // }
+    // if(obj.hasOwnProperty('Approvedshuttle2')){ // 获取的数据的值
+    //     // 判断是
+    // 	option.series[1].data = obj.Approvedshuttle2.map(e => {
+    // 		// if(parseFloat(e) >=0) {
+    // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'red';
+    // 		// } else {
+    // 		// 	option.series[0].itemStyle.normal.label.textStyle.color = 'green';
+    // 		// }
+    // 		if(e.indexOf(',')!==-1) {
+    //              return parseFloat(e.replace(/,/g, ""))
+    // 		} else {
+    // 			 return e
+    // 		}
+
+    // 	});
+    // }
+
+
+    return option;
+
+
+}

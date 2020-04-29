@@ -1,0 +1,3540 @@
+<template>
+  <div class="integratDetails">
+    <el-container style="overflow:auto;">
+      <div class="left">
+        <el-form
+          ref="objForm"
+          :model="objForm"
+          v-model="labelPosition"
+          label-width="140px"
+          :validate-on-rule-change="false"
+        >
+          <!-- 出险人信息 -->
+          <el-collapse v-model="activeName">
+            <el-collapse-item name="1" id="0">
+              <template slot="title">
+                出险人信息
+                <i
+                  class="header-icon el-icon-caret-bottom"
+                  style="margin: 0 8px 0 auto;font-size: 30px;"
+                ></i>
+              </template>
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="出险人姓名">
+                      <el-input v-model="objForm.occname" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="出险人证件类型">
+                      <el-select v-model="objForm.occidtype" clearable disabled>
+                        <el-option
+                          v-for="item in cardTypeList"
+                          :key="item.code"
+                          :label="item.codename"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="出险人证件号码">
+                      <el-input v-model="objForm.occidno" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="出险人性别">
+                      <!-- <el-input v-model="riskForm.sex" disabled></el-input> -->
+                      <el-select v-model="objForm.sex" clearable disabled>
+                        <el-option
+                          v-for="item in sexList"
+                          :key="item.code"
+                          :label="item.codename"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="出险人年龄">
+                      <el-input v-model="objForm.age" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="电话号码" prop="remark">
+                      <el-input v-model="objForm.remark" maxlength="100" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="证件有效期止期" prop="idenddate">
+                      <el-date-picker
+                        v-model="objForm.idenddate"
+                        type="date"
+                        value-format="yyyy-MM-dd"
+                        disabled
+                      ></el-date-picker>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="来源渠道">
+                      <el-input v-model="rgtclass" disabled maxlength="100"></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <!-- <el-row style="text-align:right;padding-bottom:17px;">
+              <el-button type="primary" round @click="toRiskList" v-if="!rgtno">客户查询</el-button>
+              </el-row>-->
+            </el-collapse-item>
+          </el-collapse>
+
+          <div id="1"></div>
+          <!-- 保单信息查询 既往赔案查询 保全记录 -->
+          <Policy :customerno="this.customerno"></Policy>
+          <!-- <div id="2"></div>
+          <div id="3"></div>-->
+          <!-- 立案申请信息 -->
+          <el-collapse v-model="activeName">
+            <el-collapse-item name="2" id="2">
+              <template slot="title">
+                立案申请信息
+                <i
+                  class="header-icon el-icon-caret-bottom"
+                  style="margin: 0 8px 0 auto;font-size: 30px;"
+                ></i>
+              </template>
+
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="理赔号">
+                      <el-input v-model="objForm.rgtno" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="申请日期">
+                      <el-date-picker
+                        type="date"
+                        v-model="objForm.applydate"
+                        style="width: 100%;"
+                        disabled
+                        value-format="yyyy-MM-dd"
+                      ></el-date-picker>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="保单号">
+                      <el-input v-model="objForm.contno" maxlength="10" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <span style="display:none;">{{objForm.agentcode}}</span>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="营销员电话">
+                      <el-input v-model="objForm.agentphone" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="是否通知营销员">
+                      <el-select v-model="objForm.notice" clearable disabled>
+                        <el-option label="是" value="1"></el-option>
+                        <el-option label="否" value="0"></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <!-- <el-col :span="8">
+                <div class="grid-content" style="margin-left:17px;">
+                  <el-button type="primary" round>营销员查询与关联</el-button>
+                </div>
+                </el-col>-->
+              </el-row>
+              <el-row v-if="rgtclass == '电话中心渠道'">
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="报案人姓名">
+                      <el-input v-model="objForm.reportname" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="报案日期">
+                      <el-input v-model="objForm.reportdate" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="报案人电话">
+                      <el-input v-model="objForm.reportmobile" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row v-if="rgtclass == '电话中心渠道'">
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="报案人与出险人关系">
+                      <el-select v-model="objForm.relatoinsure" disabled>
+                        <el-option
+                          v-for="item in relatoinsureList"
+                          :key="item.code"
+                          :label="item.codename"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="报案渠道">
+                      <el-input v-model="objForm.reportchannel" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+            </el-collapse-item>
+          </el-collapse>
+          <!-- 出险信息 -->
+          <el-collapse v-model="activeName">
+            <el-collapse-item name="3" id="3">
+              <template slot="title">
+                出险信息
+                <i
+                  class="header-icon el-icon-caret-bottom"
+                  style="margin: 0 8px 0 auto;font-size: 30px;"
+                ></i>
+              </template>
+
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="出险类型">
+                      <el-radio-group v-model="objForm.accidenttype">
+                        <el-radio
+                          v-for="item in accidenttypeList"
+                          :label="item.code"
+                          :key="item.code"
+                          disabled
+                        >{{item.codename}}</el-radio>
+                      </el-radio-group>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="直付标志">
+                      <el-switch
+                        v-model="objForm.directpay"
+                        active-value="1"
+                        inactive-value="0"
+                        active-color="#13ce66"
+                        inactive-color="#ff4949"
+                        disabled
+                      ></el-switch>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="24">
+                  <div class="grid-content">
+                    <el-form-item label="理赔类型">
+                      <el-checkbox-group v-model="objForm.reasoncode" disabled>
+                        <el-checkbox
+                          v-for="(item) in llclaimtypeList"
+                          :key="item.code"
+                          :label="item.code"
+                        >{{item.codename}}</el-checkbox>
+                      </el-checkbox-group>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="出险日期">
+                      <el-date-picker
+                        type="date"
+                        v-model="objForm.accidentdate"
+                        style="width: 100%;"
+                        value-format="yyyy-MM-dd"
+                        disabled
+                      ></el-date-picker>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="事故原因">
+                      <el-select v-model="objForm.accidentreason" clearable filterable disabled>
+                        <el-option
+                          v-for="item in accReasonList"
+                          :key="item.code"
+                          :label="item.codename"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="16">
+                  <div class="grid-content place">
+                    <el-form-item label="出险地点">
+                      <el-select v-model="objForm.accprovince" disabled>
+                        <el-option
+                          v-for="item in provinceList"
+                          :key="item.code"
+                          :label="item.province"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+
+                    <el-form-item label class="risk_address">
+                      <el-select v-model="objForm.acccity" disabled ref="acccity">
+                        <el-option
+                          v-for="item in cityList"
+                          :key="item.code"
+                          :label="item.city"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+
+                    <el-form-item label class="risk_address">
+                      <el-select v-model="objForm.acccounty" disabled>
+                        <el-option
+                          v-for="item in areaList"
+                          :key="item.code"
+                          :label="item.country"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                    <el-form-item label class="risk_address">
+                      <el-input
+                        v-model="objForm.accaddress"
+                        maxlength="100"
+                        class="place_des"
+                        disabled
+                      ></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="事故发生地点性质">
+                      <el-cascader v-model="objForm.accidentsite" :options="placeOptions" disabled></el-cascader>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="10">
+                  <div class="grid-content">
+                    <el-form-item label="就诊医院">
+                      <template>
+                        <el-select class="jiuzhenhosp" v-model="objForm.hospitalname" disabled>
+                          <el-option
+                            v-for="(item,index) in hospitalLists"
+                            :key="index"
+                            :label="item.hospitalname"
+                            :value="item.hospitcode"
+                          ></el-option>
+                        </el-select>
+                        <el-popover
+                          v-if="remarkContents && objForm.hospitalname"
+                          placement="top-start"
+                          width="200"
+                          trigger="hover"
+                          content="这"
+                        >
+                          <div>{{remarkContents}}</div>
+                          <el-button slot="reference" @click="toGetRemark" class="jiuzhens">
+                            <img
+                              src="../../assets/images/filing/warn.png"
+                              alt
+                              style="width:20px;height:20px"
+                            />
+                          </el-button>
+                        </el-popover>
+                      </template>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="6">
+                  <div class="grid-content">
+                    <el-form-item label="病区">
+                      <el-input v-model="objForm.hospitallesion" maxlength="100" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="床位">
+                      <el-input v-model="objForm.hospitalbed" maxlength="100" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="确诊日期">
+                      <el-date-picker
+                        type="date"
+                        v-model="objForm.dianosedate"
+                        style="width: 100%;"
+                        disabled
+                        value-format="yyyy-MM-dd"
+                      ></el-date-picker>
+                    </el-form-item>
+                  </div>
+                </el-col>
+
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="身故日期">
+                      <el-date-picker
+                        type="date"
+                        v-model="objForm.deathdate"
+                        style="width: 100%;"
+                        disabled
+                        value-format="yyyy-MM-dd"
+                      ></el-date-picker>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="受益人是否指定">
+                      <el-radio-group v-model="objForm.pointbnf" disabled>
+                        <el-radio label="1">是</el-radio>
+                        <el-radio label="0">否</el-radio>
+                      </el-radio-group>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="申请豁免原因">
+                      <el-select
+                        v-if="objForm.accidenttype==='01'"
+                        v-model="objForm.exempt"
+                        disabled
+                      >
+                        <el-option
+                          v-for="item in resource"
+                          :key="item.value"
+                          :label="item.text"
+                          :value="item.value"
+                        ></el-option>
+                      </el-select>
+
+                      <el-select
+                        v-else-if="objForm.accidenttype==='02'"
+                        v-model="objForm.exempt"
+                        disabled
+                      >
+                        <el-option
+                          v-for="item in resource1"
+                          :key="item.value"
+                          :label="item.text"
+                          :value="item.value"
+                        ></el-option>
+                      </el-select>
+
+                      <el-select v-else v-model="objForm.exempt" clearable>
+                        <el-option
+                          v-for="item in resource2"
+                          :key="item.value"
+                          :label="item.text"
+                          :value="item.value"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="伤残鉴定报告">
+                      <el-radio-group v-model="objForm.disableddrpt" disabled>
+                        <el-radio label="1">是</el-radio>
+                        <el-radio label="0">否</el-radio>
+                      </el-radio-group>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="工伤报告（失能鉴定、残疾证）">
+                      <el-radio-group v-model="objForm.occuprpt" disabled>
+                        <el-radio label="1">是</el-radio>
+                        <el-radio label="0">否</el-radio>
+                      </el-radio-group>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+            </el-collapse-item>
+          </el-collapse>
+          <!-- 申请人信息 -->
+          <el-collapse v-model="activeName">
+            <el-collapse-item name="4" id="4">
+              <template slot="title">
+                申请人信息
+                <i
+                  class="header-icon el-icon-caret-bottom"
+                  style="margin: 0 8px 0 auto;font-size: 30px;"
+                ></i>
+              </template>
+
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="申请人姓名" prop="rgtantname">
+                      <el-input v-model="objForm.rgtantname" maxlength="20" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="申请人与出险人关系" prop="relation">
+                      <el-select v-model="objForm.relation" disabled>
+                        <el-option
+                          v-for="item in relations"
+                          :key="item.code"
+                          :label="item.codename"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="证件类型">
+                      <el-select v-model="objForm.rgtantidtype" disabled>
+                        <el-option
+                          v-for="item in cardTypeList"
+                          :key="item.code"
+                          :label="item.codename"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="证件号码">
+                      <el-input v-model="objForm.rgtantidno" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="16">
+                  <div class="grid-content apply_address">
+                    <el-form-item label="联系地址">
+                      <el-select v-model="objForm.rgtantprovince" disabled>
+                        <el-option
+                          v-for="item in provinceList3"
+                          :key="item.code"
+                          :label="item.province"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                      <el-select v-model="objForm.rgtantcity" disabled>
+                        <el-option
+                          v-for="item in cityList3"
+                          :key="item.code"
+                          :label="item.city"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                      <el-select v-model="objForm.rgtantcounty" disabled>
+                        <el-option
+                          v-for="item in areaList3"
+                          :key="item.code"
+                          :label="item.country"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                      <span class="full">
+                        <el-input v-model="objForm.rgtantaddress" disabled></el-input>
+                      </span>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="邮政编码">
+                      <el-input v-model="objForm.postcode" maxlength="100" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="移动电话">
+                      <el-input v-model="objForm.rgtantmobile" maxlength="100" disabled></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+            </el-collapse-item>
+          </el-collapse>
+          <!-- 领款人信息 -->
+          <el-collapse v-model="activeName">
+            <el-collapse-item name="5" id="5">
+              <template slot="title">
+                领款人信息
+                <i
+                  class="header-icon el-icon-caret-bottom"
+                  style="margin: 0 8px 0 auto;font-size: 30px;"
+                ></i>
+              </template>
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="与被保险人关系">
+                      <el-select disabled v-model="objForm.relationtocont">
+                        <el-option
+                          v-for="item in linglist"
+                          :key="item.id"
+                          :label="item.name"
+                          :value="item.id"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="账户所有人姓名">
+                      <el-input v-model="objForm.recename" disabled maxlength="20"></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="职业">
+                      <el-select v-model="objForm.profession" placeholder="请选择" disabled>
+                        <el-option
+                          v-for="item in workListss"
+                          :key="item.occupationcode"
+                          :label="item.occuptionname"
+                          :value="item.occupationcode"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="年收入" disabled>
+                      <el-input v-model="objForm.annualincome" disabled maxlength="100"></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="证件类型">
+                      <el-select disabled v-model="objForm.receidtype" placeholder="请选择" clearable>
+                        <el-option
+                          v-for="item in cardTypeList"
+                          :key="item.code"
+                          :label="item.codename"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="证件号码">
+                      <el-input disabled v-model="objForm.receidno" maxlength="100"></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="16">
+                  <div class="grid-content bank">
+                    <el-form-item label="授权银行" prop="headbankname">
+                      <el-select disabled v-model="objForm.headbankname" placeholder="下拉模糊">
+                        <el-option
+                          v-for="item in tBankList"
+                          :key="item.bankid"
+                          :label="item.bankname"
+                          :value="item.bankid"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+
+                    <el-form-item label class="bank_style">
+                      <el-select disabled v-model="objForm.province" placeholder="所在地区">
+                        <el-option
+                          v-for="item in bankAddressList"
+                          :key="item.standardareasid"
+                          :label="item.standardareasname"
+                          :value="item.standardareasid"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+
+                    <el-form-item label class="bank_style">
+                      <el-select disabled v-model="objForm.bankname" placeholder="支行">
+                        <el-option
+                          v-for="item in branchBankList"
+                          :key="item.banklocationsid"
+                          :label="item.banklocationsname"
+                          :value="item.banklocationsid"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="授权账户号码">
+                      <el-input disabled v-model="objForm.bankaccno" maxlength="100"></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+
+              <el-row>
+                <el-col :span="24">
+                  <div class="grid-content address">
+                    <el-form-item label="联系地址">
+                      <el-select disabled v-model="objForm.receiveaccprovinc" placeholder="省">
+                        <el-option
+                          v-for="item in provinceList"
+                          :key="item.code"
+                          :label="item.province"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+
+                    <el-form-item label class="address_style">
+                      <el-select disabled v-model="objForm.receivecity" placeholder="市">
+                        <el-option
+                          v-for="item in cityListss"
+                          :key="item.code"
+                          :label="item.city"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+
+                    <el-form-item label class="address_style">
+                      <el-select disabled v-model="objForm.receivedistrict" placeholder="区">
+                        <el-option
+                          v-for="item in areaListss"
+                          :key="item.code"
+                          :label="item.country"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                    <el-form-item label class="address_style">
+                      <span class="full">
+                        <el-input
+                          disabled
+                          v-model="objForm.receiveaddress"
+                          placeholder="详细地址"
+                          maxlength="100"
+                        ></el-input>
+                      </span>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="联系方式">
+                      <el-input disabled v-model="objForm.contactway" maxlength="100"></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="单位名称">
+                      <el-input disabled v-model="objForm.workunit" maxlength="100"></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="单位地址">
+                      <el-input disabled v-model="objForm.workaddress" maxlength="100"></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <!-- </el-form> -->
+            </el-collapse-item>
+          </el-collapse>
+          <!-- 骨折代码 -->
+          <div id="6"></div>
+          <!-- <div id="9"></div>
+          <div id="10"></div>
+          <div id="11"></div>
+          <div id="12"></div>-->
+
+          <el-tabs
+            v-model="activeR"
+            type="card"
+            @tab-click="handleClick2"
+            style="margin-bottom:20px;"
+          >
+            <div :style="style2" :class="isbox2 ? 'box' : ''"></div>
+            <el-tab-pane label="诊断代码" name="one">
+              <div class="work_table">
+                <el-table :data="diagnoseListArr" style="width: 100%;padding:0 10px;">
+                  <el-table-column label="序号" type="index"></el-table-column>
+                  <el-table-column prop="diagnosticcode" label="诊断代码" align="center"></el-table-column>
+                  <el-table-column prop="diagnosticname" label="诊断名称" align="center"></el-table-column>
+                </el-table>
+              </div>
+            </el-tab-pane>
+            <el-tab-pane label="伤残代码" name="two">
+              <el-table :data="diseaseListArr" style="width: 100%;padding:0 10px;">
+                <el-table-column label="序号" type="index"></el-table-column>
+                <el-table-column label="伤残代码" prop="disabilitycode" align="center"></el-table-column>
+                <el-table-column prop="disabilityname" label="伤残名称" align="center"></el-table-column>
+                <el-table-column prop="disabilitylevel" label="伤残等级" align="center"></el-table-column>
+              </el-table>
+            </el-tab-pane>
+            <el-tab-pane label="手术代码" name="three">
+              <el-table :data="operationListArr" style="width: 100%;padding:0 10px;">
+                <el-table-column label="序号" type="index"></el-table-column>
+                <el-table-column prop="operationcode" label="手术代码" align="center"></el-table-column>
+                <el-table-column prop="operationname" label="手术名称" align="center"></el-table-column>
+              </el-table>
+            </el-tab-pane>
+            <el-tab-pane label="骨折代码" name="four">
+              <div class="work_table">
+                <el-table :data="fractureListArr" style="width: 100%;padding:0 10px;">
+                  <el-table-column label="序号" type="index"></el-table-column>
+                  <el-table-column prop="fracturename" label="骨折部位" align="center"></el-table-column>
+                  <el-table-column prop="fracturedetailname" label="骨折具体部位" align="center"></el-table-column>
+                  <el-table-column prop="fracturelevel" label="骨折程度" align="center"></el-table-column>
+                </el-table>
+                <!-- <div style="overflow:hidden">
+                <div style="float:right;margin:10px 10px 10px 0">
+                  <el-button type="primary" round @click="addItem('4')">增加</el-button>
+                </div>
+                </div>-->
+              </div>
+            </el-tab-pane>
+            <el-tab-pane label="重疾代码" name="five">
+              <div class="work_table">
+                <el-table :data="illnessListArr" style="width: 100%;padding:0 10px;">
+                  <el-table-column label="序号" type="index"></el-table-column>
+                  <el-table-column prop="criticalname" label="重疾名称" align="center"></el-table-column>
+                  <!-- <el-table-column prop="bigsource" label="大科" align="center"></el-table-column>
+                  <el-table-column prop="smallsource" label="小科" align="center"></el-table-column>-->
+                </el-table>
+              </div>
+            </el-tab-pane>
+          </el-tabs>
+
+          <!-- 赔案计算信息 -->
+          <div class="work_queue" id="7">
+            <span>赔案计算信息</span>
+            <div class="box"></div>
+          </div>
+          <div class="work_table" style="margin-bottom:20px;">
+            <el-table :data="countData1" style="width: 100%">
+              <el-table-column label="序号" type="index" width="65"></el-table-column>
+              <el-table-column prop="standpay" label="赔付金额" align="center"></el-table-column>
+              <el-table-column prop="cutmoney" label="扣减项总金额" align="center"></el-table-column>
+
+              <el-table-column prop="realpay" label="最终赔付金额" align="center"></el-table-column>
+              <el-table-column prop="declinepay" label="拒赔金额" align="center"></el-table-column>
+            </el-table>
+          </div>
+          <!-- 理赔类型计算信息 -->
+          <div class="work_queue">
+            <span>理赔类型计算信息</span>
+            <div class="box"></div>
+          </div>
+          <div class="work_table" style="margin-bottom:20px;">
+            <el-table :data="countData2" style="width: 100%">
+              <el-table-column label="序号" type="index" align="center" width="65"></el-table-column>
+              <!-- <el-table-column align="center" prop="getdutykind" width="150" label="理赔类型代码"></el-table-column> -->
+              <el-table-column prop="claimtype" label="理赔类型名称" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="tabfeemoney" label="账单金额" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="selfamnt" label="自费金额" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="totalpay" label="统筹/附加金额" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="othpay" label="其他补偿" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="claimmoney" label="保单合计理算金额" align="center" min-width="150"></el-table-column>
+
+              <el-table-column prop="realpay" label="最终赔付金额" align="center" min-width="150"></el-table-column>
+            </el-table>
+          </div>
+          <!-- 保单计算信息 -->
+          <div class="work_queue">
+            <!-- <img src="../../assets/images/report/tab_btn@1x.png" alt=""> -->
+            <span>保单计算信息</span>
+            <div class="box"></div>
+          </div>
+          <div class="work_table" style="margin-bottom:20px;">
+            <el-table :data="countData3" style="width: 100%">
+              <el-table-column label="序号" type="index" align="center" width="65"></el-table-column>
+              <el-table-column prop="contno" label="保单号" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="getdutykind" label="理赔类型" align="center" min-width="150">
+                <template slot-scope="scope">
+                  <span>{{scope.row.getdutykind|resodefilt}}</span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="cvalidate" label="生效日期" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="contstate" label="保单状态" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="riskcode" label="险种代码" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="riskname" label="险种名称" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="standpay" label="理算金额" align="center" min-width="150"></el-table-column>
+            </el-table>
+          </div>
+          <!-- 保项计算信息 -->
+          <div class="work_queue">
+            <!-- <img src="../../assets/images/report/tab_btn@1x.png" alt=""> -->
+            <span>保项计算信息</span>
+            <div class="box"></div>
+          </div>
+          <div class="work_table" style="margin-bottom:20px;">
+            <el-table :data="countData4" style="width: 100%">
+              <el-table-column label="序号" type="index" width="65" align="center"></el-table-column>
+              <el-table-column prop="adjremark" min-width="40" max-width="50" align="center">
+                <template slot-scope="scope">
+                  <el-popover
+                    v-if="scope.row.adjremark"
+                    placement="top-start"
+                    trigger="hover"
+                    content
+                  >
+                    <div>{{scope.row.adjremark}}</div>
+                    <template slot="reference">
+                      <img
+                        src="../../assets/images/filing/warn.png"
+                        alt
+                        style="width:20px;height:20px"
+                      />
+                    </template>
+                  </el-popover>
+                </template>
+              </el-table-column>
+              <el-table-column prop="contno" label="保单号" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="riskcode" label="险种代码" align="center" min-width="150">
+                <template slot-scope="scope">
+                  <div
+                    class="riskcodePDF"
+                    @click="clickCell(scope.row.riskcode)"
+                  >{{ scope.row.riskcode }}</div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="riskname" label="险种名称" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="getdutyname" label="保险责任" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="standpay" label="理算金额" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="realpay" label="调整为金额" align="center" min-width="150">
+                <template slot-scope="scope">
+                  <!-- <el-input v-model="scope.row.realpay" disabled></el-input> -->
+                  <span>{{scope.row.realpay}}</span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="givetype" label="给付状态" align="center" min-width="150">
+                <template slot-scope="scope">
+                  <span>{{getgivetypeval(scope.row.givetype)}}</span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="getstartdate" label="责任起期" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="getenddate" label="责任止期" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="realHospdate" label="住院天数" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="amnt" label="基本保险金额" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="freeamnt" label="优惠保险金额" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="outdutyamnt" label="免赔额" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="agreeamnt" label="剩余免赔额" align="center" min-width="150"></el-table-column>
+              <el-table-column prop="yearbonus" label="红利金额" align="center" min-width="150"></el-table-column>
+            </el-table>
+          </div>
+
+          <!-- 新增内容 -->
+          <div class="work_queue" style="margin-top: 15px;" id="8">
+            <!-- <img src="../../assets/images/report/tab_btn@1x.png" alt=""> -->
+            <span>审核管理</span>
+            <div class="box"></div>
+          </div>
+          <el-table
+            :data="auditMangeArray"
+            class="tables"
+            highlight-current-row
+            style="width: 100%;height:100%;"
+            v-model="activeName"
+            @row-click="getexamIdea"
+          >
+            <el-table-column type="index" width="65" label="序号"></el-table-column>
+            <el-table-column align="center" prop="auditdate" label="提交时间"></el-table-column>
+            <el-table-column align="center" prop="auditconclusion" label="审核结论"></el-table-column>
+            <el-table-column align="center" prop="auditper" label="提交人"></el-table-column>
+            <el-table-column align="center" prop="auditidea" label="审核意见"></el-table-column>
+          </el-table>
+
+          <div class="work_queue" style="margin-top: 15px;">
+            <!-- <img src="../../assets/images/report/tab_btn@1x.png" alt=""> -->
+            <span>审批管理</span>
+            <div class="box"></div>
+          </div>
+          <el-table
+            :data="approveMangeArray"
+            class="tables"
+            highlight-current-row
+            style="width: 100%;height:100%;"
+            v-model="activeName"
+          >
+            <el-table-column type="index" width="65" label="序号"></el-table-column>
+
+            <el-table-column align="center" prop="examdate" label="提交时间"></el-table-column>
+            <el-table-column align="center" prop="examconclusion" label="审批结论"></el-table-column>
+            <el-table-column align="center" prop="examper" label="提交人"></el-table-column>
+            <el-table-column align="center" prop="examidea" label="审批意见"></el-table-column>
+          </el-table>
+          <!-- </el-row>
+          </el-form>-->
+          <el-form
+            ref="auditObj"
+            :model="auditObj"
+            v-model="labelPosition"
+            :rules="rules"
+            :validate-on-rule-change="false"
+          >
+            <div style="background-color: #FFFFFF; padding:0 20px">
+              <el-form-item label="决定解释" prop="auditexplain" style="padding-bottom:20px;">
+                <el-input
+                  type="textarea"
+                  :autosize="{ minRows: 8}"
+                  show-word-limit
+                  v-model="auditObj.auditexplain"
+                  disabled
+                ></el-input>
+              </el-form-item>
+            </div>
+          </el-form>
+          <!--  -->
+
+          <!-- 备注信息 -->
+          <div class="work_queue" id="9">
+            <span>备注信息</span>
+            <div class="box"></div>
+          </div>
+          <div class="work_table" style="margin-bottom:20px;">
+            <el-table :data="countData5" style="width: 100%">
+              <el-table-column label="序号" type="index" width="65" align="center"></el-table-column>
+              <el-table-column prop="describecontes" label="备注内容" align="center"></el-table-column>
+              <el-table-column prop="operator" label="操作员" align="center"></el-table-column>
+              <el-table-column prop="maketime" label="备注时间" align="center"></el-table-column>
+            </el-table>
+          </div>
+          <el-collapse v-model="activeName" v-if="conculsion.rgtconclusion">
+            <el-collapse-item name="6" id="8">
+              <template slot="title">
+                立案结论信息
+                <i
+                  class="header-icon el-icon-caret-bottom"
+                  style="margin: 0 0 0 auto;font-size: 30px;"
+                ></i>
+              </template>
+
+              <el-row style="padding-top:20px;">
+                <el-col :span="8">
+                  <div class="grid-content">
+                    <el-form-item label="立案结论">
+                      <el-select disabled v-model="conculsion.rgtconclusion" placeholder="请选择">
+                        <el-option label="立案通过" value="01"></el-option>
+                        <el-option label="不予立案" value="02"></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="9" v-if="conculsion.rgtconclusion==='02'">
+                  <div class="grid-content">
+                    <el-form-item label="不予立案原因">
+                      <el-select
+                        disabled
+                        v-model="conculsion.norgtreason"
+                        placeholder="请选择"
+                        clearable
+                      >
+                        <el-option label="缺少资料" value="01"></el-option>
+                        <el-option label="无匹配保单责任" value="02"></el-option>
+                        <el-option label="微信预赔付金额可能≥3000元" value="03"></el-option>
+                        <el-option label="重复立案" value="05"></el-option>
+                        <el-option label="其他" value="04"></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="24" v-if="conculsion.rgtconclusion==='02'">
+                  <div class="grid-content">
+                    <el-form-item label="原因说明">
+                      <el-input
+                        disabled
+                        type="textarea"
+                        :autosize="{ minRows: 4}"
+                        maxlength="100"
+                        show-word-limit
+                        resize="none"
+                        v-model="conculsion.reasondetail"
+                      ></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+            </el-collapse-item>
+          </el-collapse>
+          <!-- 理赔进展 -->
+          <div class="work_queue" id="10">
+            <span>理赔进展</span>
+            <div class="box"></div>
+          </div>
+          <div class="work_table" style="margin-bottom:20px;">
+            <el-table :data="countData6" style="width: 100%">
+              <el-table-column label="序号" type="index" width="50" align="center"></el-table-column>
+              <el-table-column prop="makedate" label="时间" align="center"></el-table-column>
+              <el-table-column prop="evolve" label="进展" align="center"></el-table-column>
+              <el-table-column prop="evolveinfo" label="进展说明" align="center"></el-table-column>
+              <el-table-column prop="operator" label="操作人" align="center"></el-table-column>
+              <el-table-column prop="message" label="意见" align="center"></el-table-column>
+            </el-table>
+          </div>
+          <div style="text-align:right;margin-top:20px;margin-bottom:70px;">
+            <!-- <el-button type="primary" round @click="goBack()">返 回</el-button> -->
+          </div>
+        </el-form>
+      </div>
+      <!-- </el-container> -->
+      <!-- 按钮悬浮框 -->
+      <div class="botton_box" v-if="isShowMenu">
+        <div style="text-align:center;" class="button_style">
+          <!-- <el-button type="primary" round @click="goDocuments()" :disabled="!isFee">医疗单证</el-button> -->
+          <el-button
+            type="primary"
+            size="small"
+            round
+            @click="goDocuments()"
+            :disabled="!isFee"
+          >医疗单证</el-button>
+          <el-button
+            type="primary"
+            round
+            size="small"
+            @click="goPresent()"
+            :disabled="!isNotice"
+          >查看照会</el-button>
+          <el-button type="primary" round size="small" @click="goDiao()" :disabled="!isInq">查看调查</el-button>
+          <el-button
+            type="primary"
+            round
+            size="small"
+            @click="goSecond()"
+            :disabled="!isSecond"
+          >二核结论查看</el-button>
+          <el-button type="primary" round size="small" @click="toInitImg">影像查询</el-button>
+          <el-button
+            type="primary"
+            round
+            size="small"
+            :disabled="(!isContractState) || ((!countData1)&&(!countData2)&&(!countData3)&&(!countData4))"
+            @click="benefitF()"
+          >受益人分配查询</el-button>
+          <el-button
+            type="primary"
+            size="small"
+            round
+            @click="goQueryContractProcess()"
+            :disabled="!isContractStates"
+          >合同处理查询</el-button>
+          <el-button type="primary" round size="small" @click="goBack()">返 回</el-button>
+        </div>
+      </div>
+      <!-- <div style="position:fixed;top:80px;right:0;"> -->
+
+      <el-aside>
+        <div class="right">
+          <img src="../../assets/images/filing/downArrow.png" alt class="downArrow" />
+          <img src="../../assets/images/filing/TOP.png" alt @click="jump('top')" class="top" />
+          <img
+            src="../../assets/images/filing/upArrow.png"
+            alt
+            @click="jump('top')"
+            class="upArrow"
+          />
+          <!--  @click="jump(index)" -->
+          <p
+            v-for="(item,index) in btnArr"
+            :key="index"
+            class="btn_text"
+            :href="'#'+index"
+            @click="jump(index)"
+            :style="{color: activeStep === index ? '#F1CF60' : '#ccc'}"
+          >{{item}}</p>
+        </div>
+      </el-aside>
+      <!-- 对私受益人分配 -->
+      <el-dialog :visible.sync="dialogFormVisible" width="94%">
+        <div class="work_queue" style="display: flex;">
+          <span>赔案保单信息</span>
+          <div class="box"></div>
+        </div>
+        <div class="lable">
+          <el-table
+            :data="benefitData"
+            @row-click="getBenfit"
+            border
+            highlight-current-row
+            :header-cell-style="{background:'#F7FAFF',color:'#333333'}"
+          >
+            <el-table-column label="序号" type="index" align="center" width="50"></el-table-column>
+            <el-table-column prop="contno" align="center" label="保单号"></el-table-column>
+            <el-table-column prop="pay" align="center" label="赔付金额"></el-table-column>
+            <el-table-column prop="state" align="center" label="分配情况"></el-table-column>
+          </el-table>
+        </div>
+        <div class="work_queue" style="display: flex;margin-top: 10px;">
+          <span>理赔受益人信息</span>
+          <div class="box"></div>
+        </div>
+        <div class="lable">
+          <el-table
+            :data="benefitArray"
+            style="width: 100%"
+            :header-cell-style="{background:'#F7FAFF',color:'#333333'}"
+          >
+            <el-table-column label="序号" type="index" align="center" width="50"></el-table-column>
+            <el-table-column label="证件类型" align="center" width="160">
+              <template slot="header">
+                <span class="redStars">&nbsp;*&nbsp;</span>
+                <span>证件类型</span>
+              </template>
+              <template slot-scope="scope" prop="name">
+                <el-select disabled placeholder="请选择" v-model="scope.row.idtype">
+                  <el-option
+                    v-for="item in cardTypeList"
+                    :key="item.code"
+                    :label="item.codename"
+                    :value="item.code"
+                  ></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="证件号码" align="center" width="170">
+              <template slot="header">
+                <span class="redStars">&nbsp;*&nbsp;</span>
+                <span>证件号码</span>
+              </template>
+              <template slot-scope="scope" prop="idno">
+                <el-input disabled v-model="scope.row.idno"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="与被保险人关系" align="center" width="170">
+              <template slot="header">
+                <span class="redStars">&nbsp;*&nbsp;</span>
+                <span>与被保险人关系</span>
+              </template>
+              <template prop="relationtoinsured" slot-scope="scope">
+                <el-select placeholder="请选择" disabled v-model="scope.row.relationtoinsured">
+                  <el-option
+                    v-for="item in relationss"
+                    :key="item.code"
+                    :label="item.codename"
+                    :value="item.code"
+                  ></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column prop="bnflot" label="分配比例" align="center" width="160">
+              <template slot="header">
+                <span class="redStars">&nbsp;*&nbsp;</span>
+                <span>分配比例（%）</span>
+              </template>
+              <template slot-scope="scope" prop="name">
+                <el-input type="text" disabled v-model="scope.row.bnflot" maxlength="100"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="账户所有人姓名" align="center" width="180">
+              <template slot="header">
+                <span class="redStars">&nbsp;*&nbsp;</span>
+                <span>账户所有人姓名</span>
+              </template>
+              <template slot-scope="scope" prop="payeename">
+                <el-input disabled v-model="scope.row.payeename" maxlength="20"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column prop="payeeidno" label="授权账户号码" align="center" width="240">
+              <template slot="header">
+                <span class="redStars">&nbsp;*&nbsp;</span>
+                <span>授权账户号码</span>
+              </template>
+              <template slot-scope="scope" prop="bankaccno">
+                <el-input disabled v-model="scope.row.bankaccno" maxlength="100"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="授权银行" align="center" width="300">
+              <template slot="header">
+                <span class="redStars">&nbsp;*&nbsp;</span>
+                <span>授权银行</span>
+              </template>
+              <template slot-scope="scope">
+                <el-select disabled v-model="scope.row.bankcode">
+                  <el-option
+                    v-for="item in tBankList"
+                    :key="item.bankid"
+                    :label="item.bankname"
+                    :value="item.bankid"
+                  ></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="所在地区" align="center" width="200">
+              <template slot="header">
+                <span class="redStars">&nbsp;*&nbsp;</span>
+                <span>所在地区</span>
+              </template>
+              <template slot-scope="scope" prop="bankprovince">
+                <el-select v-model="scope.row.bankprovince" disabled>
+                  <el-option
+                    v-for="item in bankAddressList"
+                    :key="item.standardareasid"
+                    :label="item.standardareasname"
+                    :value="item.standardareasid"
+                  ></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="支行" align="center" width="320">
+              <template slot="header">
+                <span>支行</span>
+              </template>
+              <template slot-scope="scope">
+                <el-select disabled v-model="scope.row.bankbranch">
+                  <el-option
+                    v-for="(item,indexs) in newbranchBankList[scope.$index]"
+                    :key="indexs"
+                    :label="item.banklocationsname"
+                    :value="item.banklocationsid"
+                  ></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="职业" align="center" width="320">
+              <template slot="header">
+                <span class="redStars">&nbsp;*&nbsp;</span>
+                <span>职业</span>
+              </template>
+              <template slot-scope="scope">
+                <el-select disabled v-model="scope.row.occupation">
+                  <el-option
+                    v-for="item in workList"
+                    :key="item.occupationcode"
+                    :label="item.occuptionname"
+                    :value="item.occupationcode"
+                  ></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="年收入" align="center" width="140">
+              <template slot="header">
+                <span class="redStars">&nbsp;*&nbsp;</span>
+                <span>年收入</span>
+              </template>
+              <template slot-scope="scope" prop="annualincome">
+                <el-input
+                  disabled
+                  v-model="scope.row.annualincome"
+                  type="text"
+                  maxlength="100"
+                  min="0"
+                ></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="联系方式" align="center" width="160">
+              <template slot="header">
+                <span class="redStars">&nbsp;&nbsp;</span>
+                <span>联系方式</span>
+              </template>
+              <template slot-scope="scope" prop="phone">
+                <el-input disabled v-model="scope.row.phone" maxlength="100"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="住所地址省" align="center" width="160">
+              <template slot="header">
+                <span class="redStars">&nbsp;*&nbsp;</span>
+                <span>住所地址省</span>
+              </template>
+              <template slot-scope="scope" prop="addressprovince">
+                <el-select v-model="scope.row.addressprovince" disabled>
+                  <el-option
+                    v-for="(item,index) in provinceListsss"
+                    :key="index"
+                    :label="item.province"
+                    :value="item.code"
+                  ></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="住所地址市" align="center" width="160">
+              <template slot="header">
+                <span class="redStars">&nbsp;*&nbsp;</span>
+                <span>住所地址市</span>
+              </template>
+              <template slot-scope="scope" prop="addresscity">
+                <el-select v-model="scope.row.addresscity" disabled>
+                  <el-option
+                    v-for="(item,index) in newcitylist1[scope.$index]"
+                    :key="index"
+                    :label="item.city"
+                    :value="item.code"
+                  ></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="住所地址区" align="center" width="160">
+              <template slot="header">
+                <span class="redStars">&nbsp;*&nbsp;</span>
+                <span>住所地址区</span>
+              </template>
+              <template slot-scope="scope" prop="addressarea">
+                <el-select v-model="scope.row.addressarea" disabled>
+                  <el-option
+                    v-for="(item,index) in newarealist1[scope.$index]"
+                    :key="index"
+                    :label="item.country"
+                    :value="item.code"
+                  ></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="详细住址" align="center" width="160">
+              <template slot="header">
+                <span class="redStars">&nbsp;*&nbsp;</span>
+                <span>详细住址</span>
+              </template>
+              <template slot-scope="scope" prop="addressdetail">
+                <el-input disabled v-model="scope.row.addressdetail"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="工作单位名称" align="center" width="160">
+              <template slot-scope="scope" prop="workunit">
+                <el-input disabled v-model="scope.row.workunit" maxlength="100"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="工作单位地址" align="center" width="160">
+              <template slot-scope="scope" prop="workaddress">
+                <el-input disabled v-model="scope.row.workaddress" maxlength="100"></el-input>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </el-dialog>
+      <!-- 对公受益人分配 -->
+      <el-dialog :visible.sync="dialogFormPublic" width="94%">
+        <div class="work_queue" style="display: flex;">
+          <span>赔案保单信息</span>
+          <div class="box"></div>
+        </div>
+        <div class="lable">
+          <el-table
+            :data="benefitData"
+            @row-click="getPubBenfit"
+            border
+            highlight-current-row
+            :header-cell-style="{background:'#F7FAFF',color:'#333333'}"
+          >
+            <el-table-column label="序号" type="index" align="center" width="50"></el-table-column>
+            <el-table-column prop="contno" label="保单号" align="center"></el-table-column>
+            <el-table-column prop="pay" label="赔付金额" align="center"></el-table-column>
+            <el-table-column prop="state" label="分配情况" align="center"></el-table-column>
+          </el-table>
+        </div>
+        <div class="work_queue" style="display: flex;margin-top: 10px;">
+          <span>理赔受益人信息</span>
+          <div class="box"></div>
+        </div>
+        <div class="lable">
+          <el-table
+            :data="benefitPubArray"
+            style="width: 100%;"
+            :header-cell-style="{background:'#F7FAFF',color:'#333333'}"
+          >
+            <el-table-column label="序号" type="index" align="center" width="50"></el-table-column>
+            <el-table-column label="对公账户" align="center" width="160">
+              <template slot="header">
+                <span class="redStars">&nbsp;*&nbsp;</span>
+                <span>对公账户</span>
+              </template>
+              <template slot-scope="scope" prop="accname">
+                <el-select
+                  v-model="scope.row.accname"
+                  @change="changeAccname(scope.row,scope.$index)"
+                  placeholder="请选择"
+                >
+                  <el-option
+                    v-for="item in accountList"
+                    :key="item.accname"
+                    :label="item.accname"
+                    :value="item.accname"
+                  ></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="分配比例（%）" align="center" width="160">
+              <template>
+                <el-input disabled type="text" value="100"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="账户所有人姓名" align="center" width="150">
+              <template slot-scope="scope" prop="accpername">
+                <el-input disabled v-model="scope.row.accpername" maxlength="20"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="授权账户号码" align="center" width="240">
+              <template slot-scope="scope" prop="bankaccno">
+                <el-input disabled v-model="scope.row.bankaccno" maxlength="100"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="授权银行" align="center" width="230">
+              <template slot-scope="scope">
+                <el-select
+                  disabled
+                  placeholder="请选择"
+                  v-model="scope.row.bankcode"
+                  @change="getBanchBank(scope.row)"
+                  clearable
+                  filterable
+                >
+                  <el-option
+                    v-for="item in tBankList"
+                    :key="item.bankid"
+                    :label="item.bankname"
+                    :value="item.bankid"
+                  ></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="所在地区" align="center" width="200">
+              <template slot-scope="scope" prop="bankprovince">
+                <el-select disabled v-model="scope.row.bankprovince" placeholder="请选择">
+                  <el-option
+                    v-for="item in bankAddressList"
+                    :key="item.standardareasid"
+                    :label="item.standardareasname"
+                    :value="item.standardareasid"
+                  ></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="支行" align="center" width="280">
+              <template slot-scope="scope">
+                <el-select v-model="scope.row.bankbranch" disabled placeholder="请选择">
+                  <el-option
+                    v-for="item in branchBankList"
+                    :key="item.banklocationsid"
+                    :label="item.banklocationsname"
+                    :value="item.banklocationsid"
+                  ></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div style="background-color:#fff;text-align:right;padding:10px 20px;">
+            <el-button
+              type="primary"
+              round
+              :disabled="this.deleteBnfContNo == ''"
+              @click="savePubBenefit()"
+            >保 存</el-button>
+          </div>
+        </div>
+      </el-dialog>
+      <Drag v-if="rgtclass == '微信渠道'" ref="dragno" :rgtobj="rgtobj"></Drag>
+    </el-container>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { service, post } from "../../utils/request";
+import { IDType, getCodeType } from "../../utils/service";
+import Policy from "../../components/policy";
+import Drag from "../../components/dragCard";
+export default {
+  components: {
+    Policy,
+    Drag
+  },
+  name: "IntegratDetails",
+  directives: {
+    "el-select-loadmore": {
+      bind(el, binding) {
+        const elss = el.querySelector(
+          ".el-select-dropdown .el-select-dropdown__wrap"
+        );
+        elss.addEventListener("scroll", function() {
+          const condition =
+            this.scrollHeight - this.scrollTop <= this.clientHeight;
+          if (condition) {
+            binding.value();
+          }
+        });
+      }
+    }
+  },
+  data() {
+    return {
+      isShowMenu: true,
+      relatoinsureList: [], // 报案人与出险人关系
+      linglist: [
+        {
+          id: "8",
+          name: "投保人"
+        },
+        {
+          id: "32",
+          name: "被保人"
+        }
+      ],
+      workListss: [],
+      // ===受益人分配===
+      isContractState: "",
+      dialogFormVisible: false,
+      dialogFormPublic: false,
+      benefitData: [],
+      benefitArray: [],
+      conNum: "",
+      deleteBnfContNo: "",
+      benefitPubArray: [],
+      branchBankListss: [],
+      newbranchBankList: [],
+      newcitylist1: [],
+      newarealist1: [],
+      provinceListsss: [],
+      relationss: [],
+      accountList: [],
+      // ===End===
+      rgtclass: "柜面渠道",
+      outerVisible: false,
+      innerVisible: false,
+      approveMangeArray: [], //审批管理列表
+      auditMangeArray: [], // 审核管理列表
+      giveTypeList: [
+        {
+          code: "0",
+          codename: "给付"
+        },
+        {
+          code: "1",
+          codename: "拒赔"
+        },
+        {
+          code: "2",
+          codename: "不承担"
+        }
+      ],
+      rules: {
+        examIdea: [
+          {
+            required: true,
+            message: "请输入审批意见",
+            trigger: "blur"
+          }
+        ],
+        examConclusion: [
+          {
+            required: true,
+            message: "请选择审批结论",
+            trigger: ["blur", "change"]
+          }
+        ],
+        examNoPassReason: [
+          {
+            required: true,
+            message: "请选择回退原因",
+            trigger: ["blur", "change"]
+          }
+        ],
+        examNoPassDesc: [
+          {
+            required: true,
+            message: "请输入回退原因说明",
+            trigger: "blur"
+          }
+        ]
+      },
+      auditObj: {
+        clmNo: null, // 赔案号
+        operator: localStorage.getItem("userCode"), // 操作员
+        mngCom: localStorage.getItem("comCode"), // 机构编码
+        auditConclusion: "", //审核结论
+        regect: "", // 审批标记
+        examIdea: "", // 审批意见
+        examConclusion: "", // 审批结论
+        examNoPassReason: "", // 审批回退原因
+        examNoPassDesc: "" //  审批回退原因描述
+      },
+      backReason: [],
+      expands: [],
+      downloadpath: "", //保项计算信息PDF
+      remarkContents: "", // 就诊医院备注
+      toShowss: false, // 就诊医院备注
+      abc: false,
+      confirm: true,
+      btn: false,
+      isSaveForm: 1,
+      bankAccountNumBlur: 1,
+      bankFirst: "",
+      pagesize: 10,
+      currpage: 1,
+      currentPage: 1,
+      isInq: false,
+      isNotice: false,
+      isSecond: false,
+      isFee: false,
+      total: 0,
+      genObj: {},
+      countData1: [],
+      countData2: [],
+      countData3: [],
+      countData4: [],
+      countData5: [],
+      countData6: [],
+      unCheck: false,
+      unValue: false,
+      unValueNo: false,
+      unFlag: false,
+      saveFlag: false,
+      isSaveFlag: true,
+      isSave: false,
+      isEmpty: false,
+      bigObj: {},
+      bigObj2: {},
+      casebackList: "",
+      remarkDesc: "",
+      pagesizeRemark: 5, // 备注分页
+      currpageRemark: 1,
+      remarkTableData: [], // 备注表格
+      toShow: true,
+      remarkFormVisible: false, // 备注弹框显示与否
+      flag1: false,
+      flag2: false,
+      flag3: false,
+      obj: {},
+      axiosList: [],
+      objForm: {
+        operator: localStorage.getItem("userCode"),
+        mngcom: localStorage.getItem("comCode"),
+        customerno: this.$route.query.customerno,
+        // accno: null,
+        rgtno: null,
+        agentcode: sessionStorage.getItem("agentcode"),
+        remark: "",
+        idenddate: "",
+        reasoncode: [],
+        occname: "",
+        occidtype: "",
+        occidno: "",
+        occidno1: "",
+        sex: "",
+        age: "",
+        applydate: "",
+        accidenttype: "",
+        notice: "",
+        contno: "",
+        agentphone: "",
+        directpay: "0",
+        accidentdate: "",
+        accidentreason: "",
+        // accdegree: "",
+        accidentcourse: "",
+        accidentsite: [],
+        accsite: "",
+        accprovince: "",
+        acccity: "",
+        acccounty: "",
+        accaddress: "",
+        hospitalname: "",
+        hospitallesion: "",
+        hospitalbed: "",
+        inhospitaldate: "",
+        outhospitaldate: "",
+        dianosedate: "",
+        dieasetype: "",
+        dianobasis: [],
+        deathdate: "",
+        pointbnf: "",
+        exempt: "",
+        disableddrpt: "",
+        occuprpt: "",
+        rgtantname: "",
+        relation: "",
+        rgtantidtype: "",
+        rgtantidno: "",
+        rgtantprovince: "",
+        rgtantcity: "",
+        rgtantcounty: "",
+        rgtantaddress: "",
+        postcode: "",
+        rgtantmobile: "",
+        recename: "",
+        receidno: "",
+        bankaccno: "",
+        headbankname: "",
+        bankname: "",
+        province: "",
+        city: "",
+        address: "",
+        profession: "",
+        annualincome: "",
+        contactway: "",
+        workunit: "",
+        workaddress: "",
+        receiveaccprovinc: "",
+        receivecity: "",
+        receivedistrict: "",
+        receiveaddress: "",
+        rgtconclusion: "",
+        norgtreason: "",
+        reasondetail: ""
+      },
+      ObjForm: {
+        reasoncode: []
+      },
+      NewObj: {
+        reasoncode: []
+      },
+      reasoncode: [],
+      rgtno: "",
+
+      rgtNo: "",
+      accNo: "",
+      array: [],
+      province: "",
+      city: "",
+      address: "",
+      bankname: "",
+      cityArr: [],
+      addressArr: [],
+      bankArr: [],
+      tableMessage1: {},
+      tableMessage2: {},
+      tableMessage3: {},
+      tableMessage4: {},
+      tableMessage5: {},
+      // tableMessage6: {},
+      activeStep: "0",
+      btnArr: [
+        "出险人信息",
+        "保单既往查询",
+        // "既往赔案查询",
+        // "保全记录",
+        "立案申请信息",
+        "出险信息",
+        "申请人信息",
+        "领款人信息",
+        "诊/伤/手/骨/重",
+        // "诊断代码",
+        // "伤残代码",
+        // "手术代码",
+        // "骨折代码",
+        // "重疾代码",
+        // "",
+        "理算信息查询",
+        // "保单计算信息",
+        // "保项计算信息",
+        "审核/审批管理",
+        // "审批管理",
+        "备注信息",
+        "理赔进展"
+      ],
+      centerDialogVisible: false,
+      gridData: [
+        {
+          date: "2016-05-02",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄"
+        }
+      ],
+      dialogTableVisible: false,
+      conclusionForm: {}, //立案结论信息
+      caseLossListArr: [], // 既往赔案
+      baoquanArr: [], // 保全记录
+      sexList: [], //性别枚举值
+      cardTypeList: [], // 证件类型
+      accidenttypeList: [], // 出险类型
+      accReasonList: [], // 事故原因
+      shoushangList: [], //受伤程度
+      chuxianResult: [], //出险结果
+      llclaimtypeList: [], // 理赔类型
+      provinceList: [], // 省
+      cityList: [], // 市
+      areaList: [], // 区
+      provinceList1: [], // 省
+      cityList1: [], // 市
+      areaList1: [], // 区
+      provinceList2: [], // 省
+      provinceList3: [], // 省
+      cityList2: [], // 市
+      areaList2: [], // 区
+      areaListss: [], // 区
+      cityListss: [], // 市
+      cityList3: [], // 市
+      areaList3: [], // 区
+      hospitalList: [], // 医院
+      hospitalLists: [], // 医院
+      workList: [], // 职业
+      tBankList: [], //银行总行
+      bankAddressList: [], //银行地区
+      branchBankList: [], //银行分行
+      lists: [
+        {
+          code: "0",
+          name: "说"
+        }
+      ],
+      accidentReason: [
+        {
+          value: "1",
+          text: "交通事故"
+        },
+        {
+          value: "2",
+          text: "单车交通事故"
+        },
+        {
+          value: "3",
+          text: "意外受伤"
+        },
+        {
+          value: "4",
+          text: "高坠"
+        },
+        {
+          value: "5",
+          text: "溺水"
+        },
+        {
+          value: "6",
+          text: "其他"
+        }
+      ],
+      placeOptions: [
+        {
+          value: "1",
+          label: "室内",
+          children: [
+            {
+              value: "01",
+              label: "厂房内"
+            },
+            {
+              value: "02",
+              label: "室内职场"
+            },
+            {
+              value: "03",
+              label: "住宅内"
+            },
+            {
+              value: "04",
+              label: "公共室内"
+            },
+            {
+              value: "15",
+              label: "电梯"
+            }
+          ]
+        },
+        {
+          value: "2",
+          label: "室外",
+          children: [
+            {
+              value: "05",
+              label: "工地"
+            },
+            {
+              value: "06",
+              label: "农田"
+            },
+            {
+              value: "07",
+              label: "山岭"
+            },
+            {
+              value: "08",
+              label: "公共室外"
+            }
+          ]
+        },
+        {
+          value: "3",
+          label: "道路上"
+        },
+        {
+          value: "4",
+          label: "交通工具",
+          children: [
+            {
+              value: "09",
+              label: "运营车辆内"
+            },
+            {
+              value: "10",
+              label: "私家车辆内"
+            },
+            {
+              value: "11",
+              label: "火车"
+            },
+            {
+              value: "12",
+              label: "飞机"
+            },
+            {
+              value: "13",
+              label: "轮船"
+            },
+            {
+              value: "14",
+              label: "非机动车"
+            }
+          ]
+        },
+        {
+          value: "5",
+          label: "其他"
+        }
+      ],
+      dianoBasis: [
+        {
+          value: "1",
+          text: "病理报告"
+        },
+        {
+          value: "2",
+          text: "生化检查"
+        },
+        {
+          value: "3",
+          text: "心电图检查"
+        },
+        {
+          value: "4",
+          text: "放射线检查"
+        },
+        {
+          value: "5",
+          text: "内窥镜检查"
+        },
+        {
+          value: "6",
+          text: "其他检查"
+        }
+      ],
+      resource: [
+        {
+          value: "1",
+          text: "恶性肿瘤"
+        },
+        {
+          value: "2",
+          text: "非恶性肿瘤"
+        }
+      ],
+      resource1: [
+        {
+          value: "3",
+          text: "交通事故"
+        },
+        {
+          value: "4",
+          text: "非交通事故"
+        }
+      ],
+      resource2: [],
+      relations: [],
+      form: {
+        name: "",
+        region: "",
+        date1: "",
+        date2: "",
+        delivery: false,
+        type: [],
+        resource: "",
+        desc: ""
+      },
+      activeName: ["1", "2", "3", "4", "5", "6", "7", "8"],
+      labelPosition: "right",
+      isbox: true,
+      isbox2: true,
+      style1: {
+        margin: "0 0 0 15px"
+      },
+      style2: {
+        margin: "0 0 0 15px"
+      },
+      active: "first",
+      activeR: "one",
+      tableData: [],
+      pageData: {
+        startPage: 0,
+        endPage: 100
+      },
+      getRescode: [], // 获取理赔类型
+      diseaseListArr: [], //疾病代码
+      diagnoseListArr: [], // 诊断代码
+      operationListArr: [], // 手术
+      operationList: [], // 手术名称
+      fractureList: [],
+      fractureDList: [],
+      fractureListArr: [], //骨折
+      illnessListArr: [], // 重疾
+      getJZS: [], // 疾病，诊断，手术
+      getZG: [], // 重疾
+      getGZ: [], // 骨折
+      isContractStates: "",
+
+      conculsion: {
+        rgtconclusion: "",
+        reasondetail: "",
+        norgtreason: ""
+      },
+      rgtobj: null
+    };
+  },
+  filters: {
+    // codeToName: () => {
+
+    // }
+    codeToname: function(obj, arr) {
+      var a = null;
+      arr.forEach(element => {
+        if (element.code === obj) {
+          a = element.name;
+        }
+      });
+      return a;
+    }
+  },
+  created() {
+    // this.riskResultList = riskResult.bodys;
+    this.rgtno = this.$route.query.rgtno
+      ? this.$route.query.rgtno
+      : sessionStorage.getItem("rgtnumber");
+    this.customerno = this.$route.query.customerno;
+    this.clmno = this.$route.query.clmno;
+    this.initInfor(); // 基本信息查询
+    // this.reasoncode ? (this.value = []) : (this.value = "");
+  },
+  mounted() {
+    this.relationss = getCodeType("bnfRelationToInsured"); // 申请人与出险人关系
+    if (sessionStorage.getItem("hospitalList")) {
+      this.hospitalList = JSON.parse(sessionStorage.getItem("hospitalList"));
+    }
+    this.getCodeList();
+    this.getWorks();
+    this.getSheng();
+    this.getHeadBank();
+    this.getBankAddress();
+
+    this.buttonCheck();
+    this.initData();
+    this.queryButtonCheck();
+    this.conculsionregister(); // 立案结论查询
+    this.backReason = getCodeType("llbackreason");
+
+    this.queryTranNo(); // 微信框参数获取及报案信息获取
+    // setTimeout(() => {
+    //   if (this.rgtobj != null && this.rgtclass == "微信渠道") {
+    //     // this.$refs.dragno.queryRegisterRelation();
+    //   }
+    // }, 1000);
+    if (this.$router.query && this.$router.query.auth) {
+      this.$watermark.set();
+    } else {
+      this.$watermark.set(
+        localStorage.getItem("userCode"),
+        localStorage.getItem("userName")
+      );
+    }
+
+    if (
+      this.$route.path == "/integratDetails" &&
+      this.$route.query.source == "Query"
+    ) {
+      this.isShowMenu = false;
+    } else {
+      this.isShowMenu = true;
+    }
+  },
+  methods: {
+    // ===========================
+    // 根据合同处理控制受益人分配按钮是否置灰
+    buttonCheck() {
+      post(service.buttonCheck, {
+        bodys: {
+          customerno: this.$route.query.customerno,
+          clmno: this.$route.query.rgtno
+        }
+      }).then(res => {
+        if (res.data.bodys == true) {
+          this.isContractState = true;
+        } else if (res.data.bodys == false) {
+          this.isContractState = false;
+        }
+      });
+    },
+    benefitF() {
+      // 受益人分配
+      if (this.objForm.directpay == "0") {
+        this.dialogFormVisible = true;
+        this.getShengss();
+      } else {
+        this.dialogFormPublic = true;
+        this.initList();
+      }
+      // 刷新未分配为已分配
+      this.getBenefitInfo();
+    },
+    initList() {
+      post(service.compAccountQuery, {
+        bodys: this.listForm
+      })
+        .then(result => {
+          if (result.data.headers.code === "200") {
+            this.accountList = result.data.bodys.rows;
+          }
+        })
+        .catch(error => {});
+    },
+    // 对公
+    getBanchPubBank(key1, key2) {
+      post(service.queryTbanklocations, {
+        bodys: {
+          bankid: this.benefitPubArray[0].bankcode,
+          standardareasid: this.benefitPubArray[0].bankprovince
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.branchBankList = res.data.bodys;
+          // this.listForm2.bankbranch = "";
+        }
+      });
+    },
+    //对公银行支行
+    getBranchBank() {
+      if (this.benefitPubArray[0].bankbranch) {
+        post(service.queryTbanklocations, {
+          bodys: {
+            bankid: this.benefitPubArray[0].bankcode,
+            standardareasid: this.benefitPubArray[0].bankprovince
+          }
+        }).then(res => {
+          if (res.data.header.code === "200") {
+            this.branchBankList = res.data.bodys;
+          }
+        });
+      }
+    },
+    // 获取受益人分配信息
+    getBenefitInfo() {
+      post(service.queryClaimCont, {
+        bodys: {
+          customerno: this.$route.query.customerno, //客户号
+          clmno: this.$route.query.rgtno //赔案号
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.benefitData = res.data.bodys;
+        }
+      });
+    },
+    getBenfit(row) {
+      post(service.queryClaimBnf, {
+        bodys: {
+          clmno: this.$route.query.rgtno,
+          contno: row.contno
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.benefitArray = res.data.bodys;
+          setTimeout(() => {
+            this.getBanchData();
+            this.getCity();
+            this.getCountry();
+            // this.getHeadBank();
+          }, 1000);
+        }
+      });
+    },
+    getPubBenfit(row) {
+      post(service.queryGroupBnf, {
+        bodys: {
+          contno: row.contno
+        }
+      }).then(res => {
+        if (res.data.headers.code == "200") {
+          if (res.data.bodys.length == 0) {
+            this.benefitPubArray = this.emptyList;
+            this.emptyList[0].accname = "";
+            this.getBanchPubBank();
+            this.getBranchBank();
+          } else {
+            this.benefitPubArray = res.data.bodys;
+            this.relationId = res.data.bodys[0].relationId;
+            this.groupaccountid = res.data.bodys[0].groupaccountid;
+            setTimeout(() => {
+              this.getBanchPubBank();
+              this.getBranchBank();
+            }, 1000);
+          }
+        }
+      });
+    },
+    // 银行支行
+    getBanchData() {
+      for (let key = 0; key < this.benefitArray.length; key++) {
+        if (
+          this.benefitArray[key].bankprovince &&
+          this.benefitArray[key].bankcode
+        ) {
+          post(service.queryTbanklocations, {
+            bodys: {
+              bankid: this.benefitArray[key].bankcode,
+              standardareasid: this.benefitArray[key].bankprovince
+            }
+          }).then(res => {
+            if (res.data.header.code === "200") {
+              this.$set(this.newbranchBankList, key, res.data.bodys);
+            }
+          });
+        }
+      }
+    },
+    getCity() {
+      for (let key = 0; key < this.benefitArray.length; key++) {
+        if (this.benefitArray[key].addressprovince) {
+          post(service.getCity, {
+            bodys: {
+              state: "city",
+              code: this.benefitArray[key].addressprovince
+            }
+          }).then(res => {
+            if (res.data.headers.code === "200") {
+              // this.newcitylist1[key] = res.data.bodys.rows;
+              this.$set(this.newcitylist1, key, res.data.bodys.rows);
+            }
+          });
+        }
+      }
+    },
+    getCountry() {
+      for (let key = 0; key < this.benefitArray.length; key++) {
+        if (this.benefitArray[key].addresscity) {
+          post(service.getCity, {
+            bodys: {
+              state: "country",
+              code: this.benefitArray[key].addresscity
+            }
+          }).then(res => {
+            if (res.data.headers.code === "200") {
+              // this.newarealist1[key] = res.data.bodys.rows;
+              this.$set(this.newarealist1, key, res.data.bodys.rows);
+            }
+          });
+        }
+      }
+    },
+    getShengss() {
+      // 获取省
+      post(service.getCity, {
+        bodys: {
+          state: "province",
+          code: ""
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.provinceListsss = res.data.bodys.rows;
+        }
+      });
+    },
+    // ===========================
+    getexamIdea(row) {
+      this.auditObj.examIdea = row.auditidea;
+    },
+    getgivetypeval(data) {
+      let res = null;
+      this.giveTypeList.map(item => {
+        if (item.code == data) {
+          res = item.codename;
+        }
+      });
+      return res;
+    },
+    // 合同处理按钮控制是否置灰
+    queryButtonCheck() {
+      post(service.queryButtonCheck, {
+        bodys: {
+          clmno: this.$route.query.rgtno,
+          customerno: this.$route.query.customerno
+        }
+      }).then(res => {
+        if (res.data.bodys == true) {
+          this.isContractStates = true;
+        } else if (res.data.bodys == false) {
+          this.isContractStates = false;
+        }
+      });
+    },
+    goDocumentsDialog() {
+      this.outerVisible = true;
+    },
+
+    goBack() {
+      this.$router.push({ name: "ListQuery" });
+    },
+
+    // 照会查询
+    goPresent() {
+      this.$router.push({
+        name: "presentDetail",
+        params: {
+          dataOfTable: this.$route.query.rgtno
+        }
+      });
+    },
+    // 二核
+    goSecond() {
+      this.$router.push({
+        name: "secondSearch",
+        params: {
+          dataOfTable: JSON.stringify({ rgtno: this.$route.query.rgtno })
+        }
+      });
+    },
+    // 合同处理查询
+    goQueryContractProcess() {
+      this.$router.push({
+        name: "queryContractProcess",
+        params: {
+          dataOfTable: JSON.stringify({
+            rgtno: this.$route.query.rgtno,
+            customerno: this.$route.query.customerno
+          })
+        }
+      });
+    },
+    // 影像查询
+    toInitImg() {
+      let routeUrl = this.$router.resolve({
+        name: "initImg",
+        query: { rgtno: this.$route.query.rgtno }
+      });
+      window.open(routeUrl.href, "_blank");
+    },
+    // 医疗单证
+    goDocuments() {
+      let row = { rgtno: this.rgtno, customerno: this.customerno };
+      this.$router.push({
+        name: "medicalDocuments",
+        params: {
+          dataOfTable: JSON.stringify(row)
+        }
+      });
+    },
+    goBeijing() {
+      this.$router.push({
+        name: "bjDocuments",
+        query: { rgtno: this.$route.query.rgtno }
+      });
+    },
+    // 调查
+    goDiao() {
+      this.$router.push({
+        name: "examineSearch",
+        params: {
+          dataOfTable: this.$route.query.rgtno
+        }
+      });
+    },
+    // 获取总行
+    getHeadBank() {
+      post(service.tBank, {
+        bodys: {}
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.tBankList = res.data.bodys;
+          this.objForm.province = "";
+          this.objForm.bankname = "";
+        }
+      });
+    },
+    // 银行所在地区
+    getBankAddress() {
+      post(service.queryStand, {
+        bodys: {}
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.bankAddressList = res.data.bodys;
+        }
+      });
+    },
+    // 银行分行
+    getBanchBank(key1, key2) {
+      post(service.queryTbanklocations, {
+        bodys: {
+          bankid: key1,
+          standardareasid: key2
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.branchBankList = res.data.bodys;
+          this.objForm.bankname = "";
+        }
+      });
+    },
+    // 获取省
+    getSheng() {
+      post(service.getCity, {
+        bodys: {
+          state: "province",
+          code: ""
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.provinceList = res.data.bodys.rows;
+          this.provinceList1 = res.data.bodys.rows;
+          this.provinceList2 = res.data.bodys.rows;
+          this.provinceList3 = res.data.bodys.rows;
+        }
+      });
+    },
+    getCityCode() {
+      if (this.objForm.accprovince) {
+        post(service.getCity, {
+          bodys: {
+            state: "city",
+            code: this.objForm.accprovince
+          }
+        }).then(res => {
+          if (res.data.headers.code === "200") {
+            this.cityList = res.data.bodys.rows;
+          }
+        });
+      }
+      if (this.objForm.rgtantprovince) {
+        post(service.getCity, {
+          bodys: {
+            state: "city",
+            code: this.objForm.rgtantprovince
+          }
+        }).then(res => {
+          if (res.data.headers.code === "200") {
+            this.cityList3 = res.data.bodys.rows;
+            console.log("GGGGG", this.cityList3);
+          }
+        });
+      }
+      // if (this.objForm.receiveaccprovinc) {
+      //   post(service.getCity, {
+      //     bodys: {
+      //       state: "city",
+      //       code: this.objForm.receiveaccprovinc
+      //     }
+      //   }).then(res => {
+      //     if (res.data.headers.code === "200") {
+      //       this.cityList3 = res.data.bodys.rows;
+      //     }
+      //   });
+      // }
+    },
+    getcountyCode() {
+      if (this.objForm.acccity) {
+        post(service.getCity, {
+          bodys: {
+            state: "country",
+            code: this.objForm.acccity
+          }
+        }).then(res => {
+          if (res.data.headers.code === "200") {
+            this.areaList = res.data.bodys.rows;
+          }
+        });
+      }
+      if (this.objForm.rgtantcity) {
+        post(service.getCity, {
+          bodys: {
+            state: "country",
+            code: this.objForm.rgtantcity
+          }
+        }).then(res => {
+          if (res.data.headers.code === "200") {
+            this.areaList3 = res.data.bodys.rows;
+          }
+        });
+      }
+      if (this.objForm.receivecity) {
+        post(service.getCity, {
+          bodys: {
+            state: "country",
+            code: this.objForm.receivecity
+          }
+        }).then(res => {
+          if (res.data.headers.code === "200") {
+            this.areaList2 = res.data.bodys.rows;
+          }
+        });
+      }
+    },
+
+    getBranchBank() {
+      if (this.objForm.bankname) {
+        post(service.queryTbanklocations, {
+          bodys: {
+            bankid: this.objForm.headbankname,
+            standardareasid: this.objForm.province
+          }
+        }).then(res => {
+          if (res.data.header.code === "200") {
+            this.branchBankList = res.data.bodys;
+          }
+        });
+      }
+    },
+    // 立案详情查询接口
+    initInfor() {
+      let _this = this;
+      (_this.filingArr = [
+        {
+          url: service.occperson,
+          params: {
+            bodys: {
+              customerno: _this.$route.query.customerno,
+              rgtno: _this.$route.query.rgtno
+            }
+          }
+        },
+        {
+          url: service.rgtntregister,
+          params: {
+            bodys: {
+              rgtno: _this.$route.query.rgtno
+            }
+          }
+        },
+        {
+          url: service.occinformation,
+          params: {
+            bodys: {
+              customerno: _this.$route.query.customerno,
+              rgtno: _this.$route.query.rgtno
+            }
+          }
+        },
+        {
+          url: service.rgantperson,
+          params: {
+            bodys: {
+              rgtno: _this.$route.query.rgtno
+            }
+          }
+        },
+        {
+          url: service.receviceperson,
+          params: {
+            bodys: {
+              rgtno: _this.$route.query.rgtno
+            }
+          }
+        },
+
+        {
+          url: service.getButtonState,
+          params: {
+            bodys: {
+              rgtno: _this.$route.query.rgtno
+            }
+          }
+        },
+        {
+          url: service.getquList,
+          params: {
+            bodys: {
+              clmno: _this.$route.query.rgtno
+            }
+          }
+        },
+        {
+          url: service.queryCritical,
+          params: {
+            bodys: {
+              clmno: _this.$route.query.rgtno
+            }
+          }
+        },
+        {
+          url: service.queryFracture,
+          params: {
+            bodys: {
+              clmno: _this.$route.query.rgtno
+            }
+          }
+        },
+        {
+          url: service.auditMange, //审核管理
+          params: {
+            bodys: {
+              rgtno: _this.$route.query.rgtno
+            }
+          }
+        },
+        {
+          url: service.shengpiMange, //审批管理
+          params: {
+            bodys: {
+              rgtno: _this.$route.query.rgtno
+            }
+          }
+        }
+      ]),
+        _this.filingArr.forEach(postItem => {
+          _this.axiosList.push(post(postItem.url, postItem.params));
+        });
+      axios
+        .all(_this.axiosList)
+        .then(function(res) {
+          // 出险人信息
+          if (res[0].data.headers.code === "500") {
+            this.$message.error(res[0].data.headers.message);
+            return;
+          }
+          _this.tableMessage1 = res[0].data.bodys.rows[0];
+          // sessionStorage.setItem('accno',_this.tableMessage1.accno)
+          // 立案申请信息
+          if (res[1].data.headers.code === "500") {
+            _this.$message.error(res[1].data.headers.message);
+            return;
+          }
+          _this.tableMessage2 = res[1].data.bodys.rows[0];
+          // 出险信息
+          if (res[2].data.headers.code === "500") {
+            _this.$message.error(res[2].data.headers.message);
+            return;
+          }
+          _this.tableMessage3 = res[2].data.bodys.rows[0];
+          // 申请人信息
+          if (res[3].data.headers.code === "500") {
+            _this.$message.error(res[3].data.headers.message);
+            return;
+          }
+          _this.tableMessage4 = res[3].data.bodys.rows[0];
+          // 领款人信息
+          if (res[4].data.headers.code === "500") {
+            _this.$message.error(res[4].data.headers.message);
+            return;
+          }
+          _this.tableMessage5 = res[4].data.bodys.rows[0];
+          // buttom状态
+          _this.isInq = res[5].data.bodys.inq;
+          _this.isNotice = res[5].data.bodys.notice;
+          _this.isSecond = res[5].data.bodys.second;
+          _this.isFee = res[5].data.bodys.fee;
+          if (res[6].data.bodys[0] != null) {
+            _this.getJZS = res[6].data.bodys;
+            for (var i = 0; i < _this.getJZS.length; i++) {
+              if (
+                _this.getJZS[i].defocode &&
+                _this.getJZS[i].defocodename &&
+                _this.getJZS[i].defograde
+              ) {
+                _this.diseaseListArr.push({
+                  disabilitycode: _this.getJZS[i].defocode,
+                  disabilityname: _this.getJZS[i].defocodename,
+                  disabilitylevel: _this.getJZS[i].defograde
+                });
+              }
+              if (_this.getJZS[i].diagcode && _this.getJZS[i].diagcodename) {
+                _this.diagnoseListArr.push({
+                  diagnosticcode: _this.getJZS[i].diagcode,
+                  diagnosticname: _this.getJZS[i].diagcodename
+                }); //疾病代码
+              }
+              if (
+                _this.getJZS[i].operationcode &&
+                _this.getJZS[i].operationcodename
+              ) {
+                _this.operationListArr.push({
+                  operationcode: _this.getJZS[i].operationcode,
+                  operationname: _this.getJZS[i].operationcodename
+                });
+              }
+            }
+          }
+          _this.illnessListArr = res[7].data.bodys;
+          _this.fractureListArr = res[8].data.bodys;
+          // 保项计算
+          _this.auditMangeArray = res[9].data.bodys.rows;
+          if (_this.auditMangeArray.length > 0) {
+            _this.auditMangeArray.forEach(item => {
+              _this.auditObj.auditexplain = item.auditexplain;
+            });
+          }
+
+          _this.approveMangeArray = res[10].data.bodys.rows;
+
+          let newObj = {};
+
+          Object.assign(
+            _this.objForm,
+            _this.tableMessage1,
+            _this.tableMessage2,
+            _this.tableMessage3,
+            _this.tableMessage4,
+            _this.tableMessage5
+          );
+          // //获取理赔类型
+          _this.bigObj = JSON.stringify(_this.objForm);
+        })
+        .then(() => {
+          this.getSheng();
+          this.getCityCode();
+          this.getcountyCode();
+          this.getBranchBank();
+          if (this.objForm.hospitalname) {
+            post(service.getHospital, {
+              pagestart: 0,
+              pageend: 100,
+              likename: this.objForm.hospitalname
+            }).then(res => {
+              this.hospitalLists = res.data.bodys;
+              this.remarkContents = this.hospitalLists[0].remark;
+            });
+          }
+          if (this.objForm.receiveaccprovinc) {
+            post(service.getCity, {
+              bodys: {
+                state: "city",
+                code: this.objForm.receiveaccprovinc
+              }
+            }).then(res => {
+              if (res.data.headers.code === "200") {
+                this.cityListss = res.data.bodys.rows;
+              }
+            });
+          }
+          if (this.objForm.receivecity) {
+            post(service.getCity, {
+              bodys: {
+                state: "country",
+                code: this.objForm.receivecity
+              }
+            }).then(res => {
+              if (res.data.headers.code === "200") {
+                this.areaListss = res.data.bodys.rows;
+              }
+            });
+          }
+          if (this.objForm.profession) {
+            post(service.occupation, {
+              likename: "",
+              pageend: 800,
+              pagestart: 0
+            }).then(res => {
+              this.workListss = res.data.bodys;
+            });
+          }
+        });
+    },
+    initData() {
+      // 赔案计算信息
+      post(service.queryClaimInfo, {
+        bodys: {
+          clmno: this.$route.query.rgtno
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.countData1 = res.data.bodys;
+        }
+      });
+      // 理赔类型计算类型
+      post(service.queryClaimDutyKindInfo, {
+        bodys: {
+          clmno: this.$route.query.rgtno
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.countData2 = res.data.bodys;
+        }
+      });
+      // 保单计算类型
+      post(service.queryClaimPolicyInfo, {
+        bodys: {
+          clmno: this.$route.query.rgtno
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.countData3 = res.data.bodys;
+        }
+      });
+      // 保项计算类型
+      post(service.queryClaimDetailInfo, {
+        bodys: {
+          clmno: this.$route.query.rgtno
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.countData4 = res.data.bodys;
+        }
+      });
+      // 备注信息
+      post(service.queryDesc, {
+        bodys: {
+          clmno: this.$route.query.rgtno,
+          customerno: this.$route.query.customerno
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.countData5 = res.data.bodys;
+        }
+      });
+      // 理赔进展
+      post(service.LPJZ, {
+        bodys: {
+          clmno: this.$route.query.rgtno
+        }
+      }).then(res => {
+        if (res.data.header.code === "200" && res.data.header.success) {
+          this.countData6 = res.data.bodys;
+        }
+      });
+    },
+    getCodeList: function() {
+      post(service.getCodeList, {
+        // 证件类型，性别，出险类型 事故原因
+        codetype: [
+          "llidtype",
+          "llsex",
+          "accidenttype",
+          // "accdegree",
+          "accreason",
+          "accresult",
+          "llrelation",
+          "llclaimtype",
+          "relatoinsure"
+        ]
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.cardTypeList = res.data.bodys["llidtype"]; // 证件类型
+          this.sexList = res.data.bodys["llsex"]; // 性别
+          this.accidenttypeList = res.data.bodys["accidenttype"]; // 出险类型
+          // this.shoushangList = res.data.bodys["accdegree"]; // 受伤程度
+          this.accReasonList = res.data.bodys["accreason"]; // 事故原因
+          this.relations = res.data.bodys["llrelation"]; // 申请人与出险人关系
+          // this.chuxianResult = res.data.bodys["accresult"]; // 出险结果
+          this.llclaimtypeList = res.data.bodys["llclaimtype"]; // 理赔类型
+          this.relatoinsureList = res.data.bodys["relatoinsure"]; // 报案人与出现人关系
+        }
+      });
+    },
+    getWorks: function() {
+      post(service.getWork, {
+        // 获取职业
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.workList = res.data.bodys;
+        }
+      });
+    },
+    // 获取职业
+    codeToname: function(obj, arr) {
+      var a = null;
+      arr.forEach(element => {
+        if (element.code === obj) {
+          a = element.name;
+        }
+      });
+      return a;
+    },
+    updataBank: function() {
+      this.addressArr.forEach((item, index) => {
+        if (item.name == this.payeeForm.city) {
+          this.bankArr = item.address;
+        }
+      });
+    },
+    toRiskList() {
+      this.$router.push({ name: "RiskList" });
+    },
+    handleClick2(tab, event) {
+      this.isbox2 = true;
+      if (tab.index === "0") {
+        this.style2 = "margin: 0 0 0 15px";
+      }
+      if (tab.index === "1") {
+        this.style2 = "margin: 0 0 0 112px";
+        // this.style2="transform: translateX(100%+15px)"
+      }
+      if (tab.index === "2") {
+        this.style2 = "margin: 0 0 0 209px";
+      }
+      if (tab.index === "3") {
+        this.style2 = "margin: 0 0 0 306px";
+      }
+      if (tab.index === "4") {
+        this.style2 = "margin: 0 0 0 403px";
+      }
+      if (tab.index === "5") {
+        this.style2 = "margin: 0 0 0 500px";
+      }
+    },
+    jump(index) {
+      if (index == "top") {
+        document.getElementById(0).scrollIntoView();
+        this.$store.dispatch("titleshow", "");
+      } else {
+        this.activeStep = index;
+        this.$store.dispatch("titleshow", "true");
+        setTimeout(() => {
+          if (this.$store.getters.titleclose == "true") {
+            document.getElementById(index).scrollIntoView();
+          }
+        }, 300);
+      }
+      // document.getElementById(index).scrollIntoView();
+
+      // document.documentElement.scrollTop = document.getElementById(index).offsetTop;
+      // document.body.scrollTop = document.getElementById(index).offsetTop;
+    },
+    toGetRemark() {
+      this.toShowss = true;
+    },
+    // 保项信息PDF
+    clickCell(key) {
+      post(service.getpath, {
+        bodys: {
+          riskcode: key
+        }
+      }).then(res => {
+        this.downloadpath = res.data.bodys.downloadpath;
+        if (res.data.bodys.downloadpath) {
+          window.open("http://" + this.downloadpath, "_blank");
+        }
+      });
+    },
+    queryTranNo() {
+      post(service.queryTranNo, {
+        bodys: {
+          rgtno: this.$route.query.rgtno
+        }
+      })
+        .then(res => {
+          this.rgtobj = res.data.bodys.rgtobj;
+          if (res.data.bodys.rgtclass == "") {
+            this.rgtclass = "柜面渠道";
+          } else if (res.data.bodys.rgtclass == "02") {
+            this.rgtclass = "柜面渠道";
+          } else if (res.data.bodys.rgtclass == "01") {
+            this.rgtclass = "微信渠道";
+          } else if (res.data.bodys.rgtclass == "03") {
+            this.rgtclass = "电话中心渠道";
+          }
+        })
+        .then(() => {
+          this.reportInformation();
+        });
+    },
+    // 报案转立案申请信息
+    reportInformation() {
+      if (this.rgtclass == ("电话中心渠道" || "03")) {
+        post(service.reportInformation, {
+          bodys: {
+            rptno: this.rgtobj
+          }
+        }).then(res => {
+          this.objForm.reportname = res.data.bodys.reportname;
+          this.objForm.reportdate = res.data.bodys.reportdate;
+          this.objForm.reportmobile = res.data.bodys.reportmobile;
+          this.objForm.relatoinsure = res.data.bodys.relatoinsure;
+          this.objForm.reportchannel = res.data.bodys.reportchannel;
+          if (this.objForm.reportchannel == "01") {
+            this.objForm.reportchannel = "微信";
+          } else if (this.objForm.reportchannel == "02") {
+            this.objForm.reportchannel = "柜面";
+          } else if (this.objForm.reportchannel == "03") {
+            this.objForm.reportchannel = "电话中心";
+          }
+        });
+      }
+    },
+    conculsionregister() {
+      post(service.conculsionregister, {
+        bodys: {
+          rgtno: this.$route.query.rgtno
+        }
+      }).then(res => {
+        this.conculsion = res.data.bodys.rows[0];
+      });
+    }
+  },
+  beforeDestroy() {
+    this.$store.dispatch("titleshow", "");
+  }
+};
+</script>
+<style lang="less" scoped>
+.jiuzhens {
+  position: absolute;
+  top: 0;
+  left: 86%;
+  border: none;
+  padding: 10px 0px;
+}
+.jiuzhens:focus,
+.jiuzhens:hover {
+  color: none;
+  background: none;
+}
+//  ----Start---- 备注样式
+.lable {
+  width: auto;
+  margin-top: 0;
+  display: block !important;
+}
+.rightItem {
+  background: rgba(6, 155, 255, 0.6);
+}
+.leftItem {
+  margin-right: 10px;
+  position: relative;
+}
+.poBtn {
+  position: absolute;
+  right: -3%;
+  top: 50px;
+  padding: 5px;
+  color: #0673ff;
+  z-index: 999;
+}
+
+.innerLable1 {
+  background: #fff;
+  margin: 10px 15px 20px;
+  height: auto;
+  width: auto;
+}
+//  ----End---- 备注样式
+.integratDetails {
+  margin: 10px;
+  // margin-right: 0;
+  margin-bottom: 0;
+  box-sizing: border-box;
+  // position: relative;
+
+  .left {
+    width: 90%;
+    float: left;
+  }
+
+  .right {
+    padding: 0 5px;
+    text-align: center;
+    float: right;
+    width: 7%;
+    border: 1px solid #cccccc;
+    // height: 580px;
+    border-radius: 100px;
+    background: #fff;
+    position: absolute;
+    right: 1%;
+    margin-top: 20px;
+
+    p {
+      padding-bottom: 8px;
+    }
+
+    p:first-of-type {
+      margin-top: 45px;
+    }
+
+    p:last-of-type {
+      margin-bottom: 100px;
+    }
+
+    .downArrow {
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .upArrow {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 10px;
+    }
+
+    .top {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 30px;
+    }
+
+    .btn_text {
+      border-bottom: 1px dotted #cccccc;
+    }
+  }
+
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 20px;
+    font-family: Source Han Sans CN;
+
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+
+  .el-form {
+    // background-color: #fff;
+    // padding: 0 20px;
+  }
+
+  .work_queue {
+    position: relative;
+
+    //   img{
+    //      position: relative;
+    //   }
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 27px;
+    box-sizing: border-box;
+  }
+
+  .el-collapse {
+    margin-bottom: 20px;
+  }
+
+  .box {
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #0673ff;
+    position: absolute;
+    z-index: 999;
+  }
+
+  .botton_box {
+    position: fixed;
+    bottom: -6.5px;
+    width: 73%;
+    height: 74px;
+    line-height: 74px;
+    background-image: url("../../assets/images/filing/footer2.png");
+    background-size: 100% 60px;
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 1000;
+  }
+}
+</style>
+<style lang="less">
+.integratDetails {
+  .el-row {
+    &:first-child {
+      padding-top: 20px;
+      //   margin-bottom: 20px;
+    }
+
+    &:last-child {
+      padding-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+
+    .report {
+      display: inline-block;
+      width: 180px;
+      height: 40px;
+      text-align: center;
+      line-height: 40px;
+      background-color: #0673ff;
+      color: #fff;
+      font-size: 14px;
+      font-family: Source Han Sans CN;
+      border-radius: 25px;
+    }
+  }
+
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+}
+
+.integratDetails {
+  .el-input {
+    width: 85%;
+  }
+  .el-select {
+    width: 85%;
+    .el-input {
+      width: 100%;
+    }
+  }
+
+  .place {
+    display: flex;
+    .el-form-item__error {
+      white-space: nowrap;
+    }
+    .el-select {
+      width: 130px;
+    }
+    .risk_address {
+      .el-form-item__content {
+        margin-left: 8px !important;
+      }
+    }
+    // .el-form-item {
+    //   width: 100px;
+    // }
+    .place_des {
+      .el-input__inner {
+        width: 150px;
+      }
+    }
+  }
+
+  .bank {
+    display: flex;
+    .bank_style {
+      .el-form-item__content {
+        margin-left: 8px !important;
+      }
+    }
+    .el-select {
+      width: 180px;
+    }
+  }
+  .apply_address {
+    .full {
+      .el-input {
+        width: 150px;
+      }
+    }
+    .el-select {
+      width: 130px;
+    }
+  }
+  .address {
+    display: flex;
+    .el-form-item__error {
+      white-space: nowrap;
+    }
+    .el-form-item {
+      // width: 20%;
+    }
+    .address_style {
+      .el-form-item__content {
+        margin-left: 8px !important;
+      }
+    }
+    .el-input {
+      width: 150px;
+    }
+    .full {
+      .el-input {
+        width: 210px;
+      }
+    }
+
+    .el-select {
+      // width: 120px;
+    }
+  }
+  .special {
+    .el-input__inner {
+      text-transform: uppercase;
+    }
+  }
+  // 备注表格
+  .leftItem .el-table .cell {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  .reviewInformation .el-textarea .el-input__count {
+    // visibility: hidden;
+    top: 2px;
+  }
+  //  End
+  .el-collapse-item__arrow {
+    display: none;
+  }
+
+  .el-collapse-item__header {
+    background-color: #0673ff;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 10px 10px 0 0;
+    padding: 0 15px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+  }
+
+  .el-collapse-item__content {
+    padding-bottom: 0px;
+  }
+}
+</style>
+<style lang="less">
+.integratDetails .el-tabs--card > .el-tabs__header .el-tabs__item.is-active {
+  background-color: #0673ff;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  color: #fff;
+}
+
+.integratDetails .el-tabs__header {
+  margin: 0;
+}
+
+.integratDetails .el-tabs--card > .el-tabs__header .el-tabs__item {
+  background-color: #fff;
+  color: #999999;
+}
+.integratDetails .el-collapse-item__wrap {
+  padding: 0 10px;
+}
+.confirmButton {
+  padding: 9px 28px;
+}
+.cancelButton {
+  padding: 9px 28px;
+}
+.integratDetails .el-date-editor.el-input,
+.el-date-editor.el-input__inner {
+  width: 85% !important;
+}
+.integratDetails .el-cascader {
+  width: 85%;
+  .el-input {
+    width: 100%;
+  }
+}
+.integratDetails
+  .el-checkbox__input.is-disabled.is-checked
+  .el-checkbox__inner::after {
+  border-color: #fff !important;
+}
+.integratDetails .el-checkbox__input.is-checked .el-checkbox__inner,
+.el-checkbox__input.is-indeterminate .el-checkbox__inner {
+  background-color: #409eff !important;
+  // border-color: #409EFF;
+}
+.el-radio__input.is-disabled.is-checked .el-radio__inner {
+  background-color: #409eff !important;
+}
+.el-radio__input.is-disabled.is-checked .el-radio__inner::after {
+  background-color: #fff !important;
+}
+</style>
