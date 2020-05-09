@@ -1092,14 +1092,6 @@ export default {
           display: flex;
           flex-direction: column;
           justify-content: space-around;
-          .item{
-            line-height: 2;
-            width: 100%;
-            .span-1{
-              margin-left: 15px;
-              flex: 1;
-            }
-          }
         }
       }
 

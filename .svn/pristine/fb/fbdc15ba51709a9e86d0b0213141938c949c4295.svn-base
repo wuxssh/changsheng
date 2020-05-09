@@ -910,15 +910,20 @@ export default {
     },
     // 门诊医院
     getHospitalsz() {
+      //   setTimeout(() => {
       for (let key in this.commonOutpatient) {
         post(service.getHospital, {
           pagestart: 0,
           pageend: 100,
           likename: this.commonOutpatient[key].hospitalcode || ""
         }).then(res => {
+          // this.hospitalListsz = res.data.bodys;
+          // this.newhospitalListsz.push(this.hospitalListsz);
+          // this.newhospitalListsz[key] = res.data.bodys;
           this.$set(this.newhospitalListsz, key, res.data.bodys);
         });
       }
+      //   }, 800);
     },
     loadmorez11() {
       this.pageDataz1.startPage += 100;
@@ -975,6 +980,7 @@ export default {
     },
     // 住院医院
     getHospitalsz1() {
+      // setTimeout(() => {
       for (let key in this.commonHospital) {
         post(service.getHospital, {
           pagestart: 0,
@@ -982,8 +988,12 @@ export default {
           likename: this.commonHospital[key].hospitalcode || ""
         }).then(res => {
           this.$set(this.newhospitalListsz1, key, res.data.bodys);
+          // this.hospitalListsz1 = res.data.bodys;
+          // this.newhospitalListsz1.push(this.hospitalListsz1);
+          // this.newhospitalListsz1[key] = res.data.bodys;
         });
       }
+      // }, 800);
     },
     loadmoresz1() {
       this.pageDataz2.startPage += 100;
@@ -1716,13 +1726,13 @@ export default {
         localStorage.setItem("detailState", data.feetype);
         // 判断是新增还是已有明细
         if (data.medicinerequestreceiptlist && data.medicinerequestdeductlist) {
-          // console.log("DDDD", data.medicinerequestreceiptlist);
+          console.log("DDDD", data.medicinerequestreceiptlist);
           // 费用明细获取
           this.fyDetail = data.medicinerequestreceiptlist;
           // 扣费明细获取
           this.kfDetail = data.medicinerequestdeductlist;
         } else {
-          // console.log("DDDD1", data.medicinerequestreceiptlist);
+          console.log("DDDD1", data.medicinerequestreceiptlist);
           this.fyDetail = [];
           this.kfDetail = [];
           // 如果没有明细则默认增加一条费用明细
@@ -1908,38 +1918,12 @@ export default {
     },
     handleCurrentChangez1(val) {
       this.currentPagez1 = val;
-      for (let key = (val - 1) * 10; key < val * 10; key++) {
-        post(service.getHospital, {
-          pagestart: 0,
-          pageend: 100,
-          likename: this.commonOutpatient[key].hospitalcode || ""
-        }).then(res => {
-          this.$set(
-            this.newhospitalListsz,
-            key - (val - 1) * 10,
-            res.data.bodys
-          );
-        });
-      }
     },
     handleSizeChangez2(val) {
       this.pagesizez2 = val;
     },
     handleCurrentChangez2(val) {
       this.currentPagez2 = val;
-      for (let key = (val - 1) * 10; key < val * 10; key++) {
-        post(service.getHospital, {
-          pagestart: 0,
-          pageend: 100,
-          likename: this.commonHospital[key].hospitalcode || ""
-        }).then(res => {
-          this.$set(
-            this.newhospitalListsz1,
-            key - (val - 1) * 10,
-            res.data.bodys
-          );
-        });
-      }
     },
     handleSizeChangez3(val) {
       this.pagesizez3 = val;

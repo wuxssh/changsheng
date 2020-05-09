@@ -322,7 +322,7 @@ export default {
           let sdate = new Date(stime).getTime();
           return time.getTime() > sdate - 8.64e7;
         }
-      }
+      },
     };
   },
   created() {
@@ -337,9 +337,9 @@ export default {
     // this.getcasepaydate("1", "accident1");
     // this.getcasenumdate("5", "all");
     // this.getcasepaydate("5", "all1");
-    this.getRightData(); // 右下角按渠道赔付件数/ 金额
+    this.getRightData();  // 右下角按渠道赔付件数/ 金额
     this.getpaybyrisktypedata(); //正下方 各险种赔付 件数/金额 占比
-    this.gettop5data(); // TOP5
+    this.gettop5data()  // TOP5
   },
   mounted() {
     this.$watermark.set(
@@ -458,7 +458,7 @@ export default {
         bodys: {
           startdate: this.cases.startdate
             ? ISYMD(this.cases.startdate)
-            : new Date().getFullYear() - 4 + "-01-01"
+            : new Date().getFullYear() -4 + "-01-01"
         }
       }).then(res => {
         if (res.data.headers.code === "200" && res.data.headers.success) {
@@ -483,7 +483,7 @@ export default {
         bodys: {
           startdate: this.cases.startdate
             ? ISYMD(this.cases.startdate)
-            : new Date().getFullYear() - 4 + "-01-01"
+            : new Date().getFullYear() -4 + "-01-01"
         }
       }).then(res => {
         if (res.data.headers.code === "200" && res.data.headers.success) {
@@ -831,8 +831,8 @@ export default {
           ) {
             this.$message.error("开始时间不能晚于结束时间");
           } else {
-            this.getcasenumdate("2", "medical");
-            this.getcasepaydate("2", "medical1");
+            this.getcasenumdate("1", "medical");
+            this.getcasepaydate("1", "medical1");
           }
         }
       } else if (type === "life") {
@@ -1092,14 +1092,6 @@ export default {
           display: flex;
           flex-direction: column;
           justify-content: space-around;
-          .item{
-            line-height: 2;
-            width: 100%;
-            .span-1{
-              margin-left: 15px;
-              flex: 1;
-            }
-          }
         }
       }
 

@@ -1,0 +1,105 @@
+<template>
+  <div>
+    <el-dialog class="ZBX" :visible.sync="dialogZBX" title="理赔风险提示信息" width="30%">
+      <div style="font-size:16px">
+        <div v-for="(item,index) in ZBXList" :key="index">
+          <p>{{item}}</p>
+        </div>
+        <div>
+          <span>是否为黑灰名单：</span>
+          <el-radio-group v-model="isZBXName">
+            <el-radio :label="'1'">黑名单</el-radio>
+            <el-radio :label="'2'">灰名单</el-radio>
+          </el-radio-group>
+        </div>
+      </div>
+      <div class="beSure">
+        <el-button type="primary" @click="submit">确 定</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template> 
+
+<script>
+import { post, service } from "../utils/request.js";
+export default {
+  props: {
+    rgtno: {
+      type: String
+    },
+    idno: {
+      type: String
+    },
+    idtype: {
+      type: String
+    },
+    insuredname: {
+      type: String
+    }
+  },
+  data() {
+    return {
+      isZBXName: "",
+      ZBXList: [],
+      dialogZBX: false
+    };
+  },
+  created() {
+    this.queryZbxNotice();
+  },
+  methods: {
+    queryZbxNotice() {
+      post(service.queryZbxNotice, {
+        bodys: {
+          clmno: this.rgtno
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.ZBXList = res.data.bodys.zbxnotinces;
+          if (this.ZBXList.length == 0) {
+            this.dialogZBX = true;
+          } else {
+            this.dialogZBX = true;
+          }
+        }
+      });
+    },
+    submit() {
+      post(service.updateCusIdentify, {
+        bodys: {
+          operator: localStorage.getItem("userCode"),
+          idno: this.idno,
+          idtype: this.idtype,
+          insuredname: this.insuredname,
+          identify: this.isZBXName,
+          remark: "1"
+        }
+      }).then(res => {
+        if (res.data.header.success === true) {
+          // this.$message.success('')
+          this.dialogZBX = false;
+        }
+      });
+    }
+  }
+};
+</script>
+
+<style lang="less" scoped>
+.ZBX {
+    z-index: 8001!important;
+  /deep/.el-dialog__title {
+    font-weight: 700;
+  }
+  /deep/.el-dialog__body {
+    padding: 0px 20px;
+  }
+  /deep/.el-dialog__footer {
+    text-align: center;
+  }
+}
+.beSure {
+  text-align: center;
+  padding: 20px 0;
+}
+</style>

@@ -97,13 +97,6 @@
                   </el-form-item>
                 </div>
               </el-col>
-              <!-- <el-col :span="8">
-                <div class="grid-content">
-                  <el-form-item label>
-                    <el-button type="primary" :disabled="isShowZBX" @click="isZBXDialog">风险提示</el-button>
-                  </el-form-item>
-                </div>
-              </el-col> -->
             </el-row>
           </el-form>
         </el-collapse-item>
@@ -2280,13 +2273,7 @@
         <span>案件不符合审核规则，将提交审批</span>
         <div style="display: flex;align-items: center;margin-top: 30px;">
           <span style="flex-basis: 25%">指定审批人:</span>
-          <el-select
-            style="flex-basis: 75%"
-            v-model="auditu"
-            placeholder="请选择"
-            clearable
-            filterable
-          >
+          <el-select style="flex-basis: 75%" v-model="auditu" placeholder="请选择" clearable filterable>
             <el-option
               v-for="item in auditorArr"
               :key="item.auditcode"
@@ -2331,13 +2318,6 @@
       </el-tabs>
     </el-dialog>
     <Drag v-if="rgtclass == '微信渠道'" ref="dragno" :rgtobj="rgtobj"></Drag>
-    <!-- <ZBX
-      ref="isZBX"
-      :rgtno="rgtno"
-      :idno="dangerperInfor.idno"
-      :idtype="dangerperInfor.idtype"
-      :insuredname="dangerperInfor.name"
-    ></ZBX> -->
   </div>
 </template>
 <script>
@@ -2348,7 +2328,6 @@ import remarkDialog from "../../components/remarkDialog";
 import { post, service } from "../../utils/request.js";
 import Policy from "../../components/policy";
 import MedicalDialog from "../../components/medicalDialog";
-// import ZBX from "../../components/ZBX";
 import {
   getCodeType,
   checkAudit,
@@ -2376,8 +2355,7 @@ export default {
     Drag,
     remarkDialog,
     Policy,
-    MedicalDialog,
-    // ZBX
+    MedicalDialog
   },
   directives: {
     "el-select-loadmore": {
@@ -2397,7 +2375,6 @@ export default {
   },
   data() {
     return {
-      isShowZBX: false,
       countData4s: [], // 受益人分配页面未保存
       relatoinsureList: [], // 报案人与出险人关系
       isHosname: "",
@@ -2975,7 +2952,7 @@ export default {
       isContractState: "",
       isContractStates: "",
       rgtobj: null, // 微信框
-      rptno: "", // 报案信息参数
+      rptno:"", // 报案信息参数
       branchBankListss: [],
       areaListss: []
     };
@@ -2988,11 +2965,6 @@ export default {
     this.customerno = JSON.parse(this.$route.params.dataOfTable).customerno;
   },
   mounted() {
-    // setTimeout(() => {
-    //   if (this.$refs.isZBX.ZBXList.length == 0) {
-    //     this.isShowZBX = true;
-    //   }
-    // }, 1000);
     this.$watermark.set(
       localStorage.getItem("userCode"),
       localStorage.getItem("userName")
@@ -3069,9 +3041,6 @@ export default {
     }
   },
   methods: {
-    // isZBXDialog() {
-    //   this.$refs.isZBX.dialogZBX = true;
-    // },
     getBanchBankss(key1, key2) {
       // if (key1 && key2) {
       // this.getBankAddress();
@@ -3154,24 +3123,25 @@ export default {
     // 报案转立案申请信息
     reportInformation() {
       // if (this.rgtclass == ("电话中心渠道" || "03")) {
-      post(service.reportInformation, {
-        bodys: {
-          rptno: this.rptno || ""
-        }
-      }).then(res => {
-        this.initApplicationInfor.reportname = res.data.bodys.reportname;
-        this.initApplicationInfor.reportdate = res.data.bodys.reportdate;
-        this.initApplicationInfor.reportmobile = res.data.bodys.reportmobile;
-        this.initApplicationInfor.relatoinsure = res.data.bodys.relatoinsure;
-        this.initApplicationInfor.reportchannel = res.data.bodys.reportchannel;
-        if (this.initApplicationInfor.reportchannel == "01") {
-          this.initApplicationInfor.reportchannel = "微信";
-        } else if (this.initApplicationInfor.reportchannel == "02") {
-          this.initApplicationInfor.reportchannel = "柜面";
-        } else if (this.initApplicationInfor.reportchannel == "03") {
-          this.initApplicationInfor.reportchannel = "电话中心";
-        }
-      });
+        post(service.reportInformation, {
+          bodys: {
+            rptno: this.rptno || ""
+          }
+        }).then(res => {
+          this.initApplicationInfor.reportname = res.data.bodys.reportname;
+          this.initApplicationInfor.reportdate = res.data.bodys.reportdate;
+          this.initApplicationInfor.reportmobile = res.data.bodys.reportmobile;
+          this.initApplicationInfor.relatoinsure = res.data.bodys.relatoinsure;
+          this.initApplicationInfor.reportchannel =
+            res.data.bodys.reportchannel;
+          if (this.initApplicationInfor.reportchannel == "01") {
+            this.initApplicationInfor.reportchannel = "微信";
+          } else if (this.initApplicationInfor.reportchannel == "02") {
+            this.initApplicationInfor.reportchannel = "柜面";
+          } else if (this.initApplicationInfor.reportchannel == "03") {
+            this.initApplicationInfor.reportchannel = "电话中心";
+          }
+        });
       // }
     },
     // 合同处理按钮控制是否置灰
