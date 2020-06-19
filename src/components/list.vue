@@ -35,13 +35,9 @@ export default {
     this.isVadata();
   },
   methods: {
-    handleScoll() {
-      const scollTop = this.el.scollTop;
-      this.isVadata(scollTop);
+    handleScoll(scollTop = 0) {
+      
     },
-    isVadata(scollTop = 0) {
-
-    }
   },
   computed: {
     contentHeight() {

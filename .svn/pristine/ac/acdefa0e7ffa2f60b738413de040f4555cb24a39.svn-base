@@ -1,0 +1,1298 @@
+<template>
+  <div>
+    <!-- 对私受益人分配 -->
+    <div>
+      <div class="work_queue" style="display: flex;">
+        <span>赔案保单信息</span>
+        <div class="box"></div>
+      </div>
+      <div class="lable">
+        <el-table
+          :data="benefitData"
+          @row-click="getBenfit"
+          border
+          highlight-current-row
+          :header-cell-style="{background:'#F7FAFF',color:'#333333'}"
+        >
+          <el-table-column label="序号" type="index" align="center" width="50"></el-table-column>
+          <el-table-column prop="contno" align="center" label="保单号"></el-table-column>
+          <el-table-column prop="pay" align="center" label="赔付金额"></el-table-column>
+          <el-table-column prop="state" align="center" label="分配情况"></el-table-column>
+        </el-table>
+      </div>
+      <div v-if="noCompany == true" class="work_queue" style="display: flex;margin-top: 10px;">
+      <!-- <div v-if="isCompany != true" class="work_queue" style="display: flex;margin-top: 10px;"> -->
+        <span>理赔受益人信息</span>
+        <div class="box"></div>
+      </div>
+      <!-- isCompany != true -->
+      <!-- <div class="lable" v-if="noCompany == true"> -->
+      <div class="lable" v-if="noCompany == true">
+        <el-table
+          :data="benefitArray"
+          style="width: 100%"
+          :header-cell-style="{background:'#F7FAFF',color:'#333333'}"
+        >
+          <el-table-column label="序号" type="index" align="center" width="50"></el-table-column>
+          <el-table-column label="证件类型" align="center" width="160">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>证件类型</span>
+            </template>
+            <template slot-scope="scope" prop="name">
+              <el-select disabled placeholder="请选择" v-model="scope.row.idtype">
+                <el-option
+                  v-for="item in cardTypeList"
+                  :key="item.code"
+                  :label="item.codename"
+                  :value="item.code"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="证件号码" align="center" width="170">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>证件号码</span>
+            </template>
+            <template slot-scope="scope" prop="idno">
+              <el-input disabled v-model="scope.row.idno"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="与被保险人关系" align="center" width="170">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>与被保险人关系</span>
+            </template>
+            <template prop="relationtoinsured" slot-scope="scope">
+              <el-select placeholder="请选择" disabled v-model="scope.row.relationtoinsured">
+                <el-option
+                  v-for="item in relationss"
+                  :key="item.code"
+                  :label="item.codename"
+                  :value="item.code"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="受益人顺位" align="center" width="150">
+            <template slot="header">
+              <span>受益人顺位</span>
+            </template>
+            <template prop="benposition" slot-scope="scope">
+              <el-input v-model="scope.row.benposition" disabled></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column prop="bnflot" label="分配比例" align="center" width="160">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>分配比例（%）</span>
+            </template>
+            <template slot-scope="scope" prop="name">
+              <el-input type="text" disabled v-model="scope.row.bnflot" maxlength="100"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="账户所有人姓名" align="center" width="180">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>账户所有人姓名</span>
+            </template>
+            <template slot-scope="scope" prop="payeename">
+              <el-input disabled v-model="scope.row.payeename" maxlength="20"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column prop="payeeidno" label="授权账户号码" align="center" width="240">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>授权账户号码</span>
+            </template>
+            <template slot-scope="scope" prop="bankaccno">
+              <el-input disabled v-model="scope.row.bankaccno" maxlength="100"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="授权银行" align="center" width="300">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>授权银行</span>
+            </template>
+            <template slot-scope="scope">
+              <el-select disabled v-model="scope.row.bankcode">
+                <el-option
+                  v-for="item in tBankList"
+                  :key="item.bankid"
+                  :label="item.bankname"
+                  :value="item.bankid"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="所在地区" align="center" width="200">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>所在地区</span>
+            </template>
+            <template slot-scope="scope" prop="bankprovince">
+              <el-select v-model="scope.row.bankprovince" disabled>
+                <el-option
+                  v-for="item in bankAddressList"
+                  :key="item.standardareasid"
+                  :label="item.standardareasname"
+                  :value="item.standardareasid"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="支行" align="center" width="320">
+            <template slot="header">
+              <span>支行</span>
+            </template>
+            <template slot-scope="scope">
+              <el-select disabled v-model="scope.row.bankbranch">
+                <el-option
+                  v-for="(item,indexs) in newbranchBankList[scope.$index]"
+                  :key="indexs"
+                  :label="item.banklocationsname"
+                  :value="item.banklocationsid"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="职业" align="center" width="320">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>职业</span>
+            </template>
+            <template slot-scope="scope">
+              <el-select disabled v-model="scope.row.occupation">
+                <el-option
+                  v-for="item in workList"
+                  :key="item.occupationcode"
+                  :label="item.occuptionname"
+                  :value="item.occupationcode"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="年收入" align="center" width="140">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>年收入</span>
+            </template>
+            <template slot-scope="scope" prop="annualincome">
+              <el-input
+                disabled
+                v-model="scope.row.annualincome"
+                type="text"
+                maxlength="100"
+                min="0"
+              ></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="联系方式" align="center" width="160">
+            <template slot="header">
+              <span class="redStars">&nbsp;&nbsp;</span>
+              <span>联系方式</span>
+            </template>
+            <template slot-scope="scope" prop="phone">
+              <el-input disabled v-model="scope.row.phone" maxlength="100"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="住所地址省" align="center" width="160">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>住所地址省</span>
+            </template>
+            <template slot-scope="scope" prop="addressprovince">
+              <el-select v-model="scope.row.addressprovince" disabled>
+                <el-option
+                  v-for="(item,index) in provinceListsss"
+                  :key="index"
+                  :label="item.province"
+                  :value="item.code"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="住所地址市" align="center" width="160">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>住所地址市</span>
+            </template>
+            <template slot-scope="scope" prop="addresscity">
+              <el-select v-model="scope.row.addresscity" disabled>
+                <el-option
+                  v-for="(item,index) in newcitylist1[scope.$index]"
+                  :key="index"
+                  :label="item.city"
+                  :value="item.code"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="住所地址区" align="center" width="160">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>住所地址区</span>
+            </template>
+            <template slot-scope="scope" prop="addressarea">
+              <el-select v-model="scope.row.addressarea" disabled>
+                <el-option
+                  v-for="(item,index) in newarealist1[scope.$index]"
+                  :key="index"
+                  :label="item.country"
+                  :value="item.code"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="详细住址" align="center" width="160">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>详细住址</span>
+            </template>
+            <template slot-scope="scope" prop="addressdetail">
+              <el-input disabled v-model="scope.row.addressdetail"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="工作单位名称" align="center" width="160">
+            <template slot-scope="scope" prop="workunit">
+              <el-input disabled v-model="scope.row.workunit" maxlength="100"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="工作单位地址" align="center" width="160">
+            <template slot-scope="scope" prop="workaddress">
+              <el-input disabled v-model="scope.row.workaddress" maxlength="100"></el-input>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      <!-- =================信托============= -->
+      <div v-if="isCompany == true" class="work_queue" style="display: flex;margin-top: 10px;">
+        <span>信托公司信息</span>
+        <div class="box"></div>
+      </div>
+      <div class="lable" v-if="isCompany == true">
+        <el-table
+          id="CompanyStyle"
+          :data="companyData"
+          style="width: 100%"
+          :header-cell-style="{background:'#F7FAFF',color:'#333333'}"
+          default-expand-all
+        >
+          <el-table-column type="expand">
+            <!-- 信托所有人 -->
+            <template>
+              <div class="work_queue" style="display: flex;margin-top: 10px;">
+                <span>信托所有人信息</span>
+                <div class="box"></div>
+              </div>
+              <el-table
+                :data="companyAllData"
+                class="sonTable"
+                border
+                :header-cell-style="{background:'#F7FAFF',color:'#333333'}"
+              >
+                <el-table-column type="index" width="60" align="center" label="序号"></el-table-column>
+                <el-table-column prop="owname" label="姓名" align="center" width="150">
+                  <template slot="header">
+                    <span class="redStars">&nbsp;*&nbsp;</span>
+                    <span>姓名</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-input disabled v-model="scope.row.owname"></el-input>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="owaddr" label="住址" align="center" width="200">
+                  <template slot="header">
+                    <span class="redStars">&nbsp;*&nbsp;</span>
+                    <span>住址</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-input disabled v-model="scope.row.owaddr"></el-input>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="owidtype" label="证件类型" align="center" width="200">
+                  <template slot="header">
+                    <span class="redStars">&nbsp;*&nbsp;</span>
+                    <span>证件类型</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-select disabled v-model="scope.row.owidtype">
+                      <el-option
+                        v-for="item in cardTypeList"
+                        :key="item.code"
+                        :label="item.codename"
+                        :value="item.code"
+                      ></el-option>
+                    </el-select>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="owidnum" label="证件号码" align="center" width="200">
+                  <template slot="header">
+                    <span class="redStars">&nbsp;*&nbsp;</span>
+                    <span>证件号码</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-input disabled v-model="scope.row.owidnum"></el-input>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="owidedate" label="证件有效期止期" align="center" width="200">
+                  <template slot="header">
+                    <span class="redStars">&nbsp;*&nbsp;</span>
+                    <span>证件有效期止期</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-date-picker
+                      type="date"
+                      disabled
+                      v-model="scope.row.owidedate"
+                      style="width: 100%;"
+                      value-format="yyyy-MM-dd"
+                    ></el-date-picker>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="owphone" label="联系方式" align="center" width="200">
+                  <template slot="header">
+                    <!-- <span class="redStars">&nbsp;*&nbsp;</span> -->
+                    <span>联系方式</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-input disabled v-model="scope.row.owphone"></el-input>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </template>
+            <!-- 信托受益人 -->
+            <template>
+              <div class="work_queue" style="display: flex;margin-top: 10px;">
+                <span>信托受益人信息</span>
+                <div class="box"></div>
+              </div>
+              <el-table
+                :data="companyPersonData"
+                class="sonTable"
+                border
+                :header-cell-style="{background:'#F7FAFF',color:'#333333'}"
+              >
+                <el-table-column type="index" width="60" align="center" label="序号"></el-table-column>
+                <el-table-column prop="name" label="姓名" align="center" width="150">
+                  <template slot="header">
+                    <span class="redStars">&nbsp;*&nbsp;</span>
+                    <span>姓名</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-input disabled v-model="scope.row.name"></el-input>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="idtype" label="证件类型" align="center" width="180">
+                  <template slot="header">
+                    <span class="redStars">&nbsp;*&nbsp;</span>
+                    <span>证件类型</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-select disabled v-model="scope.row.idtype">
+                      <el-option
+                        v-for="item in cardTypeList"
+                        :key="item.code"
+                        :label="item.codename"
+                        :value="item.code"
+                      ></el-option>
+                    </el-select>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="idno" label="证件号码" align="center" width="200">
+                  <template slot="header">
+                    <span class="redStars">&nbsp;*&nbsp;</span>
+                    <span>证件号码</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-input disabled v-model="scope.row.idno"></el-input>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="idtypedate" label="证件有效期止期" align="center" width="180">
+                  <template slot="header">
+                    <span class="redStars">&nbsp;*&nbsp;</span>
+                    <span>证件有效期止期</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-date-picker
+                      type="date"
+                      disabled
+                      v-model="scope.row.idtypedate"
+                      style="width: 100%;"
+                      value-format="yyyy-MM-dd"
+                    ></el-date-picker>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="sex" label="性别" align="center" width="140">
+                  <template slot="header">
+                    <span class="redStars">&nbsp;*&nbsp;</span>
+                    <span>性别</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-select disabled v-model="scope.row.sex">
+                      <el-option
+                        v-for="item in sexList"
+                        :key="item.code"
+                        :label="item.codename"
+                        :value="item.code"
+                      ></el-option>
+                    </el-select>
+                  </template>
+                </el-table-column>
+
+                <el-table-column prop="nationality" label="国籍" align="center" width="140">
+                  <template slot="header">
+                    <span class="redStars">&nbsp;*&nbsp;</span>
+                    <span>国籍</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-input disabled v-model="scope.row.nationality"></el-input>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="occupation" label="职业" align="center" width="200">
+                  <template slot="header">
+                    <span class="redStars">&nbsp;*&nbsp;</span>
+                    <span>职业</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-select disabled v-model="scope.row.occupation">
+                      <el-option
+                        v-for="item in workList"
+                        :key="item.occupationcode"
+                        :label="item.occuptionname"
+                        :value="item.occupationcode"
+                      ></el-option>
+                    </el-select>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="annualincome" label="年收入" align="center" width="140">
+                  <template slot="header">
+                    <span class="redStars">&nbsp;*&nbsp;</span>
+                    <span>年收入</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-input disabled v-model="scope.row.annualincome"></el-input>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="phone" label="联系方式" align="center" width="160">
+                  <template slot="header">
+                    <span class="redStars">&nbsp;*&nbsp;</span>
+                    <span>联系方式</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-input disabled v-model="scope.row.phone"></el-input>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="addressdetail" label="联系地址" align="center" width="160">
+                  <template slot="header">
+                    <span class="redStars">&nbsp;*&nbsp;</span>
+                    <span>联系地址</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-input disabled v-model="scope.row.addressdetail"></el-input>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="workunit" label="单位名称" align="center" width="160">
+                  <template slot="header">
+                    <!-- <span class="redStars">&nbsp;*&nbsp;</span> -->
+                    <span>单位名称</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-input disabled v-model="scope.row.workunit"></el-input>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="workaddress" label="单位地址" align="center" width="160">
+                  <template slot="header">
+                    <!-- <span class="redStars">&nbsp;*&nbsp;</span> -->
+                    <span>单位地址</span>
+                  </template>
+                  <template slot-scope="scope">
+                    <el-input disabled v-model="scope.row.workaddress"></el-input>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </template>
+          </el-table-column>
+          <el-table-column label="序号" type="index" align="center" width="50"></el-table-column>
+          <el-table-column label="账户名称" align="center" width="160">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>账户名称</span>
+            </template>
+            <template slot-scope="scope">
+              <el-input disabled v-model="scope.row.acname"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="账号" align="center" width="220">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>账号</span>
+            </template>
+            <template slot-scope="scope">
+              <el-input disabled v-model="scope.row.acnumber"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="开户银行" align="center" width="240">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>开户银行</span>
+            </template>
+            <template slot-scope="scope">
+              <el-select disabled v-model="scope.row.debank">
+                <el-option
+                  v-for="item in tBankList"
+                  :key="item.bankid"
+                  :label="item.bankname"
+                  :value="item.bankid"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="开户行所在地" align="center" width="240">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>开户行所在地</span>
+            </template>
+            <template slot-scope="scope">
+              <el-select disabled v-model="scope.row.deadress">
+                <el-option
+                  v-for="item in bankAddressList"
+                  :key="item.standardareasid"
+                  :label="item.standardareasname"
+                  :value="item.standardareasid"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="支行" align="center" width="240">
+            <template slot="header">
+              <!-- <span class="redStars">&nbsp;*&nbsp;</span> -->
+              <span>支行</span>
+            </template>
+            <template slot-scope="scope">
+              <el-select disabled v-model="scope.row.bankbranch">
+                <el-option
+                  v-for="item in branchBankList"
+                  :key="item.banklocationsid"
+                  :label="item.banklocationsname"
+                  :value="item.banklocationsid"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="单位全称" align="center" width="240">
+            <template slot="header">
+              <!-- <span class="redStars">&nbsp;*&nbsp;</span> -->
+              <span>单位全称</span>
+            </template>
+            <template slot-scope="scope">
+              <el-input disabled v-model="scope.row.tcname"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="单位地址" align="center" width="240">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>单位地址</span>
+            </template>
+            <template slot-scope="scope">
+              <el-input disabled v-model="scope.row.tcaddr"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="经营范围" align="center" width="240">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>经营范围</span>
+            </template>
+            <template slot-scope="scope">
+              <el-input disabled v-model="scope.row.tcbuss"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="统一社会信用代码" align="center" width="200">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>统一社会信用代码</span>
+            </template>
+            <template slot-scope="scope">
+              <el-input disabled v-model="scope.row.tcuscc"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="营业执照有效起期" align="center" width="160">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>营业执照有效起期</span>
+            </template>
+            <template slot-scope="scope">
+              <el-date-picker
+                type="date"
+                disabled
+                v-model="scope.row.tcbuslsdate"
+                style="width: 100%;"
+                value-format="yyyy-MM-dd"
+              ></el-date-picker>
+            </template>
+          </el-table-column>
+          <el-table-column label="营业执照有效止期" align="center" width="160">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>营业执照有效止期</span>
+            </template>
+            <template slot-scope="scope">
+              <el-date-picker
+                type="date"
+                disabled
+                v-model="scope.row.tcbusledate"
+                style="width: 100%;"
+                value-format="yyyy-MM-dd"
+              ></el-date-picker>
+            </template>
+          </el-table-column>
+          <el-table-column label="法定代表人姓名" align="center" width="140">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>法定代表人姓名</span>
+            </template>
+            <template slot-scope="scope">
+              <el-input disabled v-model="scope.row.tclrname"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="法定代表人证件类型" align="center" width="180">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>法定代表人证件类型</span>
+            </template>
+            <template slot-scope="scope">
+              <el-select disabled v-model="scope.row.tclridtp">
+                <el-option
+                  v-for="item in cardTypeList"
+                  :key="item.code"
+                  :label="item.codename"
+                  :value="item.code"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="法定代表人证件号码" align="center" width="180">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>法定代表人证件号码</span>
+            </template>
+            <template slot-scope="scope">
+              <el-input disabled v-model="scope.row.tclridnum"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="法定代表人证件有效止期" align="center" width="200">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>法定代表人证件有效止期</span>
+            </template>
+            <template slot-scope="scope">
+              <el-date-picker
+                type="date"
+                disabled
+                v-model="scope.row.tclridedate"
+                style="width: 100%;"
+                value-format="yyyy-MM-dd"
+              ></el-date-picker>
+            </template>
+          </el-table-column>
+          <el-table-column label="控股股东或实际控制人姓名" align="center" width="220">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>控股股东或实际控制人姓名</span>
+            </template>
+            <template slot-scope="scope">
+              <el-input disabled v-model="scope.row.tcacname"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="控股股东或实际控制人证件类型" align="center" width="240">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>控股股东或实际控制人证件类型</span>
+            </template>
+            <template slot-scope="scope">
+              <el-select disabled v-model="scope.row.tcacidtp">
+                <el-option
+                  v-for="item in cardTypeList"
+                  :key="item.code"
+                  :label="item.codename"
+                  :value="item.code"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="控股股东或实际控制人证件号码" align="center" width="260">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>控股股东或实际控制人证件号码</span>
+            </template>
+            <template slot-scope="scope">
+              <el-input disabled v-model="scope.row.tcacidnum"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="控股股东或实际控制人证件有效止期" align="center" width="280">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>控股股东或实际控制人证件有效止期</span>
+            </template>
+            <template slot-scope="scope">
+              <el-date-picker
+                type="date"
+                disabled
+                v-model="scope.row.tcacidedate"
+                style="width: 100%;"
+                value-format="yyyy-MM-dd"
+              ></el-date-picker>
+            </template>
+          </el-table-column>
+          <el-table-column label="授权办理业务人员姓名" align="center" width="200">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>授权办理业务人员姓名</span>
+            </template>
+            <template slot-scope="scope">
+              <el-input disabled v-model="scope.row.tcatname"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="授权办理业务人员证件类型" align="center" width="220">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>授权办理业务人员证件类型</span>
+            </template>
+            <template slot-scope="scope">
+              <el-select disabled v-model="scope.row.tcatidtp">
+                <el-option
+                  v-for="item in cardTypeList"
+                  :key="item.code"
+                  :label="item.codename"
+                  :value="item.code"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="授权办理业务人员证件号码" align="center" width="220">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>授权办理业务人员证件号码</span>
+            </template>
+            <template slot-scope="scope">
+              <el-input disabled v-model="scope.row.tcatidnum"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="授权办理业务人员证件有效止期" align="center" width="260">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>授权办理业务人员证件有效止期</span>
+            </template>
+            <template slot-scope="scope">
+              <el-date-picker
+                type="date"
+                disabled
+                v-model="scope.row.tcatidedate"
+                style="width: 100%;"
+                value-format="yyyy-MM-dd"
+              ></el-date-picker>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+    <!-- 对公受益人分配（不是我写的不敢乱动） -->
+    <div v-if="dialogFormPublic == true && isCompany != true">
+      <div class="work_queue" style="display: flex;">
+        <span>赔案保单信息</span>
+        <div class="box"></div>
+      </div>
+      <div class="lable">
+        <el-table
+          :data="benefitData"
+          @row-click="getPubBenfit"
+          border
+          highlight-current-row
+          :header-cell-style="{background:'#F7FAFF',color:'#333333'}"
+        >
+          <el-table-column label="序号" type="index" align="center" width="50"></el-table-column>
+          <el-table-column prop="contno" label="保单号" align="center"></el-table-column>
+          <el-table-column prop="pay" label="赔付金额" align="center"></el-table-column>
+          <el-table-column prop="state" label="分配情况" align="center"></el-table-column>
+        </el-table>
+      </div>
+      <div class="work_queue" style="display: flex;margin-top: 10px;">
+        <span>理赔受益人信息</span>
+        <div class="box"></div>
+      </div>
+      <div class="lable">
+        <el-table
+          :data="benefitPubArray"
+          style="width: 100%;"
+          :header-cell-style="{background:'#F7FAFF',color:'#333333'}"
+        >
+          <el-table-column label="序号" type="index" align="center" width="50"></el-table-column>
+          <el-table-column label="对公账户" align="center" width="160">
+            <template slot="header">
+              <span class="redStars">&nbsp;*&nbsp;</span>
+              <span>对公账户</span>
+            </template>
+            <template slot-scope="scope" prop="accname">
+              <el-select
+                v-model="scope.row.accname"
+                @change="changeAccname(scope.row,scope.$index)"
+                placeholder="请选择"
+              >
+                <el-option
+                  v-for="item in accountList"
+                  :key="item.accname"
+                  :label="item.accname"
+                  :value="item.accname"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="分配比例（%）" align="center" width="160">
+            <template>
+              <el-input disabled type="text" value="100"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="账户所有人姓名" align="center" width="150">
+            <template slot-scope="scope" prop="accpername">
+              <el-input disabled v-model="scope.row.accpername" maxlength="20"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="授权账户号码" align="center" width="240">
+            <template slot-scope="scope" prop="bankaccno">
+              <el-input disabled v-model="scope.row.bankaccno" maxlength="100"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="授权银行" align="center" width="230">
+            <template slot-scope="scope">
+              <el-select
+                disabled
+                placeholder="请选择"
+                v-model="scope.row.bankcode"
+                @change="getBanchBank(scope.row)"
+                clearable
+                filterable
+              >
+                <el-option
+                  v-for="item in tBankList"
+                  :key="item.bankid"
+                  :label="item.bankname"
+                  :value="item.bankid"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="所在地区" align="center" width="200">
+            <template slot-scope="scope" prop="bankprovince">
+              <el-select disabled v-model="scope.row.bankprovince" placeholder="请选择">
+                <el-option
+                  v-for="item in bankAddressList"
+                  :key="item.standardareasid"
+                  :label="item.standardareasname"
+                  :value="item.standardareasid"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="支行" align="center" width="280">
+            <template slot-scope="scope">
+              <el-select v-model="scope.row.bankbranch" disabled placeholder="请选择">
+                <el-option
+                  v-for="item in branchBankList"
+                  :key="item.banklocationsid"
+                  :label="item.banklocationsname"
+                  :value="item.banklocationsid"
+                ></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { getCodeType } from "../utils/service";
+import { post, service } from "../utils/request.js";
+export default {
+  props: {
+    rgtno: {
+      type: String
+    },
+    customerno: {
+      type: String
+    },
+    directpay: {
+      type: String
+    }
+    // isCompany: {
+    //   type: Boolean
+    // }
+  },
+  data() {
+    return {
+      isCompany: false,
+      noCompany: false,
+      deleteBnfContNo: "",
+      benefitArray: [],
+      benefitData: [],
+      benefitPubArray: [],
+      accountList: [],
+      newcitylist1: [],
+      newarealist1: [],
+      newbranchBankList: [],
+      provinceListsss: [],
+      tBankList: [],
+      workList: [],
+      bankAddressList: [],
+      branchBankList: [],
+      dialogFormVisible: false,
+      dialogFormPublic: false,
+      //
+      companyData: [],
+      companyAllData: [],
+      companyPersonData: []
+    };
+  },
+
+  created() {
+    this.getCodeList();
+    this.getBenefitInfo();
+    if (this.directpay == "0") {
+      this.dialogFormVisible = true;
+      this.getShengss();
+    } else {
+      this.dialogFormPublic = true;
+      this.initList();
+    }
+  },
+  mounted() {
+    this.cardTypeList = getCodeType("llidtype"); // 证件类型
+    this.sexList = getCodeType("llsex"); // 性别
+    this.workList = JSON.parse(localStorage.getItem("workcodeList")); //职业类型
+  },
+  methods: {
+    getCodeList() {
+      // debugger;
+      post(service.getCodeList, {
+        codetype: ["relatoinsure", "bnfRelationToInsured"]
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.relatoinsureList = res.data.bodys["relatoinsure"]; // 报案人与出现人关系
+          this.relationss = getCodeType("bnfRelationToInsured"); // 申请人与出险人关系
+        }
+      });
+    },
+    getHeadBanks() {
+      post(service.queryBank, {
+        pagestart: 0,
+        pageend: 100,
+        likename: ""
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.tBankList = res.data.bodys;
+        }
+      });
+    },
+    // 获取受益人分配信息
+    getBenefitInfo() {
+      post(service.queryClaimCont, {
+        bodys: {
+          customerno: this.customerno, //客户号
+          clmno: this.rgtno //赔案号
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.benefitData = res.data.bodys;
+        }
+      });
+    },
+    // 对私受益人详细
+    getBenfit(row) {
+      // console.log("SSSS", this.isCompany);
+      if (!this.isCompany) {
+        post(service.queryClaimBnf, {
+          bodys: {
+            clmno: this.rgtno,
+            contno: row.contno
+          }
+        }).then(res => {
+          if (res.data.headers.code === "200") {
+            this.benefitArray = res.data.bodys;
+            setTimeout(() => {
+              this.getBanchData();
+              this.getCity();
+              this.getCountry();
+            }, 1000);
+          }
+        });
+      }
+      // ==============判断是否信托===============
+      post(service.queryEntrust, {
+        bodys: {
+          clmno: this.rgtno,
+          contno: row.contno
+        }
+      }).then(res => {
+        if (res.data.bodys.entrustFlag == "Y") {
+          this.isCompany = true;
+          this.noCompany = false;
+          if (this.isCompany) {
+            this.getHeadBanks();
+            // 信托公司
+            post(service.queryLlCmTrustc, {
+              bodys: {
+                clmno: this.rgtno,
+                contno: row.contno
+              }
+            }).then(res => {
+              if (res.data.headers.code === "200") {
+                this.companyData = res.data.bodys;
+                if (this.companyData[0]) {
+                  this.companyData[0].tclridtp = this.companyData[0].tclridtp.toString();
+                  this.companyData[0].tcacidtp = this.companyData[0].tcacidtp.toString();
+                  this.companyData[0].tcatidtp = this.companyData[0].tcatidtp.toString();
+                  this.getBanchBanks();
+                }
+              }
+            });
+            // 信托所有人
+            post(service.queryLlCmtCowner, {
+              bodys: {
+                clmno: this.rgtno,
+                contno: row.contno
+              }
+            }).then(res => {
+              if (res.data.headers.code === "200") {
+                this.companyAllData = res.data.bodys;
+                this.companyAllData.forEach(item => {
+                  item.owidtype = item.owidtype.toString();
+                });
+              }
+            });
+            // 信托受益人
+            post(service.queryLlbnf, {
+              bodys: {
+                clmno: this.rgtno,
+                contno: row.contno
+              }
+            }).then(res => {
+              if (res.data.headers.code === "200") {
+                this.companyPersonData = res.data.bodys;
+              }
+            });
+          }
+        } else {
+          this.isCompany = false;
+          this.noCompany = true;
+          if (!this.isCompany) {
+            post(service.queryClaimBnf, {
+              bodys: {
+                clmno: this.rgtno,
+                contno: row.contno
+              }
+            }).then(res => {
+              if (res.data.headers.code === "200") {
+                this.benefitArray = res.data.bodys;
+                setTimeout(() => {
+                  this.getBanchData();
+                  this.getCity();
+                  this.getCountry();
+                }, 1000);
+              }
+            });
+          }
+        }
+      });
+      this.getBankAddress();
+    },
+    // 对公受益人详细
+    getPubBenfit(row) {
+      post(service.queryGroupBnf, {
+        bodys: {
+          contno: row.contno
+        }
+      }).then(res => {
+        if (res.data.headers.code == "200") {
+          if (res.data.bodys.length == 0) {
+            this.benefitPubArray = this.emptyList;
+            this.emptyList[0].accname = "";
+            this.getBanchPubBank();
+            this.getBranchBank();
+          } else {
+            this.benefitPubArray = res.data.bodys;
+            this.relationId = res.data.bodys[0].relationId;
+            this.groupaccountid = res.data.bodys[0].groupaccountid;
+            setTimeout(() => {
+              this.getBanchPubBank();
+              this.getBranchBank();
+            }, 1000);
+          }
+        }
+      });
+    },
+    initList() {
+      post(service.compAccountQuery, {
+        bodys: this.listForm
+      })
+        .then(result => {
+          if (result.data.headers.code === "200") {
+            this.accountList = result.data.bodys.rows;
+          }
+        })
+        .catch(error => {});
+    },
+    // 对公
+    getBanchPubBank(key1, key2) {
+      post(service.queryTbanklocations, {
+        bodys: {
+          bankid: this.benefitPubArray[0].bankcode,
+          standardareasid: this.benefitPubArray[0].bankprovince
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.branchBankList = res.data.bodys;
+          // this.listForm2.bankbranch = "";
+        }
+      });
+    },
+    //对公银行支行
+    getBranchBank() {
+      if (this.benefitPubArray[0].bankbranch) {
+        post(service.queryTbanklocations, {
+          bodys: {
+            bankid: this.benefitPubArray[0].bankcode,
+            standardareasid: this.benefitPubArray[0].bankprovince
+          }
+        }).then(res => {
+          if (res.data.header.code === "200") {
+            this.branchBankList = res.data.bodys;
+          }
+        });
+      }
+    },
+    // 银行支行
+    getBanchData() {
+      for (let key = 0; key < this.benefitArray.length; key++) {
+        if (
+          this.benefitArray[key].bankprovince &&
+          this.benefitArray[key].bankcode
+        ) {
+          post(service.queryTbanklocations, {
+            bodys: {
+              bankid: this.benefitArray[key].bankcode,
+              standardareasid: this.benefitArray[key].bankprovince
+            }
+          }).then(res => {
+            if (res.data.header.code === "200") {
+              this.$set(this.newbranchBankList, key, res.data.bodys);
+            }
+          });
+        }
+      }
+    },
+    // 信托支行
+    getBanchBanks() {
+      for (let key = 0; key < this.companyData.length; key++) {
+        if (this.companyData[key].debank && this.companyData[key].deadress) {
+          post(service.queryTbanklocations, {
+            bodys: {
+              bankid: this.companyData[key].debank,
+              standardareasid: this.companyData[key].deadress
+            }
+          }).then(res => {
+            if (res.data.header.code === "200") {
+              this.branchBankList = res.data.bodys;
+            }
+          });
+        }
+      }
+    },
+    getCity() {
+      for (let key = 0; key < this.benefitArray.length; key++) {
+        if (this.benefitArray[key].addressprovince) {
+          post(service.getCity, {
+            bodys: {
+              state: "city",
+              code: this.benefitArray[key].addressprovince
+            }
+          }).then(res => {
+            if (res.data.headers.code === "200") {
+              // this.newcitylist1[key] = res.data.bodys.rows;
+              this.$set(this.newcitylist1, key, res.data.bodys.rows);
+            }
+          });
+        }
+      }
+    },
+    getCountry() {
+      for (let key = 0; key < this.benefitArray.length; key++) {
+        if (this.benefitArray[key].addresscity) {
+          post(service.getCity, {
+            bodys: {
+              state: "country",
+              code: this.benefitArray[key].addresscity
+            }
+          }).then(res => {
+            if (res.data.headers.code === "200") {
+              this.$set(this.newarealist1, key, res.data.bodys.rows);
+            }
+          });
+        }
+      }
+    },
+    getShengss() {
+      // 获取省
+      post(service.getCity, {
+        bodys: {
+          state: "province",
+          code: ""
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.provinceListsss = res.data.bodys.rows;
+        }
+      });
+    },
+    getBankAddress() {
+      post(service.queryBankLocation, {
+        pagestart: 0,
+        pageend: 100,
+        likename: ""
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.bankAddressList = res.data.bodys;
+        }
+      });
+    }
+  }
+};
+</script>
+
+<style lang="less" scoped>
+.work_queue {
+  position: relative;
+  span {
+    display: inline-block;
+    background-color: #0673ff;
+    color: #fff;
+    padding: 0 15px;
+    height: 33px;
+    line-height: 33px;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .box {
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #0673ff;
+    position: absolute;
+    top: 33px;
+    left: 15px;
+    z-index: 999;
+  }
+}
+</style>

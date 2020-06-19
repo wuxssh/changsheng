@@ -1,0 +1,22 @@
+# install
+npm install
+
+# 启动
+npm run dev_s  // sit环境  
+
+npm run dev_u  // uat环境  
+
+npm run dev_p  // 生产环境  
+
+
+# 发布
+npm run build sit    // sit环境  
+
+npm run build uat    // uat环境  
+
+npm run build prod   // 生产环境  
+
+# 各部分前后端文档在svn
+## 进入项目先看package.json、webpack配置
+## 页面找不到看路由页面(router/index.js)
+## 接口在utils/request.js

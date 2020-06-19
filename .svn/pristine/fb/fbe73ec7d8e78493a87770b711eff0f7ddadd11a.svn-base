@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"> 
+  <link rel="stylesheet" href="https://at.alicdn.com/t/font_1766728_of7crlyxzz.css">
+  <link rel="icon" href="https://imgkr.cn-bj.ufileos.com/97ff4c30-9e6a-49b7-8401-1f482de3bc4b.ico" type="img/x-ico" />
+  <title>理赔业务系统</title>
+</head>
+
+<body>
+  <div id="app"></div>
+</body>
+
+</html>
+<style>
+  body {
+    padding: 0;
+    margin: 0;
+  }
+</style>
+<script type="text/javascript"
+  src="http://api.map.baidu.com/api?v=2.0&ak=aiM7jMPeUV9uEepWsxr642Plxqgfpvt9&s=1&callback=init"></script>

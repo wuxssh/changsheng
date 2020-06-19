@@ -1,0 +1,1244 @@
+<template>
+  <div class="initiateSurvey">
+    <div class="work_queue">
+      <span>保单信息查询</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        ref="multipleTable"
+        :data="tableData.slice((currpage1 - 1) * pagesize1, currpage1 * pagesize1)"
+        style="width: 100%"
+        @selection-change="toChangeContno"
+        @select-all="toGetAllContno"
+        :row-key="getRowKeys"
+      >
+        <el-table-column
+          type="selection"
+          width="55"
+          :reserve-selection="true"
+          prop="contno"
+          align="center"
+        ></el-table-column>
+        <el-table-column label="序号" type="index" width="60" align="center" :index="indexMethod1"></el-table-column>
+        <el-table-column prop="contno" label="保单号" align="center"></el-table-column>
+        <el-table-column prop="appntname" label="投保人姓名" align="center"></el-table-column>
+        <el-table-column prop="insuredname" label="被保人姓名" align="center"></el-table-column>
+        <!-- <el-table-column prop="dutyname" label="保单责任" align="center" width="400"></el-table-column> -->
+        <!-- <el-table-column prop="riskname" label="保单险种" align="center"></el-table-column> -->
+        <el-table-column prop="cvalidate" label="生效日期" align="center"></el-table-column>
+        <el-table-column prop="enddate" label="保单到期日" align="center"></el-table-column>
+        <!-- <el-table-column prop="amnt" label="保额" align="center"></el-table-column> -->
+      </el-table>
+      <div style="margin-top:10px;">
+        <el-pagination
+          background
+          @size-change="handleSizeChange1"
+          @current-change="handleCurrentChange1"
+          :page-size="pagesize1"
+          layout="prev, pager, next,jumper"
+          :total="tableData.length"
+        ></el-pagination>
+      </div>
+    </div>
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          调查信息
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form ref="form" v-model="form" label-width="120px">
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <span class="redStar">&nbsp;*&nbsp;</span>
+                <el-form-item label="出险类型">
+                  <el-input style="width:100%" v-model="form.accidenttype" disabled></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content" style="margin-left:60px;">
+                <span class="redStar">&nbsp;*&nbsp;</span>
+                <el-form-item label="调查深度">
+                  <el-radio-group v-model="form.inqdepth">
+                    <el-radio
+                      :label="item.value"
+                      v-for="(item,index) in inqdepthList"
+                      :key="index"
+                    >{{item.text}}</el-radio>
+                  </el-radio-group>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <span class="redStar">&nbsp;&nbsp;&nbsp;</span>
+                <el-form-item label="案件标识">
+                  <el-checkbox-group v-model="form.casemarks">
+                    <el-checkbox
+                      v-for="item in casemarkList"
+                      :key="item.value"
+                      :label="item.value"
+                    >{{item.text}}</el-checkbox>
+                  </el-checkbox-group>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <div class="grid-content">
+                <span class="redStar">&nbsp;*&nbsp;</span>
+                <el-form-item label="调查原因">
+                  <!-- multiple -->
+                  <el-select multiple collapse-tags v-model="form.inqrcode" placeholder="请选择">
+                    <el-option
+                      v-for="(item,index) in regionList"
+                      :key="index"
+                      :label="item.text"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content" style="margin-left:60px;">
+                <span class="redStar">&nbsp;*&nbsp;</span>
+                <el-form-item label="异地调查">
+                  <el-select v-model="form.locflag" placeholder="请选择">
+                    <el-option
+                      v-for="(item,index) in offsiteList"
+                      :key="index"
+                      :label="item.text"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <div class="addBox">
+            <div class="addBtn">
+              <el-button type="primary" @click="addSurvey">添 加</el-button>
+            </div>
+            <div v-for="(addItem,index) in inqdetail" :key="index">
+              <el-row class="addressCode">
+                <el-col :span="6">
+                  <div class="grid-content">
+                    <span class="redStar">&nbsp;*&nbsp;</span>
+                    <el-form-item label="调查地点">
+                      <el-select v-model="inqdetail[index].inqplace" @change="clearAddre(index)">
+                        <el-option
+                          v-for="(item,index) in surveyAddressList"
+                          :key="index"
+                          :label="item.text"
+                          :value="item.value"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="16" v-if="inqdetail[index].inqplace == '02'">
+                  <div class="grid-content address">
+                    <el-form-item>
+                      <el-select
+                        clearable
+                        filterable
+                        v-model="inqdetail[index].province"
+                        placeholder="省"
+                        @change="changevince(inqdetail[index])"
+                        @clear="clearAddress(inqdetail[index])"
+                      >
+                        <el-option
+                          v-for="(item) in provinceList"
+                          :key="item.code"
+                          :label="item.province"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                      <el-select
+                        clearable
+                        filterable
+                        v-model="inqdetail[index].ccity"
+                        placeholder="市"
+                        @change="changaccity(inqdetail[index])"
+                        @clear="clearAddress1(inqdetail[index])"
+                      >
+                        <el-option
+                          v-for="(item) in newcitylist[index]"
+                          :key="item.code"
+                          :label="item.city"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                      <el-select
+                        clearable
+                        filterable
+                        v-model="inqdetail[index].district"
+                        placeholder="区"
+                        @clear="clearAddress2(inqdetail[index])"
+                      >
+                        <el-option
+                          v-for="(item) in newarealist[index]"
+                          :key="item.code"
+                          :label="item.country"
+                          :value="item.code"
+                        ></el-option>
+                      </el-select>
+                      <span style="display:inline-block;">
+                        <el-input
+                          v-model="inqdetail[index].street"
+                          maxlength="100"
+                          placeholder="详细地址"
+                        ></el-input>
+                      </span>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <el-col :span="8" v-else>
+                  <div class="grid-content">
+                    <el-form-item label>
+                      <el-select
+                        v-model="inqdetail[index].hospital"
+                        placeholder="请选择"
+                        v-el-select-loadmore="loadmores"
+                        filterable
+                        :filter-method="filtered"
+                        @focus="getRow(inqdetail[index],index)"
+                      >
+                        <el-option
+                          v-for="item in newhospitalLists[index]"
+                          :key="item.hospitcode"
+                          :label="item.hospitalname"
+                          :value="item.hospitcode"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+                <span class="deleted">
+                  <!-- <span class="deletes" @click="deleteAddress(index)">删除</span> -->
+                  <el-button
+                    :class="active==index ? 'activeClass' : '' "
+                    type="primary"
+                    small
+                    @click="deleteAddress(index)"
+                  >删 除</el-button>
+                </span>
+              </el-row>
+              <el-row>
+                <el-col :span="10">
+                  <div class="grid-content">
+                    <span class="redStar">&nbsp;*&nbsp;</span>
+                    <el-form-item label="调查要点">
+                      <!-- multiple -->
+                      <el-select
+                        multiple
+                        collapse-tags
+                        v-model="inqdetail[index].pointlist"
+                        placeholder="请选择"
+                      >
+                        <el-option
+                          v-for="(item,index) in keyPointList"
+                          :key="index"
+                          :label="item.text"
+                          :value="item.value"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+            </div>
+          </div>
+          <el-row class="survey_select">
+            <el-col :span="12">
+              <div class="grid-content">
+                <el-form-item label="是否委托调查">
+                  <el-select v-model="form.trustInq" placeholder="请选择" clearable>
+                    <el-option
+                      v-for="(item,index) in missionInvestigation"
+                      :key="index"
+                      :label="item.resultname"
+                      :value="item.resultcode"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="24">
+              <div class="grid-content">
+                <el-form-item label="调查描述">
+                  <el-input
+                    type="textarea"
+                    v-model="form.inqdesc"
+                    :rows="5"
+                    placeholder="请输入您的描述"
+                    maxlength="700"
+                    show-word-limit
+                  ></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row style="float:right;">
+            <el-col :span="24">
+              <div class="grid-content">
+                <el-form-item>
+                  <el-button type="primary" @click="initSurvey()">保 存</el-button>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+    <div class="work_queue">
+      <!-- <img src="../../assets/images/report/tab_btn@1x.png" alt=""> -->
+      <span>该赔案已经发起的调查列表</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        :data="surveyForm"
+        style="width: 100%"
+        class="bgcStyle"
+        highlight-current-row
+        @row-click="toApply"
+        @current-change="toApply"
+      >
+        <el-table-column type="expand">
+          <template slot-scope="props">
+            <div class>
+              <el-form class="itemForm" label-width="120px">
+                <div v-for="(item,index) in props.row.inqdetail" :key="index">
+                  <el-row class="firstItem">
+                    <el-col :span="8">
+                      <el-form-item label="调查地点">
+                        <el-input v-model="item.inqplace" disabled></el-input>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="8">
+                      <el-form-item label="调查要点">
+                        <el-select multiple collapse-tags v-model="item.pointlist">
+                          <el-option
+                            disabled
+                            v-for="(val,index) in item.pointlist"
+                            :key="index"
+                            :label="val.inqpointname"
+                            :value="val.inqpoint"
+                          ></el-option>
+                        </el-select>
+                      </el-form-item>
+                    </el-col>
+                  </el-row>
+                </div>
+                <el-row>
+                  <el-col :span="16">
+                    <el-form-item label="调查描述" v-show="props.row.inqdesc">
+                      <el-input
+                        disabled
+                        type="textarea"
+                        resize="none"
+                        v-model="props.row.inqdesc"
+                        :rows="4"
+                      ></el-input>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-form>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="序号" type="index" width="60" align="center"></el-table-column>
+        <el-table-column prop="rgtno" label="理赔号" width="160" align="center"></el-table-column>
+        <el-table-column prop="contno" label="保单号" width="160" align="center"></el-table-column>
+        <el-table-column prop="insurename" label="被保险人姓名" width="120" align="center"></el-table-column>
+        <el-table-column prop="accidentname" label="出险类型" width="160" align="center"></el-table-column>
+        <el-table-column prop="caseflag" label="案件标识" width="160" align="center"></el-table-column>
+        <el-table-column prop="inqdepth" label="调查深度" width="160" align="center"></el-table-column>
+        <el-table-column prop="inqrname" label="调查原因" width="160" align="center"></el-table-column>
+        <el-table-column prop="trustInq" label="是否委托调查" width="160" align="center"></el-table-column>
+        <el-table-column prop="initinqdate" label="提调日期" width="160" align="center"></el-table-column>
+        <el-table-column prop="inqstate" label="调查状态" width="160" align="center"></el-table-column>
+        <el-table-column label="操作">
+          <template slot-scope="scope">
+            <el-button
+              v-if="scope.row.inqstate == '待生成'"
+              size="mini"
+              type="danger"
+              @click="deleteItem(scope.row,scope.$index)"
+            >删除</el-button>
+            <el-button
+              v-else
+              size="mini"
+              type="danger"
+              disabled
+              @click="deleteItem(scope.row,scope.$index)"
+            >删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="footerBtn">
+        <el-button
+          v-if="this.inqstates == '' || this.inqstates != '待生成'"
+          type="primary"
+          disabled
+          @click="inqInfoApply"
+        >申请提调</el-button>
+        <el-button v-else type="primary" @click="inqInfoApply">申请提调</el-button>
+        <el-button type="primary" @click="goBack">返回</el-button>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import axios from "axios";
+import { post, service } from "../../utils/request.js";
+export default {
+  name: "initiateSurvey",
+  inject: ["reload"],
+  directives: {
+    "el-select-loadmore": {
+      bind(el, binding) {
+        //  console.log(arg)
+        const elsss = el.querySelector(
+          ".el-select-dropdown .el-select-dropdown__wrap"
+        );
+        elsss.addEventListener("scroll", function() {
+          const condition =
+            this.scrollHeight - this.scrollTop - 1 <= this.clientHeight;
+          if (condition) {
+            binding.value();
+          }
+        });
+      }
+    }
+  },
+  data() {
+    return {
+      pagesize1: 10,
+      currpage1: 1,
+      active: 0,
+      accidenttypename: "", //出险类型
+      isApply: true, //未选择状态下申请提调按钮置灰
+      isDelete: false, // 删除置灰
+      inqdepthInfor: {},
+      inqdepthList: [
+        { value: "01", text: "普通调查" },
+        { value: "02", text: "深度调查" }
+      ],
+      casemarkList: [
+        { value: "01", text: "加急" },
+        { value: "02", text: "前置" }
+      ],
+      regionList: [
+        { value: "01", text: "短期出险" },
+        { value: "02", text: "出险金额高" },
+        { value: "03", text: "怀疑挂床" },
+        { value: "04", text: "明确疾病性质" },
+        { value: "05", text: "核实事故经过" },
+        { value: "06", text: "核实医疗收据金额" },
+        { value: "07", text: "核实材料真实性" },
+        { value: "08", text: "核实医院级别" },
+        { value: "09", text: "怀疑欺诈怀疑" }
+      ],
+      offsiteList: [
+        { value: "01", text: "跨省" },
+        { value: "02", text: "跨国" },
+        { value: "03", text: "本地" },
+        { value: "04", text: "其他" }
+      ],
+      surveyAddressList: [
+        { value: "01", text: "医院" },
+        { value: "02", text: "其他地点" }
+      ],
+      keyPointList: [
+        { value: "01", text: "调阅住院病史" },
+        { value: "02", text: "查阅门诊就诊记录" },
+        {
+          value: "03",
+          text: "查阅报告(病理报告、体检报告、心电图报告、生化检查)"
+        },
+        {
+          value: "04",
+          text: "查阅检查报告申请单(病理报告、心电图报告、生化检查)"
+        },
+        { value: "05", text: "走访病理科医生,询问诊断依据(录音)" },
+        { value: "06", text: "走访主治医生,询问诊断依据(录音)" },
+        { value: "07", text: "当地二级以上医院住院排查" },
+        { value: "08", text: "当地二级以上医院门诊、住院排查" },
+        { value: "09", text: "当地医保排查、核实就诊信息" },
+        { value: "10", text: "住家周围排查、核实保险事故" },
+        { value: "11", text: "工作单位核实,出勤、体检情况" },
+        { value: "12", text: "事故地点勘察现场" },
+        { value: "13", text: "面见客户，查验手术伤口" },
+        { value: "14", text: "面见客户，核实事故经过(笔录、录音)" },
+        { value: "15", text: "面见客户，了解目前伤残情况(拍照)" },
+        { value: "16", text: "面见客户，索要完整门诊、住院就诊资料" },
+        { value: "17", text: "面见客户，通过笔录固定证据(笔录、录音)" },
+        {
+          value: "18",
+          text: "面见客户家属，要求对客户尸体做尸检，并签署同意书"
+        },
+        { value: "19", text: "其他走访(公、检、法、交通队、殡仪馆、民政局)" },
+        { value: "20", text: "其他" }
+      ],
+      provinceList: [], //省
+      cityList: [], //市
+      newcitylist: [],
+      areaList: [], //区
+      newarealist: [], //区
+      address: {},
+      // hospitalNames: [],
+      hospitalList: [],
+      form: {
+        accidenttypes: "",
+        accidenttype: "",
+        inqdepth: "",
+        casemarks: [],
+        inqrcode: [],
+        locflag: "",
+        trustInq: "",
+        inqdesc: ""
+      },
+      inqdetail: [
+        {
+          inqplace: "",
+          province: "",
+          ccity: "",
+          district: "",
+          street: "",
+          hospital: "",
+          pointlist: []
+        }
+      ],
+      opinion: [
+        {
+          value: "01",
+          label: "疾病"
+        },
+        {
+          value: "02",
+          label: "意外"
+        }
+      ],
+      tableData: [],
+      surveyForm: [],
+      addData: [],
+      activeName: ["1", "2", "3", "4"],
+      labelPosition: "left",
+      clmno: "",
+
+      missionInvestigation: [],
+      applyDesc: "",
+      resultcode: "",
+      inqstates: "",
+      contnos: [],
+      pageData1: {
+        startPage: 0,
+        endPage: 100
+      },
+      hospitalLists: [],
+      newhospitalLists: [],
+      hosState: "",
+      hospitalListsname: "",
+      pointlists: []
+    };
+  },
+  created() {
+    // this.clmno = "550000000014";
+    this.clmno = this.$route.query.clmno;
+    // this.rgtno = this.$route.query.rgtno;
+    this.contno = this.$route.query.contno;
+
+    this.getWarranty();
+    this.getSurveyList();
+    this.getCommissionInvestigation();
+    this.getSheng();
+    // this.hospitalList = hospitals.bodys;
+    this.getHospitals();
+  },
+  mounted() {
+    this.$watermark.set(
+      localStorage.getItem("userCode"),
+      localStorage.getItem("userName")
+    );
+  },
+
+  methods: {
+    filtered(val) {
+      this.pageData1.startPage = 0;
+      this.pageData1.endPage = 100;
+      if (val != "") {
+        for (let key in this.inqdetail) {
+          if (this.hosState == key) {
+            // this.inqdetail[key].hospital = val;
+            this.hospitalListsname = val;
+            // this.getHospitals(val);
+            post(service.getHospital, {
+              pagestart: this.pageData1.startPage,
+              pageend: this.pageData1.endPage,
+              likename: val || ""
+            }).then(res => {
+              this.hospitalLists = res.data.bodys;
+              this.newhospitalLists.push(this.hospitalLists);
+              this.newhospitalLists[key] = res.data.bodys;
+            });
+          }
+        }
+      }
+    },
+    getRow(row, index) {
+      this.hosState = index;
+      post(service.getHospital, {
+        pagestart: this.pageData1.startPage,
+        pageend: this.pageData1.endPage,
+        likename: ""
+      }).then(res => {
+        this.hospitalLists = res.data.bodys;
+        this.newhospitalLists.push(this.hospitalLists);
+        this.newhospitalLists[index] = res.data.bodys;
+      });
+    },
+    // 医院
+    getHospitals() {
+      for (let key in this.inqdetail) {
+        post(service.getHospital, {
+          pagestart: this.pageData1.startPage,
+          pageend: this.pageData1.endPage,
+          likename: this.inqdetail[key].hospital
+        }).then(res => {
+          this.hospitalLists = res.data.bodys;
+          this.newhospitalLists.push(this.hospitalLists);
+          this.newhospitalLists[key] = res.data.bodys;
+        });
+      }
+    },
+    loadmores() {
+      this.pageData1.startPage += 100;
+      this.pageData1.endPage = 100;
+      post(service.getHospital, {
+        pagestart: this.pageData1.startPage,
+        pageend: 100,
+        likename: this.hospitalListsname
+      }).then(res => {
+        this.hospitalLists = [...this.hospitalLists, ...res.data.bodys];
+        this.newhospitalLists.push(this.hospitalLists);
+        this.newhospitalLists[this.hosState] = [
+          ...this.newhospitalLists[this.hosState],
+          ...res.data.bodys
+        ];
+      });
+    },
+    // 发起调查
+    clearAddre(index) {
+      console.log("xzzxzzxz");
+      this.inqdetail[index].hospital = null;
+      this.inqdetail[index].province = null;
+      this.inqdetail[index].ccity = null;
+      this.inqdetail[index].street = null;
+      this.inqdetail[index].district = null;
+    },
+    getArr(a) {
+      var supplyMaterial = a;
+      var obj = {};
+      supplyMaterial.forEach((item, index) => {
+        obj[index] = item;
+      });
+      var supplyArr = [];
+      for (var key in obj) {
+        var temp = {};
+        temp.casemark = obj[key];
+        supplyArr.push(temp);
+      }
+      return supplyArr;
+    },
+    getArr1(a) {
+      var supplyMaterial = a;
+      var obj = {};
+      supplyMaterial.forEach((item, index) => {
+        obj[index] = item;
+      });
+      var supplyArr = [];
+      for (var key in obj) {
+        var temp = {};
+        temp.inqrcode = obj[key];
+        supplyArr.push(temp);
+      }
+      return supplyArr;
+    },
+    initSurvey() {
+      if (this.contnos == "") {
+        this.$message.error("请先选择调查保单");
+        return;
+      }
+      if (!this.form.accidenttype) {
+        this.$message.error("请填写出险类型");
+        return;
+      }
+      if (!this.form.inqdepth) {
+        this.$message.error("请选择调查深度");
+        return;
+      }
+      if (!this.form.inqrcode) {
+        this.$message.error("请选择调查原因");
+        return;
+      }
+      if (!this.form.locflag) {
+        this.$message.error("请选择异地调查");
+        return;
+      }
+
+      var inqNum = this.inqdetail.length;
+      var inqdetail = [];
+      var i = inqdetail.length;
+      for (let i = 0; i < inqNum; i++) {
+        this.pointlists = this.inqdetail[i].pointlist.map(item => {
+          return { inqpoint: item };
+        });
+        console.log("DDD", this.pointlists);
+        inqdetail.push({
+          inqplace: this.inqdetail[i].inqplace,
+          province: this.inqdetail[i].province,
+          city: this.inqdetail[i].ccity,
+          district: this.inqdetail[i].district,
+          street: this.inqdetail[i].street,
+          hospital: this.inqdetail[i].hospital,
+
+          // inqpoint: this.inqdetail[i].inqpoint,
+          // pointlist: this.inqdetail[i].pointlist
+          pointlist: this.pointlists
+        });
+        if (!this.inqdetail[i].inqplace) {
+          this.$message.error("请选择调查地点");
+          return;
+        }
+        // if (this.inqdetail[i].inqplace !== "01") {
+        //   if (!this.inqdetail[i].province) {
+        //     this.$message.error("请选择省");
+        //     return;
+        //   }
+        //   if (!this.inqdetail[i].ccity) {
+        //     this.$message.error("请选择市");
+        //     return;
+        //   }
+        //   if (!this.inqdetail[i].district) {
+        //     this.$message.error("请选择区/县");
+        //     return;
+        //   }
+        //   if (!this.inqdetail[i].street) {
+        //     this.$message.error("请输入详细地点");
+        //     return;
+        //   }
+        // }
+        if (this.inqdetail[i].inqplace !== "02") {
+          if (!this.inqdetail[i].hospital) {
+            this.$message.error("请选择医院");
+            return;
+          }
+        }
+        if (!this.inqdetail[i].pointlist) {
+          this.$message.error("请选择调查要点");
+          return;
+        }
+      }
+      var obj = {};
+      this.contnos = this.contnos.reduce(function(item, next) {
+        obj[next.contno] ? "" : (obj[next.contno] = true && item.push(next));
+        return item;
+      }, []);
+      post(service.inqInfoInput, {
+        bodys: {
+          agentcode: localStorage.getItem("userCode"),
+          comcode: localStorage.getItem("comCode"),
+          rgtno: this.clmno,
+          contnos: this.contnos,
+          accidenttype: this.form.accidenttypes,
+          inqdepth: this.form.inqdepth,
+          casemarkobj: this.getArr(this.form.casemarks),
+          locflag: this.form.locflag,
+          inqrcodes: this.getArr1(this.form.inqrcode),
+          trustInq: this.form.trustInq,
+          inqdesc: this.form.inqdesc,
+          inqdetail
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.getSurveyList();
+          this.$message({
+            message: "保存成功",
+            type: "success"
+          });
+          this.reload();
+        } else {
+          this.$message.error(res.data.header.message);
+        }
+      });
+    },
+    goBack() {
+      this.$router.go(-1);
+    },
+    toChangeContno(selection) {
+      // for (var i = 0; i < selection.length; i++) {
+      this.contnos = selection;
+      // }
+      console.log("getAll", this.contnos);
+    },
+    toGetAllContno(selection) {
+      // for (var i = 0; i < selection.length; i++) {
+      // this.contnos.push({ contno: selection[i].contno });
+      this.contnos = selection;
+      // }
+      console.log("getAll", this.contnos);
+    },
+    getRowKeys(row) {
+      return row.contno;
+    },
+    toApply(row) {
+      this.isApply = false;
+      console.log("xxx", row.inqno);
+      this.inqnoss = row.inqno;
+      this.inqstates = row.inqstate;
+      console.log("11", this.inqstates);
+    },
+    // 申请提调(校验+提交)
+    inqInfoApply() {
+      //  校验
+      post(service.inqAuditCheck, {
+        bodys: {
+          rgtno: this.clmno,
+          inqno: this.inqnoss,
+          inqidea: "",
+          inqideadesc: "",
+          comcode: localStorage.getItem("comCode"),
+          agentcode: localStorage.getItem("userCode")
+        }
+      }).then(res => {
+        console.log("校验", res);
+        this.applyDesc = res.data.bodys.resultdesc;
+        this.resultcode = res.data.bodys.resultcode;
+        console.log(this.resultcode);
+        if (this.resultcode === "200") {
+          post(service.inqInfoApply, {
+            bodys: {
+              rgtno: this.clmno,
+              inqno: this.inqnoss,
+              inqidea: "",
+              inqideadesc: "",
+              comcode: localStorage.getItem("comCode"),
+              agentcode: localStorage.getItem("userCode")
+            }
+          }).then(res => {
+            this.$message({
+              type: "success",
+              message: "操作成功!"
+            });
+            console.log("直接成功", this.applyDesc);
+            this.getSurveyList();
+            this.inqstates = "";
+          });
+        } else if (this.resultcode === "500") {
+          this.$confirm("该客户已存在未结束的调查，是否继续？", "提示", {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning"
+          })
+            .then(() => {
+              post(service.inqInfoApply, {
+                bodys: {
+                  rgtno: this.clmno,
+                  inqno: this.inqnoss,
+                  inqidea: "",
+                  inqideadesc: "",
+                  comcode: localStorage.getItem("comCode"),
+                  agentcode: localStorage.getItem("userCode")
+                }
+              }).then(res => {
+                this.$message({
+                  type: "success",
+                  message: "操作成功!"
+                });
+                console.log("是，继续", this.applyDesc);
+                this.getSurveyList();
+                this.inqstates = "";
+              });
+            })
+            .catch(() => {
+              this.$message({
+                type: "info",
+                message: "已取消该操作"
+              });
+            });
+        }
+      });
+      //    -------------
+    },
+    //  保单信息查询
+    getWarranty() {
+      post(service.contInfoQuery, {
+        bodys: { rgtno: this.clmno }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          console.log("保单信息查询", res);
+          this.tableData = res.data.bodys;
+          this.form.accidenttype = res.data.bodys[0].accidenttypename;
+          this.form.accidenttypes = res.data.bodys[0].accidenttypecode;
+        }
+      });
+    },
+    // 调查列表单个删除
+    deleteItem(row, index) {
+      var inqnoa = row.inqno;
+      post(service.inqInfoDelete, {
+        bodys: {
+          rgtno: this.clmno,
+          inqno: row.inqno
+        }
+      }).then(res => {
+        console.log(res);
+        this.$message({
+          message: "删除成功",
+          type: "success"
+        });
+        this.getSurveyList();
+        this.inqstates = "";
+      });
+    },
+    // 调查列表查询
+    getSurveyList() {
+      post(service.inqInfoQuery, {
+        bodys: { rgtno: this.clmno }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          console.log("已发起的调查列表", res);
+          this.surveyForm = res.data.bodys;
+        }
+      });
+    },
+    // 是否委托查询
+    getCommissionInvestigation() {
+      post(service.commissionInvestigation, {
+        bodys: { code: "", name: "" }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          console.log("委托", res);
+          this.missionInvestigation = res.data.bodys;
+        }
+      });
+    },
+    // 调查地点增加 删除
+    addSurvey(e) {
+      e.preventDefault();
+      this.inqdetail.push({
+        inqplace: "",
+        province: "",
+        ccity: "",
+        district: "",
+        street: "",
+        hospital: "",
+        pointlist: []
+
+        // inqpoint: ""
+      });
+    },
+    deleteAddress(index) {
+      this.inqdetail.splice(index, 1);
+    },
+    // 保单信息分页
+    handleSizeChange1(val) {
+      this.pagesize1 = val;
+    },
+    indexMethod1(index) {
+      return index + 1 + (this.currpage1 - 1) * 10;
+    },
+    handleCurrentChange1(val) {
+      this.currpage1 = val;
+    },
+    // 省市区获取
+    getSheng() {
+      // 获取省
+      post(service.getCity, {
+        bodys: {
+          state: "province",
+          code: ""
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.provinceList = res.data.bodys.rows;
+        }
+      });
+    },
+    changevince(key) {
+      post(service.getCity, {
+        bodys: {
+          state: "city",
+          code: key.province
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.cityList = res.data.bodys.rows;
+          for (var i = 0; i < this.inqdetail.length; i++) {
+            if (key.province === this.inqdetail[i].province) {
+              this.newcitylist.push(this.cityList);
+              this.newcitylist[i] = res.data.bodys.rows;
+            }
+          }
+          key.ccity = null;
+          key.district = null;
+          key.street = null;
+        }
+      });
+    },
+    // 获取市==县
+    changaccity(key) {
+      post(service.getCity, {
+        bodys: {
+          state: "country",
+          code: key.ccity
+        }
+      }).then(res => {
+        if (res.data.headers.code === "200") {
+          this.areaList = res.data.bodys.rows;
+          for (var i = 0; i < this.inqdetail.length; i++) {
+            if (key.ccity === this.inqdetail[i].ccity) {
+              this.newarealist.push(this.areaList);
+              this.newarealist[i] = res.data.bodys.rows;
+            }
+          }
+          key.district = null;
+          key.street = null;
+        }
+      });
+    },
+    // 清空省市区
+    clearAddress(key) {
+      key.ccity = null;
+      key.district = null;
+      key.street = null;
+    },
+    clearAddress1(key) {
+      key.district = null;
+      key.street = null;
+    },
+    clearAddress2(key) {
+      key.street = null;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.grid-content {
+  /deep/.el-form-item__label {
+    width: 90px !important;
+    padding: 0;
+    text-align: left;
+  }
+}
+/deep/.el-table__expanded-cell {
+  padding: 10px 0px !important;
+}
+.firstItem {
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+}
+.actived {
+  pointer-events: none;
+  cursor: pointer;
+  opacity: 0.6;
+}
+.footerBtn {
+  padding: 30px 0 0;
+  text-align: right;
+}
+.addBtn {
+  position: absolute;
+  right: 0;
+  top: 22px;
+  z-index: 999;
+  cursor: pointer;
+}
+.addBox {
+  position: relative;
+}
+.initiateSurvey {
+  margin: 20px;
+  .el-form {
+    background-color: #fff;
+    padding: 0 20px;
+  }
+  .work_queue {
+    position: relative;
+    //   img{
+    //      position: relative;
+    //   }
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .work_table {
+    margin-bottom: 20px;
+  }
+  .address .el-select {
+    width: 18%;
+  }
+}
+.activeClass {
+  display: none;
+}
+.deleted {
+  position: absolute;
+  right: 120px;
+  top: 22px;
+}
+// .deleted:empty{
+//   background: #000
+// }
+.deleted:nth-child(1) {
+  display: none;
+}
+.deleted:first-child {
+  display: none;
+}
+.deletes {
+  display: inline-block;
+  background: linear-gradient(
+    180deg,
+    rgba(71, 157, 255, 1) 0%,
+    rgba(0, 62, 255, 1) 100%
+  );
+  opacity: 1;
+  border-radius: 2px;
+  margin-left: 30px;
+  cursor: pointer;
+}
+</style>
+<style lang="less">
+.initiateSurvey {
+  .el-row {
+    padding-top: 20px;
+    //   margin-bottom: 20px;
+    &:last-child {
+      padding-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+    .report {
+      display: inline-block;
+      width: 180px;
+      height: 40px;
+      text-align: center;
+      line-height: 40px;
+      background-color: #0673ff;
+      color: #fff;
+      font-size: 14px;
+      font-family: Source Han Sans CN;
+      border-radius: 25px;
+    }
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+}
+.initiateSurvey {
+  .el-select {
+    width: 100%;
+  }
+  .el-collapse-item__arrow {
+    display: none;
+  }
+  .el-collapse-item__header {
+    background-color: #0673ff;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 10px 10px 0 0;
+    padding: 0 15px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 20px;
+    font-family: Source Han Sans CN;
+  }
+  .el-collapse-item__content {
+    padding-bottom: 0px;
+  }
+  .survey_select {
+    .el-col-12 {
+      .el-select {
+        width: 46%;
+      }
+    }
+  }
+  .select_bgc {
+    background: #f7faff;
+    position: relative;
+    span {
+      position: absolute;
+      top: 0;
+      right: 0;
+    }
+  }
+}
+</style>
+<style lang="less">
+.initiateSurvey .el-tabs--card > .el-tabs__header .el-tabs__item.is-active {
+  background-color: #0673ff;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  color: #fff;
+}
+.initiateSurvey .el-tabs__header {
+  margin: 0;
+}
+
+.initiateSurvey .el-tabs--card > .el-tabs__header .el-tabs__item {
+  background-color: #fff;
+  color: #999999;
+}
+.initiateSurvey .el-textarea .el-input__count {
+  color: #909399;
+  background: none;
+  position: absolute;
+  font-size: 12px;
+  right: 10px;
+}
+.initiateSurvey .el-textarea__inner {
+  background-color: #f7faff;
+}
+.bgcStyle {
+  .el-form {
+    background-color: #f7faff !important;
+  }
+}
+.initiateSurvey .el-collapse {
+  margin-bottom: 20px;
+}
+</style>

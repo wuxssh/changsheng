@@ -1,0 +1,960 @@
+<template>
+  <div class="initiatingPhoto">
+    <div class="work_queue">
+      <!-- <img src="../../assets/images/report/tab_btn@1x.png" alt=""> -->
+      <span>案件信息</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table :data="caseData" style="width: 100%">
+        <el-table-column label="序号" width="60" type="index"></el-table-column>
+        <el-table-column prop="contno" label="保单号"></el-table-column>
+        <el-table-column prop="appntname" label="投保人姓名"></el-table-column>
+        <el-table-column prop="insuredname" label="被保人姓名"></el-table-column>
+        <el-table-column prop="managename" label="保单所属分公司"></el-table-column>
+        <el-table-column prop="caseno" label="理赔号"></el-table-column>
+        <el-table-column prop="accdate" label="出险日期"></el-table-column>
+        <el-table-column prop="customername" label="出险人姓名"></el-table-column>
+        <el-table-column prop="accidenttype" label="出险类型"></el-table-column>
+        <el-table-column prop="reportchnlname" label="报案渠道"></el-table-column>
+      </el-table>
+    </div>
+
+    <el-collapse v-model="activeName">
+      <el-collapse-item name="1">
+        <template slot="title">
+          照会信息
+          <i
+            class="header-icon el-icon-caret-bottom"
+            style="margin: 0 8px 0 auto;font-size: 30px;"
+          ></i>
+        </template>
+        <el-form
+          ref="form"
+          :model="form"
+          v-model="labelPosition"
+          label-width="120px"
+          :rules="rules"
+        >
+          <el-row style="margin-top:30px;">
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="照会种类" prop="type">
+                  <el-select v-model="form.type">
+                    <el-option
+                      v-for="item in typeNotes"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="grid-content">
+                <el-form-item label="接收对象" prop="receivingobj">
+                  <el-select v-model="form.receivingobj" placeholder="请选择接收对象">
+                    <el-option
+                      v-for="item in acceptedObjs"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="24">
+              <!-- <div v-if="isShow">
+                <el-form-item label="照会类型" prop="supplymaterial">
+                  <el-checkbox-group v-model="form.supplymaterial">
+                    <el-checkbox
+                      v-for="(item) in supplymaterialLists"
+                      :key="item.id"
+                      :label="item.id"
+                    >{{item.name}}</el-checkbox>
+                  </el-checkbox-group>
+                </el-form-item>
+              </div>-->
+              <div class="grid-content">
+                <el-form-item label="照会类型" v-if="form.type=='01'" prop="supplymaterial">
+                  <el-checkbox-group v-model="form.supplymaterial">
+                    <el-checkbox
+                      @change="show1"
+                      v-for="(item) in supplymaterialLists"
+                      :key="item.id"
+                      :label="item.id"
+                    >{{item.name}}</el-checkbox>
+                  </el-checkbox-group>
+                </el-form-item>
+                <el-form-item label="照会类型" v-if="form.type=='02'" prop="statematerial">
+                  <el-checkbox-group v-model="form.statematerial">
+                    <el-checkbox
+                      @change="show1"
+                      v-for="(item) in statematerialLists"
+                      :key="item.id"
+                      :label="item.id"
+                    >{{item.name}}</el-checkbox>
+                  </el-checkbox-group>
+                </el-form-item>
+                <el-form-item label="照会类型" v-if="form.type=='03'" prop="changenotific">
+                  <el-checkbox-group v-model="form.changenotific">
+                    <el-checkbox
+                      @change="show1"
+                      v-for="(item) in changenotificLists"
+                      :key="item.id"
+                      :label="item.id"
+                    >{{item.name}}</el-checkbox>
+                  </el-checkbox-group>
+                </el-form-item>
+                <!-- 照会类型-健康问卷 -->
+                <el-col :span="10">
+                  <div v-if="form.statematerial.indexOf('0201')>-1">
+                    <el-form-item
+                      v-show="form.type=='02' && form.statematerial.indexOf('0201')>-1"
+                      prop="healthtypelist"
+                    >
+                      <el-select
+                        v-model="form.healthtypelist"
+                        multiple
+                        collapse-tags
+                        prop="healthtype"
+                        clearable
+                        placeholder="请选择健康问卷"
+                      >
+                        <el-option
+                          v-for="item in questiobOptions"
+                          :key="item.questioncode"
+                          :label="item.questionname"
+                          :value="item.questioncode"
+                        ></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="24">
+              <div class="grid-content">
+                <el-form-item label="照会描述" prop="noticedesc">
+                  <el-input
+                    type="textarea"
+                    v-model="form.noticedesc"
+                    :rows="11"
+                    placeholder="请输入您的描述"
+                    maxlength="700"
+                    show-word-limit
+                  ></el-input>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row style="float:right;">
+            <el-col :span="24">
+              <div class="grid-content">
+                <el-form-item>
+                  <el-button type="primary" @click="submitForm('form')" round>保 存</el-button>
+                </el-form-item>
+              </div>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-collapse-item>
+    </el-collapse>
+
+    <div class="work_queue">
+      <span>该赔案已经发起的照会列表</span>
+      <div class="box"></div>
+    </div>
+    <div class="work_table">
+      <el-table
+        :data="noticeData.slice((currpage1 - 1) * pagesize1, currpage1 * pagesize1)"
+        style="width: 100%"
+        @row-click="lookDes"
+        highlight-current-row
+      >
+        <el-table-column type="expand">
+          <template slot-scope="props">
+            <el-form>
+              <el-row>
+                <el-col :span="24">
+                  <div class="grid-content">
+                    <el-form-item label="照会描述">
+                      <el-input
+                        type="textarea"
+                        resize="none"
+                        :disabled="props.row.noticestatus != '01' && props.row.noticestatus != '03'"
+                        v-model="props.row.noticedesc"
+                        :rows="6"
+                      ></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-row>
+            </el-form>
+          </template>
+        </el-table-column>
+        <el-table-column type="index" width="60" label="序号" :index="indexMethod1"></el-table-column>
+        <el-table-column prop="rgtno" label="理赔号"></el-table-column>
+        <el-table-column prop="receivename" label="接收对象"></el-table-column>
+        <el-table-column prop="noticekind" label="照会种类"></el-table-column>
+        <el-table-column prop="noticetype" label="照会类型"></el-table-column>
+        <el-table-column prop="noticesigndate" label="下发日期"></el-table-column>
+        <el-table-column prop="noticestatuname" label="照会状态"></el-table-column>
+        <el-table-column label="操作" align="center" width="220">
+          <template slot-scope="scope">
+            <el-button size="mini" type="primary" @click="lookPDF(scope.row,scope.$index)">预览</el-button>
+            <el-button
+              size="mini"
+              type="danger"
+              :disabled="scope.row.noticestatus != '01' && scope.row.noticestatus != '03'"
+              @click="noticeInfoDelete(scope.row,scope.$index)"
+            >删除</el-button>
+            <el-button
+              size="mini"
+              type="success"
+              :disabled="scope.row.noticestatus != '01' && scope.row.noticestatus != '03'"
+              @click="noticeDescUpdate(scope.row,scope.$index)"
+            >修改</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div style="margin-top:10px;">
+        <el-pagination
+          background
+          @size-change="handleSizeChange1"
+          @current-change="handleCurrentChange1"
+          :page-size="pagesize1"
+          layout="prev, pager, next,jumper"
+          :total="noticeData.length"
+        ></el-pagination>
+      </div>
+      <div style="text-align:right;margin-top:20px;">
+        <el-button type="primary" round @click="applyNote" v-if="flag">申请下发</el-button>
+        <el-button type="info" round disabled v-if="!flag">申请下发</el-button>
+        <el-button type="primary" round @click="goBack()">返 回</el-button>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import { post, service } from "../../utils/request.js";
+import { generateUUID, getDate, getTime } from "../../utils/common.js";
+export default {
+  name: "InitiatingPhoto",
+  inject: ["reload"],
+  data() {
+    return {
+      pagesize1: 10,
+      currpage1: 1,
+      // isShow: true,
+      rgtno: "",
+      caseData: [],
+      typeNotes: [
+        {
+          value: "01",
+          label: "补充材料类"
+        },
+        {
+          value: "02",
+          label: "声明材料类"
+        },
+        {
+          value: "03",
+          label: "契变告知"
+        }
+      ],
+      noteForm: {},
+      noticeData: [],
+      supplymaterialLists: [
+        {
+          id: "0101",
+          name: "提供体检报告",
+          content: "请提交近两年体检报告。"
+        },
+        {
+          id: "0102",
+          name: "首诊病史（放射科诊断）",
+          content: "请提交首诊病史以及完整病史。"
+        },
+        {
+          id: "0103",
+          name: "补充病史（门诊，住院）",
+          content: "请提交补充病史。"
+        },
+        {
+          id: "0104",
+          name: "提供出生证明、关系证明",
+          content: "请提交出生证明、关系证明。"
+        },
+        {
+          id: "0105",
+          name: "提供身份证件（身份证、户口本）",
+          content: "请提交提供身份证件。"
+        },
+        {
+          id: "0106",
+          name: "死亡证明（死亡证、户籍注销证明等）",
+          content: "请提交死亡证明。"
+        },
+        {
+          id: "0107",
+          name: "意外情况说明（工伤证明、交通事故责任认定书，处警记录等）",
+          content: "请提交意外情况说明。"
+        },
+        {
+          id: "0108",
+          name: "其他材料（行驶证，驾驶证、公证书、法律文书等）",
+          content: "请提交其他材料（行驶证，驾驶证、公证书、法律文书等）。"
+        }
+      ],
+      statematerialLists: [
+        {
+          id: "0201",
+          name: "健康问卷",
+          content:
+            "您此次提交对的理赔材料我们已收悉。在初审过程中，我们仍需要您对于健康情况作补充说明，便于我们进一步审核您的理赔申请，请完成健康问卷。"
+        },
+        {
+          id: "0202",
+          name: "宽限期出险，照会续费",
+          content:
+            "您此次提交对的理赔材料我们已收悉。在初审过程中，我们确认您在宽限期内出险，但目前我们尚未收到您当期保费，请即使完成保险费缴纳，如有问题可联系您的代理人，或致电我司客服：400-820-8599。"
+        },
+        {
+          id: "0203",
+          name: "声明首诊时间、治疗内容、检查结果",
+          content:
+            "您此次提交对的理赔材料我们已收悉。在初审过程中，我们仍需要您对于此次保险事故中的(首次就诊时间/治疗过程/检查结果）作补充说明，便于我们进一步审核您的理赔申请，请作书面陈述，并本人签名确认。"
+        }
+      ],
+      changenotificLists: [
+        {
+          id: "0301",
+          name: "通知签署《契变书》",
+          content:
+            "请您签署《承保内容变更通知书》，因您本次就诊疾病依据《承保内容变更通知书》的约定已不在本保单的保障范围内，故您本次理赔申请本公司歉难赔付，请谅解。"
+        }
+      ],
+      acceptedObjs: [
+        {
+          value: "01",
+          label: "投保人"
+        },
+        {
+          value: "02",
+          label: "被保人"
+        },
+        {
+          value: "03",
+          label: "申请人"
+        }
+      ],
+      questiobOptions: [],
+      textarea: "",
+      rules: {
+        type: [
+          { required: true, message: "请选择照会种类", trigger: "change" }
+        ],
+        receivingobj: [
+          { required: true, message: "请选择接收对象", trigger: "change" }
+        ],
+        supplymaterial: [
+          {
+            type: "array",
+            required: true,
+            message: "请选择至少一个照会类型",
+            trigger: "change"
+          }
+        ],
+        statematerial: [
+          {
+            type: "array",
+            required: true,
+            message: "请选择至少一个照会类型",
+            trigger: "change"
+          }
+        ],
+        changenotific: [
+          {
+            type: "array",
+            required: true,
+            message: "请选择至少一个照会类型",
+            trigger: "change"
+          }
+        ],
+        healthtypelist: [
+          { required: true, message: "请选择健康问卷", trigger: "change" }
+        ],
+        noticedesc: [
+          {
+            required: true,
+            message: "请填写照会描述",
+            trigger: ["blur", "change"]
+          }
+        ]
+      },
+      value: "",
+      activeName: "1",
+
+      form: {
+        name: "",
+        kind: "0",
+        desc: "",
+        noticedesc: "",
+        receivingobj: "", // 接收对象
+        supplymaterial: [], // 补充材料类
+        statematerial: [], // 声明材料类
+        changenotific: [], // 契约类
+        healthtype: "",
+        healthtypelist: [],
+        type: "01"
+      },
+      activeName: ["1", "2", "3", "4"],
+      labelPosition: "right",
+      isbox: true,
+      style1: {
+        margin: "0 0 0 15px"
+      },
+      active: "first",
+      noticeNo: "",
+      flag: false,
+      resultcode: "",
+      message11: "",
+      message1:
+        "您此次提交对的理赔材料我们已收悉。在初审过程中，我们仍需要您作补充相关资料，便于我们进一步审核您的理赔申请，请提供如下资料。",
+      message2: "",
+      message3: "",
+      textContent1: [
+        "请提交近两年体检报告。",
+        "请提交提供身份证件。",
+        "请提交出生证明、关系证明。",
+        "请提交补充病史。",
+        "请提交死亡证明。",
+        "请提交意外情况说明。",
+        "请提交首诊病史以及完整病史。",
+        "请提交其他材料（行驶证，驾驶证、公证书、法律文书等）。"
+      ],
+      textContent2: [
+        "您此次提交对的理赔材料我们已收悉。在初审过程中，我们仍需要您对于健康情况作补充说明，便于我们进一步审核您的理赔申请，请完成健康问卷。",
+        "您此次提交对的理赔材料我们已收悉。在初审过程中，我们确认您在宽限期内出险，但目前我们尚未收到您当期保费，请即使完成保险费缴纳，如有问题可联系您的代理人，或致电我司客服：400-820-8599。",
+        "您此次提交对的理赔材料我们已收悉。在初审过程中，我们仍需要您对于此次保险事故中的(首次就诊时间/治疗过程/检查结果）作补充说明，便于我们进一步审核您的理赔申请，请作书面陈述，并本人签名确认。"
+      ],
+      textContent3: [
+        "请您签署《承保内容变更通知书》，因您本次就诊疾病依据《承保内容变更通知书》的约定已不在本保单的保障范围内，故您本次理赔申请本公司歉难赔付，请谅解。"
+      ],
+      desc1: "",
+      desc2: "",
+      desc3: "",
+      pdfList: []
+    };
+  },
+  created() {
+    this.rgtno = this.$route.query.clmno;
+    this.customerno = this.$route.query.customerno;
+    this.initCaseNotice(); // 案件信息+照会列表查询
+  },
+  mounted() {
+    this.$watermark.set(
+      localStorage.getItem("userCode"),
+      localStorage.getItem("userName")
+    );
+  },
+  methods: {
+    getArr1(a) {
+      var supplyMaterial = a;
+      var obj = {};
+      supplyMaterial.forEach((item, index) => {
+        obj[index] = item;
+      });
+      var supplyArr = [];
+      for (var key in obj) {
+        var temp = {};
+        temp.healthtype = obj[key];
+        supplyArr.push(temp);
+      }
+      return supplyArr;
+    },
+    // 照会修改
+    noticeDescUpdate(row, index) {
+      if (!row.noticedesc) {
+        this.$message.error("照会描述不能为空！");
+        return;
+      }
+      post(service.noticeDescUpdate, {
+        noticeno: row.noticeno,
+        rgtno: row.rgtno,
+        noticedesc: row.noticedesc
+      }).then(res => {
+        if (res.data.resultcode === "200") {
+          this.$message.success("操作成功！");
+          //  this.initCaseNotice();
+        } else {
+          this.$message.error(res.data.resultdesc);
+        }
+      });
+    },
+    // 照会删除
+    noticeInfoDelete(row, index) {
+      post(service.noticeInfoDelete, {
+        noticeno: row.noticeno,
+        rgtno: row.rgtno
+      }).then(res => {
+        this.$message.success("操作成功！");
+        this.initCaseNotice();
+      });
+    },
+    //  照会预览
+    lookPDF(row, index) {
+      post(service.noticepdfprint, {
+        rgtno: this.rgtno,
+        noticeno: row.noticeno,
+        printtype: "01"
+        // noticeno: "Zh001910018",
+        // rgtno: "1910110002401"
+      }).then(res => {
+        this.pdfList = res.data.pdflist;
+        if (this.pdfList) {
+          window.open(this.pdfList[0].pdfurl, "_blank");
+        } else {
+          this.$message.error("未查询到照会预览pdf路径！");
+        }
+      });
+    },
+    getIsShow() {
+      // this.isShow = false;
+    },
+    show1() {
+      if (this.form.supplymaterial == "") {
+        this.message1 = "";
+      } else {
+        this.message1 =
+          "您此次提交对的理赔材料我们已收悉。在初审过程中，我们仍需要您作补充相关资料，便于我们进一步审核您的理赔申请，请提供如下资料。";
+      }
+      if (this.message1 == "") {
+        this.form.noticedesc = this.message1;
+      } else {
+        this.form.noticedesc = this.message1 + "\n";
+      }
+      for (let i = 0; i < this.supplymaterialLists.length; i++) {
+        if (this.form.supplymaterial[i]) {
+          for (let n = 0; n < this.supplymaterialLists.length; n++) {
+            if (this.form.supplymaterial[i] == this.supplymaterialLists[n].id) {
+              this.form.noticedesc +=
+                this.supplymaterialLists[n].content + "\n";
+            }
+          }
+        }
+      }
+      for (let i = 0; i < this.statematerialLists.length; i++) {
+        if (this.form.statematerial[i]) {
+          for (let n = 0; n < this.statematerialLists.length; n++) {
+            if (this.form.statematerial[i] == this.statematerialLists[n].id) {
+              this.form.noticedesc += this.textContent2[n] + "\n";
+            }
+          }
+        }
+      }
+      for (let i = 0; i < this.changenotificLists.length; i++) {
+        if (this.form.changenotific[i]) {
+          for (let n = 0; n < this.changenotificLists.length; n++) {
+            if (this.form.changenotific[i] == this.changenotificLists[n].id) {
+              this.form.noticedesc += this.textContent3[n] + "\n";
+            }
+          }
+        }
+      }
+    },
+    goBack() {
+      this.$router.go(-1);
+    },
+    // 查询
+    initCaseNotice() {
+      post(service.claimQuery, {
+        bodys: {
+          rgtno: this.rgtno
+        }
+      }).then(result => {
+        if (result.data.header.code === "200") {
+          this.caseData = result.data.bodys;
+        }
+      });
+      post(service.noticeQuery, {
+        bodys: {
+          rgtno: this.rgtno,
+          querytype: "01"
+        }
+      })
+        .then(result => {
+          if (result.data.header.code === "200") {
+            this.noticeData = result.data.bodys;
+          }
+        })
+        .catch();
+
+      post(service.questionQuery, {
+        bodys: {
+          querytype: "00"
+        }
+      }).then(res => {
+        if (res.data.header.code === "200") {
+          this.questiobOptions = res.data.bodys;
+        }
+      });
+    },
+    getArr(a) {
+      var supplyMaterial = a;
+      var obj = {};
+      supplyMaterial.forEach((item, index) => {
+        obj[index] = item;
+      });
+      var supplyArr = [];
+      for (var key in obj) {
+        var temp = {};
+        temp.noticetype = obj[key];
+        supplyArr.push(temp);
+      }
+      return supplyArr;
+    },
+    // 照会信息保存
+    submitForm(formName) {
+      this.$refs[formName].validate(valid => {
+        if (!valid) {
+          this.$message.error("请先完成必填项！");
+          return false;
+        } else {
+          post(service.infoInsertQuery, {
+            bodys: {
+              comcode: localStorage.getItem("comCode"),
+              agentcode: localStorage.getItem("userCode"),
+              rgtno: this.rgtno,
+              caseno: this.rgtno,
+              receivingobj: this.form.receivingobj,
+              type: this.form.type,
+              supplymaterial: this.getArr(this.form.supplymaterial),
+              statematerial: this.getArr(this.form.statematerial),
+              changenotific: this.getArr(this.form.changenotific),
+              healthtypelist: this.getArr1(this.form.healthtypelist),
+              noticedesc: this.form.noticedesc
+            }
+          }).then(res => {
+            if (res.data.header.code === "200") {
+              this.$message.success(res.data.header.message);
+              this.initCaseNotice();
+              this.reload();
+              this.form = {
+                name: "",
+                kind: "0",
+                desc: "",
+                noticedesc: "",
+                receivingobj: "",
+                supplymaterial: [],
+                statematerial: [],
+                changenotific: [],
+                healthtype: "",
+                type: ""
+              };
+            } else {
+              this.$message.error(res.data.header.message);
+              // this.form = {
+              //   name: "",
+              //   kind: "0",
+              //   desc: "",
+              //   noticedesc: "",
+              //   receivingobj: "",
+              //   supplymaterial: [],
+              //   statematerial: [],
+              //   changenotific: [],
+              //   healthtype: "",
+              //   type: ""
+              // };
+              // this.isShow = true;
+            }
+          });
+        }
+      });
+    },
+    // 申请下发 + 校验
+    applyNote() {
+      for (var key = 0; key < this.noticeData.length; key++) {
+        if (this.noticeNo != this.noticeData[key].noticeno) {
+          if (
+            this.noticeData[key].noticestatus != "03" &&
+            this.noticeData[key].noticestatus != "07"
+          ) {
+            this.$message.error("另有照会正在处理中，不能重新发起照会");
+            return;
+          }
+        }
+      }
+      //  校验
+      post(service.checkNoticeLowerHair, {
+        bodys: {
+          rgtno: this.rgtno,
+          noticeno: this.noticeNo,
+          customerno: this.customerno,
+          comcode: localStorage.getItem("comCode"),
+          agentcode: localStorage.getItem("userCode")
+        }
+      }).then(res => {
+        this.resultcode = res.data.header.code;
+        if (this.resultcode === "200") {
+          post(service.noticeLowerHair, {
+            bodys: {
+              rgtno: this.rgtno,
+              noticeno: this.noticeNo,
+              customerno: this.customerno,
+              comcode: localStorage.getItem("comCode"),
+              agentcode: localStorage.getItem("userCode")
+            }
+          }).then(res => {
+            this.$message({
+              type: "success",
+              message: "操作成功!"
+            });
+            this.reload();
+          });
+        } else if (this.resultcode === "500") {
+          this.$confirm("该客户已存在未结束的照会，是否继续？", "提示", {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning"
+          })
+            .then(() => {
+              post(service.noticeLowerHair, {
+                bodys: {
+                  rgtno: this.rgtno,
+                  noticeno: this.noticeNo,
+                  customerno: this.customerno,
+                  comcode: localStorage.getItem("comCode"),
+                  agentcode: localStorage.getItem("userCode")
+                }
+              }).then(res => {
+                this.$message({
+                  type: "success",
+                  message: "操作成功!"
+                });
+                this.reload();
+              });
+            })
+            .catch(() => {
+              this.$message({
+                type: "info",
+                message: "已取消该操作"
+              });
+            });
+        }
+      });
+      //    -------------
+    },
+    // 照会流水号
+    lookDes(row) {
+      this.noticeNo = row.noticeno;
+      this.textarea = row.noticedesc;
+      if (row.noticestatus === "01" || row.noticestatus === "03") {
+        this.flag = true;
+      } else {
+        this.flag = false;
+      }
+    },
+    // 申请下发分页
+    handleSizeChange1(val) {
+      this.pagesize1 = val;
+    },
+    indexMethod1(index) {
+      return index + 1 + (this.currpage1 - 1) * 10;
+    },
+    handleCurrentChange1(val) {
+      this.currpage1 = val;
+    }
+  }
+};
+</script>
+<style lang="less" scoped>
+.initiatingPhoto {
+  margin: 20px;
+  .header {
+    background-color: #0673ff;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 25px 25px 0 0;
+    padding: 0 30px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 20px;
+    font-family: Source Han Sans CN;
+    i {
+      font-size: 30px;
+      float: right;
+      margin-top: 19px;
+    }
+  }
+  .el-form {
+    background-color: #fff;
+    padding: 0 20px;
+  }
+  /deep/.el-table__expanded-cell[class*="cell"] {
+    padding: 0;
+  }
+  .work_queue {
+    position: relative;
+    //   img{
+    //      position: relative;
+    //   }
+    span {
+      display: inline-block;
+      background-color: #0673ff;
+      color: #fff;
+      padding: 0 15px;
+      height: 33px;
+      line-height: 33px;
+      border-radius: 10px 10px 0 0;
+    }
+    .box {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid #0673ff;
+      position: absolute;
+      top: 33px;
+      left: 15px;
+      z-index: 999;
+    }
+  }
+  .work_table {
+    margin-bottom: 20px;
+  }
+  .block {
+    background-color: #fff;
+    height: 80px;
+    padding-top: 27px;
+    box-sizing: border-box;
+  }
+  .el-collapse {
+    margin-bottom: 20px;
+  }
+  .box {
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #0673ff;
+    position: absolute;
+    z-index: 999;
+  }
+}
+</style>
+<style lang="less">
+.el-row {
+  // padding-top: 20px;
+  //   margin-bottom: 20px;
+  &:last-child {
+    padding-top: 0;
+    margin-bottom: 0;
+  }
+}
+
+.grid-content {
+  border-radius: 4px;
+  min-height: 36px;
+  .report {
+    display: inline-block;
+    width: 180px;
+    height: 40px;
+    text-align: center;
+    line-height: 40px;
+    background-color: #0673ff;
+    color: #fff;
+    font-size: 14px;
+    font-family: Source Han Sans CN;
+    border-radius: 25px;
+  }
+}
+.row-bg {
+  padding: 10px 0;
+  background-color: #f9fafc;
+}
+.initiatingPhoto {
+  .el-select {
+    width: 100%;
+  }
+  .el-collapse-item__arrow {
+    display: none;
+  }
+  .el-collapse-item__header {
+    background-color: #0673ff;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 10px 10px 0 0;
+    padding: 0 15px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 16px;
+    font-family: Source Han Sans CN;
+  }
+  .el-collapse-item__content {
+    padding-bottom: 0px;
+  }
+}
+</style>
+<style lang="less">
+.initiatingPhoto .el-tabs--card > .el-tabs__header .el-tabs__item.is-active {
+  background-color: #0673ff;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  color: #fff;
+}
+.initiatingPhoto .el-tabs__header {
+  margin: 0;
+}
+
+.initiatingPhoto .el-tabs--card > .el-tabs__header .el-tabs__item {
+  background-color: #fff;
+  color: #999999;
+}
+.initiatingPhoto .el-textarea .el-input__count {
+  color: #909399;
+  background: none;
+  position: absolute;
+  font-size: 12px;
+  right: 10px;
+  bottom: -10px;
+}
+.initiatingPhoto .el-textarea__inner {
+  background-color: #f7faff;
+}
+</style>
+<style>
+.demo-table-expand {
+  font-size: 0;
+}
+.demo-table-expand label {
+  width: 90px;
+  color: #99a9bf;
+}
+.demo-table-expand .el-form-item {
+  margin-right: 0;
+  margin-bottom: 0;
+  width: 50%;
+}
+.initiatingPhoto
+  .el-table--striped
+  .el-table__body
+  tr.el-table__row--striped.current-row
+  td,
+.el-table__body tr.current-row > td,
+.el-table__body tr.hover-row.current-row > td,
+.el-table__body tr.hover-row.el-table__row--striped.current-row > td,
+.el-table__body tr.hover-row.el-table__row--striped > td,
+.el-table__body tr.hover-row > td {
+  background-color: #409eff;
+}
+</style>
+
+

@@ -148,8 +148,8 @@ export default {
       let leftBox = document.getElementsByClassName("leftBox");
       var leftContentList = [];
       var leftBoxItem = leftBox[0].childNodes;
-      console.log("Sss", leftBox);
-      console.log("S", leftBoxItem);
+      // console.log("Sss", leftBox);
+      // console.log("S", leftBoxItem);
 
       for (let key = 0; key < leftBoxItem.length; key++) {
         var typeItem = "";

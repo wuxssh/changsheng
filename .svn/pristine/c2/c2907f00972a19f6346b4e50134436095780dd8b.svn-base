@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="fe75e6cc-487d-4172-981b-2e2adf1c874d" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/App.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/BeijingDialog.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/BeijingDialog.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ZBX.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ZBX.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/charts/Charts.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/charts/Charts.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/common/Header.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/common/Header.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/homeTabs/HomeTabs.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/homeTabs/HomeTabs.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/medicalDialog.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/medicalDialog.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/summary/SumUp.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/summary/SumUp.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/map.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/map.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/router/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/router/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/charts1.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/charts1.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/piecharts.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/piecharts.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/request.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/request.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/auditManage/ContractProcess.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/auditManage/ContractProcess.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/auditManage/ReviewInformation.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/auditManage/ReviewInformation.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/auditManage/Secondary.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/auditManage/Secondary.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/auditManage/WorkPool.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/auditManage/WorkPool.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/auditManage/queryContractProcess.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/auditManage/queryContractProcess.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/configManage/HospitalConfig.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/configManage/HospitalConfig.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/configManage/accumulator.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/configManage/accumulator.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/configManage/productConfig.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/configManage/productConfig.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/customerManage/DiseaseManage.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/customerManage/DiseaseManage.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/diplomaticnote/diplomaticnoteDetail.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/diplomaticnote/diplomaticnoteDetail.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/examination-approval/EAListDetails1.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/examination-approval/EAListDetails1.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/examination-approval/bjDocuments.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/examination-approval/bjDocuments.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/examination-approval/medicalDocuments.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/examination-approval/medicalDocuments.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/filing/AddFiling.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/filing/AddFiling.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/filing/BeijingBill.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/filing/GeneralMedical.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/filing/InitiateSurvey.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/filing/InitiateSurvey.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/filing/InitiatingPhoto.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/filing/InitiatingPhoto.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/filing/RiskList.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/filing/RiskList.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/filing/medical.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/filing/medicalDetail.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/filing/tonew.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/filing/tonew.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/home/Home.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/home/Home.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/home/WorkBench.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/home/WorkBench.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/integratedQuery/IntegratDetails.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/integratedQuery/IntegratDetails.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/integratedQuery/ListQuery.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/integratedQuery/ListQuery.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/investigationManagement/InvestigationResale.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/investigationManagement/InvestigationResale.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/investigationManagement/InvestigationReview.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/investigationManagement/InvestigationReview.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/pay/pay.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/pay/pay.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/report/ReportDetails.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/report/ReportDetails.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/reportForm/CheckKPIForm.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/reportForm/CheckKPIForm.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/reportForm/IndexDatabaseForm.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/reportForm/IndexDatabaseForm.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/reportForm/StatisticsKPIForm.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/reportForm/StatisticsKPIForm.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/secondCore/secondCore.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/secondCore/secondCore.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/secondCore/secondDeal.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/secondCore/secondDeal.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/secondCore/secondDetail.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/secondCore/secondDetail.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/secondCore/secondReply.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/secondCore/secondReply.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/systemManagement/MenuManage.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/systemManagement/MenuManage.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/systemManagement/RolePermissions.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/systemManagement/RolePermissions.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/systemManagement/UserManage.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/systemManagement/UserManage.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/taskRedistribution/Task.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/taskRedistribution/Task.vue" afterDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1Ty89cm4rsEntrn4pjUml3BygPF" />
+  <component name="PropertiesComponent">
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="prettierjs.PrettierConfiguration.Package" value="C:\Users\jiang\Desktop\新建文件夹\changsheng\node_modules\prettier" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="fe75e6cc-487d-4172-981b-2e2adf1c874d" name="Default Changelist" comment="" />
+      <created>1574420824408</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1574420824408</updated>
+      <workItem from="1574420826329" duration="35000" />
+      <workItem from="1574420878873" duration="53000" />
+      <workItem from="1591582105781" duration="4000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
